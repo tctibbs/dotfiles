@@ -2,7 +2,7 @@
 # Setup file for docker dev containers extension for VS Code
 
 SUDO=""
-if [[ "$EUID" -ne 0 ]]; then
+if [ "$EUID" -ne 0 ]; then
     SUDO="sudo"
 fi
 
@@ -26,11 +26,25 @@ fi
 
 # Use stow to link zsh configuration
 echo "Linking zsh configuration with stow..."
-stow -v -R --target=$HOME zsh
+stow -v -R --target="$HOME" zsh
 
-# Verify the symlink for .zshrc as an example
-if [[ -L "$HOME/.zshrc" && -f "$HOME/.zshrc" ]]; then
+# Ensure p10k configuration is linked
+if [ -f "$HOME/dotfiles/zsh/.p10k.zsh" ]; then
+    echo "Linking Powerlevel10k configuration with stow..."
+    stow -v -R --target="$HOME" zsh
+else
+    echo "Warning: Powerlevel10k configuration file not found in zsh folder. Skipping."
+fi
+
+# Verify the symlink for .zshrc and .p10k.zsh
+if [ -L "$HOME/.zshrc" ] && [ -f "$HOME/.zshrc" ]; then
     echo ".zshrc linked successfully."
 else
     echo "Error: .zshrc was not linked. Check your stow setup or folder structure."
+fi
+
+if [ -L "$HOME/.p10k.zsh" ] && [ -f "$HOME/.p10k.zsh" ]; then
+    echo ".p10k.zsh linked successfully."
+else
+    echo "Warning: .p10k.zsh was not linked. Check your stow setup or folder structure."
 fi
