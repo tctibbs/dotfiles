@@ -1,14 +1,14 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
 FONT_NAME="FiraCode Nerd Font"
 FONT_SIZE=12
 
 # Check OS
-if [[ "$(uname)" == "Darwin" ]]; then
+if [ "$(uname)" = "Darwin" ]; then
     echo "macOS detected. Please follow these steps to set the font in iTerm2."
 
     # Check if iTerm2 is installed
-    if ! command -v open -a "iTerm" &>/dev/null; then
+    if ! command -v open >/dev/null 2>&1 || ! open -Ra "iTerm"; then
         echo "iTerm2 is not installed. Please install it from https://iterm2.com."
         exit 1
     fi
@@ -20,9 +20,9 @@ if [[ "$(uname)" == "Darwin" ]]; then
     echo "3. Under 'Font', select FiraCode Nerd Font and set the size to $FONT_SIZE."
     open -a "iTerm"
 
-elif [[ "$(uname)" == "Linux" ]]; then
+elif [ "$(uname)" = "Linux" ]; then
     # Linux - Set FiraCode Nerd Font for GNOME Terminal
-    if command -v gsettings &>/dev/null; then
+    if command -v gsettings >/dev/null 2>&1; then
         PROFILE=$(gsettings get org.gnome.Terminal.ProfilesList default | tr -d "'")
         if [ -n "$PROFILE" ]; then
             echo "Setting ${FONT_NAME} as the font for GNOME Terminal..."
