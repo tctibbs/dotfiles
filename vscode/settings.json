@@ -1,0 +1,32 @@
+{
+    // Editor Settings
+    "editor.fontFamily": "'FiraCode Nerd Font', Consolas, 'Courier New', monospace",
+    "editor.fontLigatures": true,
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "charliermarsh.ruff", 
+  
+    // Terminal Settings
+    "terminal.integrated.fontFamily": "'FiraCode Nerd Font', monospace",
+    "terminal.integrated.fontLigatures": true,
+  
+    // Remote Development Settings
+    "remote.autoForwardPortsSource": "hybrid",
+    "remoteX11.SSH.XAuthPermissionLevel": "trusted",
+  
+    // Theme & Appearance Settings
+    "workbench.iconTheme": "vscode-icons",
+    "workbench.startupEditor": "none",
+  
+    // Jupyter Settings
+    "jupyter.askForKernelRestart": false,
+    "notebook.formatOnSave.enabled": true,
+  
+    // Dotfiles Settings
+    "dotfiles.repository": "https://github.com/tctibbs/dotfiles.git",
+  
+    // PlantUML Settings
+    // Prevents truncated exports due to PlantUML's default size limit
+    "plantuml.commandArgs": [
+      "-DPLANTUML_LIMIT_SIZE=8192"
+    ]
+}
