@@ -1,3 +1,5 @@
+![Dotfiles Banner](assets/dotfiles_banner.png)
+
 # My Dotfiles
 
 This repository contains my personal configuration files (dotfiles) to set up a consistent environment across multiple systems. 
