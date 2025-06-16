@@ -20,8 +20,15 @@ fi
 
 # Only define aliases if bat is available
 if command -v bat &> /dev/null; then
-  alias cat='bat'                                  # Replace cat with bat
+  alias cat='bat'                                  
   export BAT_THEME="Visual Studio Dark+"
 else
-  echo "⚠️  'bat' not found – skipping bat aliases" >&2
+  echo "⚠️  'bat' not found - skipping bat aliases" >&2
+fi
+
+# Only define alias if dust is available
+if command -v dust &>/dev/null; then
+  alias du='dust'
+else
+  echo "⚠️  'dust' not found - skipping dust aliases" >&2
 fi
