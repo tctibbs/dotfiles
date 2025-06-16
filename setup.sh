@@ -47,4 +47,21 @@ if [ -L "$HOME/.p10k.zsh" ] && [ -f "$HOME/.p10k.zsh" ]; then
     echo ".p10k.zsh linked successfully."
 else
     echo "Warning: .p10k.zsh was not linked. Check your stow setup or folder structure."
+
+# Run all installation scripts
+# Detect OS and architecture for platform-specific installs
+OS="$(uname -s | tr '[:upper:]' '[:lower:]')"  # linux or darwin
+ARCH="$(uname -m)"                             # x86_64, aarch64, etc.
+INSTALL_DIR="./install/${OS}/${ARCH}"
+
+if [[ -d "$INSTALL_DIR" ]]; then
+    echo "Running platform-specific install scripts in $INSTALL_DIR..."
+    for script in "$INSTALL_DIR"/*.sh; do
+        if [[ -f "$script" ]]; then
+            echo "Running $script..."
+            bash "$script"
+        fi
+    done
+else
+    echo "No install directory found for OS=$OS ARCH=$ARCH"
 fi
