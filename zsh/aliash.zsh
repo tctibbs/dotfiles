@@ -32,3 +32,10 @@ if command -v dust &>/dev/null; then
 else
   echo "⚠️  'dust' not found - skipping dust aliases" >&2
 fi
+
+# Only define aliases if procs is available
+if command -v procs &>/dev/null; then
+  alias ps='procs'
+else
+  echo "⚠️  'procs' not found - skipping procs aliases" >&2
+fi
