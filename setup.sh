@@ -47,6 +47,7 @@ if [ -L "$HOME/.p10k.zsh" ] && [ -f "$HOME/.p10k.zsh" ]; then
     echo ".p10k.zsh linked successfully."
 else
     echo "Warning: .p10k.zsh was not linked. Check your stow setup or folder structure."
+fi
 
 # Run all installation scripts
 # Detect OS and architecture for platform-specific installs
