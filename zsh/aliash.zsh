@@ -46,3 +46,26 @@ if command -v fd &>/dev/null; then
 else
   echo "⚠️  'fd' not found - skipping fd alias" >&2
 fi
+
+# fzf aliases for enhanced fuzzy finding
+if command -v fzf &>/dev/null; then
+  # Fuzzy find files and directories
+  alias fzf-files='fzf --preview "bat --style=numbers --color=always --line-range :500 {}"'
+  
+  # Fuzzy find in git files only
+  alias fzf-git='git ls-files | fzf --preview "bat --style=numbers --color=always --line-range :500 {}"'
+  
+  # Fuzzy find directories
+  alias fzf-dirs='find . -type d 2> /dev/null | fzf'
+  
+  # Fuzzy find and cd into directory
+  alias fzf-cd='cd $(find . -type d 2> /dev/null | fzf)'
+  
+  # Fuzzy find and open with default editor
+  alias fzf-edit='$EDITOR $(fzf)'
+  
+  # Fuzzy find in command history
+  alias fzf-history='history 0 | fzf'
+else
+  echo "⚠️  'fzf' not found - skipping fzf aliases" >&2
+fi

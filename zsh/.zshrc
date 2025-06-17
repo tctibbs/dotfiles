@@ -41,6 +41,12 @@ bindkey '^ ' autosuggest-accept                         # Accept autosuggestions
 bindkey '^[[A' history-substring-search-up              # Search history (up arrow)
 bindkey '^[[B' history-substring-search-down            # Search history (down arrow)
 
+# Enable fzf key bindings and auto-completions (only if fzf is installed)
+[ -f "$HOME/.zsh_env" ] && source "$HOME/.zsh_env"
+if command -v fzf &>/dev/null && [[ -f ~/.fzf.zsh ]]; then
+  source ~/.fzf.zsh
+fi
+
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 

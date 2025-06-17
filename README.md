@@ -22,6 +22,7 @@ These dotfiles install a suite of modern command-line tools to replace older def
 | `fd`   | `find`        | Fast, user-friendly file search tool.          |
 | `tldr` | `man`         | Simplified community-driven command help.      |
 | `btop` | `htop` / `top`| Resource monitor with charts and themes.       |
+| `fzf`  | -             | Fuzzy finder for command-line with key bindings.|
 
 These tools are installed automatically by the `setup.sh` script when using a supported system (like Linux aarch64). Aliases for tools like `fd`, `bat`, and `eza` are defined in the `zsh/.alias.zsh` configuration.
 
@@ -32,7 +33,7 @@ To get started with my dotfiles, clone this repository and run the setup script:
 ```bash
 git clone https://github.com/username/dotfiles.git
 cd dotfiles
-./install.sh
+./setup.sh
 ```
 
 ## Configuring VSCode with Dotfiles
@@ -52,7 +53,7 @@ VSCode provides native support for managing dotfiles across remote environments.
 
 ### 2. Apply Dotfiles Automatically on Remote Systems
 
-- Whenever you connect to a remote system via SSH using VSCode, the repository will automatically clone into the remote user's home directory and execute its `install.sh` script.
+- Whenever you connect to a remote system via SSH using VSCode, the repository will automatically clone into the remote user's home directory and execute its `setup.sh` script.
 
 ### 3. Example Configuration in settings.json
 
@@ -61,7 +62,7 @@ Update your **settings.json** file with the following:
 ```json
 {
     "dotfiles.repository": "https://github.com/tctibbs/dotfiles.git",
-    "dotfiles.installCommand": "~/dotfiles/install.sh"
+    "dotfiles.installCommand": "~/dotfiles/setup.sh"
 }
 ```
 
@@ -82,7 +83,7 @@ For environments involving multiple layers of SSH (e.g., connecting to a Docker 
     ``` json
     {
     "remote.SSH.dotfiles.repository": "https://github.com/tctibbs/dotfiles.git",
-    "remote.SSH.dotfiles.installCommand": "~/dotfiles/install.sh"
+    "remote.SSH.dotfiles.installCommand": "~/dotfiles/setup.sh"
     }
     ```
 3. Ensure the Docker container has access to git and the internet to clone the repository.
