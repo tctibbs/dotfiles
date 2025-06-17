@@ -9,6 +9,22 @@ This repository contains my personal configuration files (dotfiles) to set up a 
 - **Fonts**: Personal fonts, including Nerd Fonts for powerline-compatible symbols.
 - **Zsh Configuration**: Includes zsh plugins, theme, and aliases for a personalized shell experience.
 
+## Included CLI Tools
+
+These dotfiles install a suite of modern command-line tools to replace older defaults and enhance productivity:
+
+| Tool   | Replaces     | Description                                     |
+|--------|--------------|-------------------------------------------------|
+| `eza`  | `ls`          | Modern replacement with color, icons, tree view. |
+| `bat`  | `cat`         | Syntax-highlighted file viewer with pager.     |
+| `dust` | `du`          | Visual disk usage analyzer.                    |
+| `procs`| `ps`          | Improved process viewer with color and layout. |
+| `fd`   | `find`        | Fast, user-friendly file search tool.          |
+| `tldr` | `man`         | Simplified community-driven command help.      |
+| `btop` | `htop` / `top`| Resource monitor with charts and themes.       |
+
+These tools are installed automatically by the `setup.sh` script when using a supported system (like Linux aarch64). Aliases for tools like `fd`, `bat`, and `eza` are defined in the `zsh/.alias.zsh` configuration.
+
 ## Installation
 
 To get started with my dotfiles, clone this repository and run the setup script:
