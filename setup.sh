@@ -57,8 +57,26 @@ INSTALL_DIR="./install/${OS}/${ARCH}"
 
 if [[ -d "$INSTALL_DIR" ]]; then
     echo "Running platform-specific install scripts in $INSTALL_DIR..."
+    
+    # First, run the consolidated common tools script if it exists
+    COMMON_TOOLS_SCRIPT="./install/${OS}/common-tools.sh"
+    if [[ -f "$COMMON_TOOLS_SCRIPT" ]]; then
+        echo "Running consolidated common tools script..."
+        bash "$COMMON_TOOLS_SCRIPT"
+    fi
+    
+    # Then run individual scripts, excluding the ones handled by common-tools.sh
     for script in "$INSTALL_DIR"/*.sh; do
         if [[ -f "$script" ]]; then
+            # Skip individual scripts that are now handled by common-tools.sh
+            SCRIPT_NAME=$(basename "$script")
+            case "$SCRIPT_NAME" in
+                "btop.sh"|"tldr.sh"|"bat.sh"|"zoxide.sh")
+                    echo "Skipping $SCRIPT_NAME (handled by common-tools.sh)..."
+                    continue
+                    ;;
+            esac
+            
             echo "Running $script..."
             bash "$script"
         fi
