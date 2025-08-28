@@ -4,7 +4,7 @@
 FONTS_DIR=${1:-"$HOME/.local/share/fonts"}
 
 # FiraCode Nerd Font URL and version
-NERD_FONT_VERSION="2.3.3"
+NERD_FONT_VERSION="3.2.1"
 FIRA_CODE_NERD_URL="https://github.com/ryanoasis/nerd-fonts/releases/download/v${NERD_FONT_VERSION}/FiraCode.zip"
 
 # Create fonts directory if it doesn't exist
