@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-VERSION="1.2.1"
+VERSION="1.2.2"
 FILE="dust-v${VERSION}-aarch64-unknown-linux-gnu.tar.gz"
 TMPDIR="$(mktemp -d)"
 
