@@ -28,6 +28,11 @@ fi
 echo "Linking zsh configuration with stow..."
 stow -v -R --target="$HOME" zsh
 
+# Create ~/.config/zsh directory and link additional config files
+echo "Creating ~/.config/zsh directory and linking additional config files..."
+mkdir -p "$HOME/.config/zsh"
+ln -sf "$HOME/Code/dotfiles/zsh/aliash.zsh" "$HOME/.config/zsh/aliash.zsh"
+
 # Ensure p10k configuration is linked
 if [ -f "$HOME/dotfiles/zsh/.p10k.zsh" ]; then
     echo "Linking Powerlevel10k configuration with stow..."

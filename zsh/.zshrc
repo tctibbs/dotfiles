@@ -60,4 +60,3 @@ fi
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
 unset ZSH_AUTOSUGGEST_USE_ASYNC
-source ~/getcontext_alias.sh

@@ -48,6 +48,9 @@ else
 fi
 
 # Source getcontext functions if available
-if [[ -f "$HOME/.dotfiles/scripts/getcontext.zsh" ]]; then
+# Try multiple possible locations for the dotfiles
+if [[ -f "${0:A:h}/../scripts/getcontext.zsh" ]]; then
+  source "${0:A:h}/../scripts/getcontext.zsh"
+elif [[ -f "$HOME/.dotfiles/scripts/getcontext.zsh" ]]; then
   source "$HOME/.dotfiles/scripts/getcontext.zsh"
 fi
