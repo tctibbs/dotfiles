@@ -46,3 +46,8 @@ if command -v fd &>/dev/null; then
 else
   echo "⚠️  'fd' not found - skipping fd alias" >&2
 fi
+
+# Source getcontext functions if available
+if [[ -f "$HOME/.dotfiles/scripts/getcontext.zsh" ]]; then
+  source "$HOME/.dotfiles/scripts/getcontext.zsh"
+fi
