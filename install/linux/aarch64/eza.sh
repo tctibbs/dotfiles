@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-VERSION="0.21.4"
+VERSION="0.22.0"
 FILE="eza_aarch64-unknown-linux-gnu.tar.gz"
 
 echo "📦 Downloading: $FILE"
