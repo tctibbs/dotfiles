@@ -19,8 +19,8 @@ export HISTFILE=~/.zsh_history        # Location for saved command history
 source ~/.config/zsh/znap/znap.zsh
 
 # Load optional custom configurations (aliases, exports, functions)
-[[ -f "$HOME/aliash.zsh" ]] && source "$HOME/aliash.zsh"
-[[ -f "$HOME/exports.zsh" ]] && source "$HOME/exports.zsh"
+[[ -f "$HOME/.config/zsh/aliash.zsh" ]] && source "$HOME/.config/zsh/aliash.zsh"
+[[ -f "$HOME/.config/zsh/exports.zsh" ]] && source "$HOME/.config/zsh/exports.zsh"
 
 # theme
 znap source romkatv/powerlevel10k
