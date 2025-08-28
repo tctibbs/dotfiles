@@ -4,6 +4,12 @@ set -euo pipefail
 VERSION="0.22.0"
 FILE="eza_x86_64-unknown-linux-gnu.tar.gz"
 
+# Skip if already installed
+if command -v eza &>/dev/null; then
+    echo "✅ eza is already installed"
+    exit 0
+fi
+
 echo "📦 Downloading: $FILE"
 curl -fsSL -o "$FILE" "https://github.com/eza-community/eza/releases/download/v${VERSION}/${FILE}"
 
