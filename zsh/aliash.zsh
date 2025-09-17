@@ -40,12 +40,6 @@ else
   echo "⚠️  'procs' not found - skipping procs aliases" >&2
 fi
 
-# Only define alias if fd is available
-if command -v fd &>/dev/null; then
-  alias find='fd'
-else
-  echo "⚠️  'fd' not found - skipping fd alias" >&2
-fi
 
 # Source getcontext functions if available
 # Try multiple possible locations for the dotfiles
