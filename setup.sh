@@ -87,6 +87,11 @@ if command -v tmux &>/dev/null; then
         ["tmux-resurrect"]="https://github.com/tmux-plugins/tmux-resurrect"
         ["tmux-continuum"]="https://github.com/tmux-plugins/tmux-continuum"
         ["tmux-yank"]="https://github.com/tmux-plugins/tmux-yank"
+        ["tmux-fzf"]="https://github.com/sainnhe/tmux-fzf"
+        ["tmux-battery"]="https://github.com/tmux-plugins/tmux-battery"
+        ["tmux-cpu"]="https://github.com/tmux-plugins/tmux-cpu"
+        ["tmux-prefix-highlight"]="https://github.com/tmux-plugins/tmux-prefix-highlight"
+        ["tmux-open"]="https://github.com/tmux-plugins/tmux-open"
     )
 
     for plugin in "${!PLUGINS[@]}"; do
