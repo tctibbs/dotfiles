@@ -28,6 +28,10 @@ fi
 echo "Linking zsh configuration with stow..."
 stow -v -R --target="$HOME" zsh
 
+# Use stow to link tmux configuration
+echo "Linking tmux configuration with stow..."
+stow -v -R --target="$HOME" tmux
+
 # Create ~/.config/zsh directory and link additional config files
 echo "Creating ~/.config/zsh directory and linking additional config files..."
 mkdir -p "$HOME/.config/zsh"
@@ -52,6 +56,52 @@ if [ -L "$HOME/.p10k.zsh" ] && [ -f "$HOME/.p10k.zsh" ]; then
     echo ".p10k.zsh linked successfully."
 else
     echo "Warning: .p10k.zsh was not linked. Check your stow setup or folder structure."
+fi
+
+if [ -L "$HOME/.tmux.conf" ] && [ -f "$HOME/.tmux.conf" ]; then
+    echo ".tmux.conf linked successfully."
+else
+    echo "Warning: .tmux.conf was not linked. Check your stow setup or folder structure."
+fi
+
+# Install Tmux Plugin Manager (TPM) and plugins
+if command -v tmux &>/dev/null; then
+    TMUX_PLUGINS_DIR="$HOME/.tmux/plugins"
+    mkdir -p "$TMUX_PLUGINS_DIR"
+
+    # Install TPM itself
+    TPM_DIR="$TMUX_PLUGINS_DIR/tpm"
+    if [ ! -d "$TPM_DIR" ]; then
+        echo "📦 Installing Tmux Plugin Manager (TPM)..."
+        git clone --quiet https://github.com/tmux-plugins/tpm "$TPM_DIR"
+        echo "✅ TPM installed"
+    else
+        echo "✅ TPM is already installed"
+    fi
+
+    # Install plugins directly (same plugins as configured in .tmux.conf)
+    echo "📦 Installing tmux plugins..."
+
+    declare -A PLUGINS=(
+        ["tmux-sensible"]="https://github.com/tmux-plugins/tmux-sensible"
+        ["tmux-resurrect"]="https://github.com/tmux-plugins/tmux-resurrect"
+        ["tmux-continuum"]="https://github.com/tmux-plugins/tmux-continuum"
+        ["tmux-yank"]="https://github.com/tmux-plugins/tmux-yank"
+    )
+
+    for plugin in "${!PLUGINS[@]}"; do
+        PLUGIN_DIR="$TMUX_PLUGINS_DIR/$plugin"
+        if [ ! -d "$PLUGIN_DIR" ]; then
+            echo "  📥 Installing $plugin..."
+            git clone --quiet "${PLUGINS[$plugin]}" "$PLUGIN_DIR"
+        else
+            echo "  ✅ $plugin already installed"
+        fi
+    done
+
+    echo "✅ All tmux plugins installed"
+else
+    echo "⚠️  Tmux not found. Skipping TPM installation."
 fi
 
 # Run all installation scripts

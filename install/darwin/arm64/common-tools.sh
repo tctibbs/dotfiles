@@ -22,6 +22,7 @@ TOOLS=(
     "fzf"       # Fuzzy finder
     "procs"     # Better ps
     "tldr"      # Simplified man pages
+    "tmux"      # Terminal multiplexer
     "zoxide"    # Better cd
 )
 

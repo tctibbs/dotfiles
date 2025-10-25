@@ -7,6 +7,7 @@ COMMON_TOOLS=(
     "tldr"
     "bat"
     "zoxide"
+    "tmux"
 )
 
 echo "📦 Installing common Linux tools via apt..."
