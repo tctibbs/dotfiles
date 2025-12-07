@@ -35,6 +35,10 @@ stow -v -R --target="$HOME" zsh
 echo "Linking tmux configuration with stow..."
 stow -v -R --target="$HOME" tmux
 
+# Link git configuration
+echo "Linking git configuration..."
+ln -sf "$SCRIPT_DIR/git/.gitconfig" "$HOME/.gitconfig"
+
 # Create ~/.config/zsh directory and link additional config files
 echo "Creating ~/.config/zsh directory and linking additional config files..."
 mkdir -p "$HOME/.config/zsh"
