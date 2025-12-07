@@ -146,7 +146,10 @@ fi
 
 if tmux info &> /dev/null; then
     echo -e "${GREEN}🔄 Reloading tmux configuration...${NC}"
+    # Source config in all sessions to apply changes everywhere
     tmux source-file "$HOME/.tmux.conf" 2>/dev/null || true
+    # Kill and restart the server to fully apply terminal settings (optional)
+    echo -e "${YELLOW}⚠️  For full effect, restart tmux: tmux kill-server && tmux${NC}"
 else
     echo -e "${BLUE}ℹ️  Tmux server not running. Configuration will be loaded on next session.${NC}"
 fi
