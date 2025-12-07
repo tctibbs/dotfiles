@@ -122,9 +122,39 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
         echo -e "${GREEN}  ✓ fzf available${NC}"
     fi
 elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    echo -e "${BLUE}  ℹ️  Optional: Install pipes.sh from https://github.com/pipeseroni/pipes.sh${NC}"
-    echo -e "${BLUE}  ℹ️  Optional: Install lazygit from https://github.com/jesseduffield/lazygit${NC}"
-    echo -e "${BLUE}  ℹ️  Optional: Install fzf from https://github.com/junegunn/fzf${NC}"
+    # cmatrix for screensaver
+    if ! command -v cmatrix &>/dev/null; then
+        echo -e "${YELLOW}  Installing cmatrix...${NC}"
+        if command -v apt-get &>/dev/null; then
+            sudo apt-get install -y cmatrix 2>/dev/null || echo -e "${YELLOW}  ⚠️  cmatrix install failed (optional)${NC}"
+        elif command -v yum &>/dev/null; then
+            sudo yum install -y cmatrix 2>/dev/null || echo -e "${YELLOW}  ⚠️  cmatrix install failed (optional)${NC}"
+        elif command -v pacman &>/dev/null; then
+            sudo pacman -S --noconfirm cmatrix 2>/dev/null || echo -e "${YELLOW}  ⚠️  cmatrix install failed (optional)${NC}"
+        fi
+    else
+        echo -e "${GREEN}  ✓ cmatrix available${NC}"
+    fi
+
+    # lazygit for git popup
+    if ! command -v lazygit &>/dev/null; then
+        echo -e "${YELLOW}  Installing lazygit...${NC}"
+        if command -v apt-get &>/dev/null; then
+            sudo apt-get install -y lazygit 2>/dev/null || echo -e "${YELLOW}  ⚠️  lazygit install failed (optional)${NC}"
+        fi
+    else
+        echo -e "${GREEN}  ✓ lazygit available${NC}"
+    fi
+
+    # fzf for tmux-fzf plugin
+    if ! command -v fzf &>/dev/null; then
+        echo -e "${YELLOW}  Installing fzf...${NC}"
+        if command -v apt-get &>/dev/null; then
+            sudo apt-get install -y fzf 2>/dev/null || echo -e "${YELLOW}  ⚠️  fzf install failed (optional)${NC}"
+        fi
+    else
+        echo -e "${GREEN}  ✓ fzf available${NC}"
+    fi
 fi
 
 # ===================================
