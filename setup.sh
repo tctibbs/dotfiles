@@ -6,6 +6,9 @@ if [ "$EUID" -ne 0 ]; then
     SUDO="sudo"
 fi
 
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # Detect OS and use the appropriate package manager
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
     $SUDO apt update
@@ -31,10 +34,10 @@ stow -v -R --target="$HOME" zsh
 # Create ~/.config/zsh directory and link additional config files
 echo "Creating ~/.config/zsh directory and linking additional config files..."
 mkdir -p "$HOME/.config/zsh"
-ln -sf "$HOME/Code/dotfiles/zsh/aliash.zsh" "$HOME/.config/zsh/aliash.zsh"
+ln -sf "$SCRIPT_DIR/zsh/aliash.zsh" "$HOME/.config/zsh/aliash.zsh"
 
 # Ensure p10k configuration is linked
-if [ -f "$HOME/dotfiles/zsh/.p10k.zsh" ]; then
+if [ -f "$SCRIPT_DIR/zsh/.p10k.zsh" ]; then
     echo "Linking Powerlevel10k configuration with stow..."
     stow -v -R --target="$HOME" zsh
 else
@@ -58,18 +61,18 @@ fi
 # Detect OS and architecture for platform-specific installs
 OS="$(uname -s | tr '[:upper:]' '[:lower:]')"  # linux or darwin
 ARCH="$(uname -m)"                             # x86_64, aarch64, etc.
-INSTALL_DIR="./install/${OS}/${ARCH}"
+INSTALL_DIR="$SCRIPT_DIR/install/${OS}/${ARCH}"
 
 if [[ -d "$INSTALL_DIR" ]]; then
     echo "Running platform-specific install scripts in $INSTALL_DIR..."
-    
+
     # First, run the consolidated common tools script if it exists
-    COMMON_TOOLS_SCRIPT="./install/${OS}/common-tools.sh"
+    COMMON_TOOLS_SCRIPT="$SCRIPT_DIR/install/${OS}/common-tools.sh"
     if [[ -f "$COMMON_TOOLS_SCRIPT" ]]; then
         echo "Running consolidated common tools script..."
         bash "$COMMON_TOOLS_SCRIPT"
     fi
-    
+
     # Then run individual scripts, excluding the ones handled by common-tools.sh
     for script in "$INSTALL_DIR"/*.sh; do
         if [[ -f "$script" ]]; then
@@ -81,7 +84,7 @@ if [[ -d "$INSTALL_DIR" ]]; then
                     continue
                     ;;
             esac
-            
+
             echo "Running $script..."
             bash "$script"
         fi
@@ -89,3 +92,15 @@ if [[ -d "$INSTALL_DIR" ]]; then
 else
     echo "No install directory found for OS=$OS ARCH=$ARCH"
 fi
+
+# Run tmux setup
+echo ""
+echo "Setting up tmux configuration..."
+if [[ -f "$SCRIPT_DIR/tmux/install.sh" ]]; then
+    bash "$SCRIPT_DIR/tmux/install.sh"
+else
+    echo "Warning: tmux install script not found. Skipping tmux setup."
+fi
+
+echo ""
+echo "Setup complete!"
