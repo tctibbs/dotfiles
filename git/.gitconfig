@@ -1,0 +1,22 @@
+[init]
+    defaultBranch = main
+
+[pull]
+    rebase = true
+
+[push]
+    autoSetupRemote = true
+
+[fetch]
+    prune = true
+
+[diff]
+    colorMoved = default
+
+[merge]
+    conflictStyle = diff3
+
+[alias]
+    amend = commit --amend --no-edit
+    wip = !git add -A && git commit -m "WIP"
+    undo = reset HEAD~1 --soft
