@@ -35,9 +35,14 @@ stow -v -R --target="$HOME" zsh
 echo "Linking tmux configuration with stow..."
 stow -v -R --target="$HOME" tmux
 
-# Link git configuration
-echo "Linking git configuration..."
-ln -sf "$SCRIPT_DIR/git/.gitconfig" "$HOME/.gitconfig"
+# Run git setup
+echo ""
+echo "Setting up git configuration..."
+if [[ -f "$SCRIPT_DIR/git/install.sh" ]]; then
+    bash "$SCRIPT_DIR/git/install.sh"
+else
+    echo "Warning: git install script not found. Skipping git setup."
+fi
 
 # Create ~/.config/zsh directory and link additional config files
 echo "Creating ~/.config/zsh directory and linking additional config files..."
