@@ -210,6 +210,7 @@ getcontext() {
   fi
 
   fd_cmd=(command fd --type f "${fd_ext_flags[@]}"
+    .
     --exclude node_modules
     --exclude .git
     --exclude dist
