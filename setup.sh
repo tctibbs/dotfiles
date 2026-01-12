@@ -35,6 +35,10 @@ stow -v -R --target="$HOME" zsh
 echo "Linking tmux configuration with stow..."
 stow -v -R --target="$HOME" tmux
 
+# Use stow to link wezterm configuration
+echo "Linking wezterm configuration with stow..."
+stow -v -R --target="$HOME" wezterm
+
 # Run git setup
 echo ""
 echo "Setting up git configuration..."
@@ -164,6 +168,15 @@ if [[ -f "$SCRIPT_DIR/tmux/install.sh" ]]; then
     bash "$SCRIPT_DIR/tmux/install.sh"
 else
     echo "Warning: tmux install script not found. Skipping tmux setup."
+fi
+
+# Run wezterm setup
+echo ""
+echo "Setting up wezterm configuration..."
+if [[ -f "$SCRIPT_DIR/wezterm/install.sh" ]]; then
+    bash "$SCRIPT_DIR/wezterm/install.sh"
+else
+    echo "Warning: wezterm install script not found. Skipping wezterm setup."
 fi
 
 echo ""
