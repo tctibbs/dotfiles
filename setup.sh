@@ -53,25 +53,11 @@ echo "Creating ~/.config/zsh directory and linking additional config files..."
 mkdir -p "$HOME/.config/zsh"
 ln -sf "$SCRIPT_DIR/zsh/aliash.zsh" "$HOME/.config/zsh/aliash.zsh"
 
-# Ensure p10k configuration is linked
-if [ -f "$SCRIPT_DIR/zsh/.p10k.zsh" ]; then
-    echo "Linking Powerlevel10k configuration with stow..."
-    stow -v -R --target="$HOME" zsh
-else
-    echo "Warning: Powerlevel10k configuration file not found in zsh folder. Skipping."
-fi
-
-# Verify the symlink for .zshrc and .p10k.zsh
+# Verify the symlink for .zshrc
 if [ -L "$HOME/.zshrc" ] && [ -f "$HOME/.zshrc" ]; then
     echo ".zshrc linked successfully."
 else
     echo "Error: .zshrc was not linked. Check your stow setup or folder structure."
-fi
-
-if [ -L "$HOME/.p10k.zsh" ] && [ -f "$HOME/.p10k.zsh" ]; then
-    echo ".p10k.zsh linked successfully."
-else
-    echo "Warning: .p10k.zsh was not linked. Check your stow setup or folder structure."
 fi
 
 if [ -L "$HOME/.tmux.conf" ] && [ -f "$HOME/.tmux.conf" ]; then
