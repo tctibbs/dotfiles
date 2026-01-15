@@ -40,14 +40,6 @@ else
   echo "⚠️  'procs' not found - skipping procs aliases" >&2
 fi
 
-# Only define alias if mdfried is available
-if command -v mdfried &>/dev/null; then
-  alias md='mdfried'
-else
-  echo "⚠️  'mdfried' not found - skipping md alias" >&2
-fi
-
-
 # Source getcontext functions if available
 # Try multiple possible locations for the dotfiles
 if [[ -f "${0:A:h}/../scripts/getcontext.zsh" ]]; then
