@@ -45,7 +45,6 @@ if [[ -f "$SCRIPT_DIR/git/install.sh" ]]; then
 else
     echo "Warning: git install script not found. Skipping git setup."
 fi
-
 # Create ~/.config/zsh directory and link additional config files
 echo "Creating ~/.config/zsh directory and linking additional config files..."
 mkdir -p "$HOME/.config/zsh"
