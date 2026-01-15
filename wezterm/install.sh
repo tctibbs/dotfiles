@@ -84,6 +84,39 @@ for module in theme platform keys; do
     fi
 done
 
+# Copy icons directory
+if [ -d "$SCRIPT_DIR/icons" ]; then
+    cp -r "$SCRIPT_DIR/icons" "$CONFIG_DIR/"
+    echo -e "  ${GREEN}Copied icons/${NC}"
+fi
+
+# Platform-specific icon installation
+echo ""
+echo "Installing custom WezTerm icon..."
+
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    # macOS: Use fileicon to set app icon
+    if command -v fileicon &>/dev/null; then
+        if [ -d "/Applications/WezTerm.app" ]; then
+            fileicon set /Applications/WezTerm.app "$SCRIPT_DIR/icons/wezterm.icns" 2>/dev/null && \
+                echo -e "  ${GREEN}Set WezTerm.app icon${NC}" || \
+                echo -e "  ${YELLOW}Could not set app icon (may need to restart Finder)${NC}"
+        fi
+    else
+        echo -e "  ${YELLOW}Install fileicon for custom app icon: brew install fileicon${NC}"
+    fi
+elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    # Linux: Update .desktop file icon path
+    DESKTOP_FILE="$HOME/.local/share/applications/org.wezfurlong.wezterm.desktop"
+    if [ -f "$DESKTOP_FILE" ]; then
+        sed -i "s|^Icon=.*|Icon=$CONFIG_DIR/icons/wezterm.png|" "$DESKTOP_FILE" && \
+            echo -e "  ${GREEN}Updated .desktop file icon${NC}" || \
+            echo -e "  ${YELLOW}Could not update .desktop file${NC}"
+    else
+        echo -e "  ${YELLOW}No .desktop file found at $DESKTOP_FILE${NC}"
+    fi
+fi
+
 echo ""
 echo -e "${GREEN}WezTerm configuration installed to ~/.config/wezterm/${NC}"
 echo ""
