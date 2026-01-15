@@ -26,13 +26,17 @@ if ! command -v starship &>/dev/null; then
             brew install starship
         else
             echo -e "${YELLOW}Homebrew not found, using curl installer...${NC}"
-            curl -sS https://starship.rs/install.sh | sh -s -- -y
+            mkdir -p "$HOME/.local/bin"
+            curl -sS https://starship.rs/install.sh | sh -s -- -b "$HOME/.local/bin" -y
         fi
     elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
-        curl -sS https://starship.rs/install.sh | sh -s -- -y
+        # Install to ~/.local/bin to avoid requiring sudo
+        mkdir -p "$HOME/.local/bin"
+        curl -sS https://starship.rs/install.sh | sh -s -- -b "$HOME/.local/bin" -y
     elif [[ "$OSTYPE" == "msys"* ]] || [[ "$OSTYPE" == "cygwin"* ]]; then
         # Windows (Git Bash/MSYS2)
-        curl -sS https://starship.rs/install.sh | sh -s -- -y
+        mkdir -p "$HOME/.local/bin"
+        curl -sS https://starship.rs/install.sh | sh -s -- -b "$HOME/.local/bin" -y
     else
         echo -e "${RED}Unsupported OS. Please install Starship manually.${NC}"
         echo "Visit: https://starship.rs/guide/#installation"

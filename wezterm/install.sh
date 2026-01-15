@@ -31,17 +31,20 @@ if ! command -v wezterm &>/dev/null; then
         fi
     elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
         if command -v flatpak &>/dev/null; then
-            echo "Installing via Flatpak..."
-            flatpak install -y flathub org.wezfurlong.wezterm
-        elif command -v apt &>/dev/null; then
-            echo "Installing via apt..."
-            curl -fsSL https://apt.fury.io/wez/gpg.key | sudo gpg --yes --dearmor -o /usr/share/keyrings/wezterm-fury.gpg
-            echo 'deb [signed-by=/usr/share/keyrings/wezterm-fury.gpg] https://apt.fury.io/wez/ * *' | sudo tee /etc/apt/sources.list.d/wezterm.list
-            sudo apt update
-            sudo apt install -y wezterm
+            echo "Installing via Flatpak (user installation, no sudo required)..."
+            flatpak install --user -y flathub org.wezfurlong.wezterm
         else
-            echo -e "${RED}No supported package manager found. Please install WezTerm manually.${NC}"
-            exit 1
+            echo -e "${YELLOW}WezTerm installation requires either Flatpak or manual installation.${NC}"
+            echo ""
+            echo "Option 1: Install Flatpak, then run this script again:"
+            echo "  sudo apt install -y flatpak"
+            echo ""
+            echo "Option 2: Install WezTerm via apt (requires sudo):"
+            echo "  curl -fsSL https://apt.fury.io/wez/gpg.key | sudo gpg --yes --dearmor -o /usr/share/keyrings/wezterm-fury.gpg"
+            echo "  echo 'deb [signed-by=/usr/share/keyrings/wezterm-fury.gpg] https://apt.fury.io/wez/ * *' | sudo tee /etc/apt/sources.list.d/wezterm.list"
+            echo "  sudo apt update && sudo apt install -y wezterm"
+            echo ""
+            echo -e "${YELLOW}Continuing with configuration setup...${NC}"
         fi
     elif [[ "$OSTYPE" == "msys"* ]] || [[ "$OSTYPE" == "cygwin"* ]]; then
         echo -e "${YELLOW}On Windows, please install WezTerm from: https://wezfurlong.org/wezterm/install/windows.html${NC}"
