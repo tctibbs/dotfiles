@@ -46,8 +46,8 @@ function module.apply(config, wezterm)
         { key = "UpArrow", mods = "CTRL|SHIFT", action = act.ActivatePaneDirection("Up") },
         { key = "DownArrow", mods = "CTRL|SHIFT", action = act.ActivatePaneDirection("Down") },
 
-        -- Reload configuration
-        { key = "r", mods = "CTRL|SHIFT", action = act.ReloadConfiguration },
+        -- Reload configuration (F5 to avoid conflict with rename on Windows/Linux)
+        { key = "F5", mods = "CTRL|SHIFT", action = act.ReloadConfiguration },
 
         -- Clipboard (universal)
         { key = "v", mods = "CTRL", action = act.PasteFrom("Clipboard") },
