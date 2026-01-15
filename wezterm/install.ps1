@@ -5,14 +5,6 @@
 
 $ErrorActionPreference = "Stop"
 
-# Colors
-function Write-ColorOutput($ForegroundColor) {
-    $fc = $host.UI.RawUI.ForegroundColor
-    $host.UI.RawUI.ForegroundColor = $ForegroundColor
-    if ($args) { Write-Output $args }
-    $host.UI.RawUI.ForegroundColor = $fc
-}
-
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ConfigDir = "$env:USERPROFILE\.config\wezterm"
 
