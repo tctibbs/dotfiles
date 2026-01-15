@@ -18,10 +18,19 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
     if ! command -v brew &>/dev/null; then
         echo "Homebrew not found. Installing Homebrew..."
         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        # Add brew to PATH for Apple Silicon
+        if [[ -f "/opt/homebrew/bin/brew" ]]; then
+            eval "$(/opt/homebrew/bin/brew shellenv)"
+        fi
     fi
 
-    # Install zsh and stow via Homebrew
-    brew install zsh stow
+    # Install all packages via Brewfile
+    if [[ -f "$SCRIPT_DIR/homebrew/install.sh" ]]; then
+        bash "$SCRIPT_DIR/homebrew/install.sh"
+    else
+        # Fallback: install essentials
+        brew install zsh stow
+    fi
 else
     echo "Unsupported OS. This script only works on Linux and macOS."
     exit 1
@@ -108,40 +117,31 @@ else
     echo "⚠️  Tmux not found. Skipping TPM installation."
 fi
 
-# Run all installation scripts
-# Detect OS and architecture for platform-specific installs
-OS="$(uname -s | tr '[:upper:]' '[:lower:]')"  # linux or darwin
-ARCH="$(uname -m)"                             # x86_64, aarch64, etc.
-INSTALL_DIR="$SCRIPT_DIR/install/${OS}/${ARCH}"
+# Run platform-specific installation scripts (Linux only - macOS uses Brewfile)
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    ARCH="$(uname -m)"  # x86_64, aarch64, etc.
+    INSTALL_DIR="$SCRIPT_DIR/install/linux/${ARCH}"
 
-if [[ -d "$INSTALL_DIR" ]]; then
-    echo "Running platform-specific install scripts in $INSTALL_DIR..."
+    if [[ -d "$INSTALL_DIR" ]]; then
+        echo "Running Linux install scripts in $INSTALL_DIR..."
 
-    # First, run the consolidated common tools script if it exists
-    COMMON_TOOLS_SCRIPT="$SCRIPT_DIR/install/${OS}/common-tools.sh"
-    if [[ -f "$COMMON_TOOLS_SCRIPT" ]]; then
-        echo "Running consolidated common tools script..."
-        bash "$COMMON_TOOLS_SCRIPT"
-    fi
-
-    # Then run individual scripts, excluding the ones handled by common-tools.sh
-    for script in "$INSTALL_DIR"/*.sh; do
-        if [[ -f "$script" ]]; then
-            # Skip individual scripts that are now handled by common-tools.sh
-            SCRIPT_NAME=$(basename "$script")
-            case "$SCRIPT_NAME" in
-                "btop.sh"|"tldr.sh"|"bat.sh"|"zoxide.sh")
-                    echo "Skipping $SCRIPT_NAME (handled by common-tools.sh)..."
-                    continue
-                    ;;
-            esac
-
-            echo "Running $script..."
-            bash "$script"
+        # First, run the consolidated common tools script if it exists
+        COMMON_TOOLS_SCRIPT="$SCRIPT_DIR/install/linux/common-tools.sh"
+        if [[ -f "$COMMON_TOOLS_SCRIPT" ]]; then
+            echo "Running consolidated common tools script..."
+            bash "$COMMON_TOOLS_SCRIPT"
         fi
-    done
-else
-    echo "No install directory found for OS=$OS ARCH=$ARCH"
+
+        # Then run individual scripts
+        for script in "$INSTALL_DIR"/*.sh; do
+            if [[ -f "$script" ]]; then
+                echo "Running $script..."
+                bash "$script"
+            fi
+        done
+    else
+        echo "No install directory found for ARCH=$ARCH"
+    fi
 fi
 
 # Run tmux setup
