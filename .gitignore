@@ -2,3 +2,4 @@
 .DS_Store
 CLAUDE.md
 AGENTS.md
+tmux/tmux-client-*.log

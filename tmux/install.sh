@@ -67,21 +67,21 @@ fi
 # ===================================
 # Symlink configuration files
 # ===================================
+# Note: Symlinks are created by stow in the main setup.sh script.
+# We just verify they exist here.
 
-echo -e "${BLUE}🔗 Creating symlinks to tmux configurations...${NC}"
+echo -e "${BLUE}🔗 Verifying tmux configuration symlinks...${NC}"
 
 CONFIGS=(".tmux.conf" ".tmux.mac.conf" ".tmux.linux.conf")
 
 for conf in "${CONFIGS[@]}"; do
-    if [ -f "$SCRIPT_DIR/$conf" ]; then
-        # Backup existing non-symlink config
-        if [ -f "$HOME/$conf" ] && [ ! -L "$HOME/$conf" ]; then
-            echo -e "${YELLOW}  📦 Backing up existing $conf${NC}"
-            mv "$HOME/$conf" "$HOME/${conf}.backup"
-        fi
-
-        ln -sf "$SCRIPT_DIR/$conf" "$HOME/$conf"
-        echo -e "${GREEN}  ✓ Linked $conf${NC}"
+    if [ -L "$HOME/$conf" ]; then
+        echo -e "${GREEN}  ✓ $conf is linked${NC}"
+    elif [ -f "$HOME/$conf" ]; then
+        echo -e "${YELLOW}  ⚠️  $conf exists but is not a symlink${NC}"
+        echo -e "${YELLOW}     Consider backing it up and running stow${NC}"
+    else
+        echo -e "${YELLOW}  ⚠️  $conf not found (will be created by stow)${NC}"
     fi
 done
 

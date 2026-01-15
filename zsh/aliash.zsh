@@ -40,7 +40,6 @@ else
   echo "⚠️  'procs' not found - skipping procs aliases" >&2
 fi
 
-
 # Source getcontext functions if available
 # Try multiple possible locations for the dotfiles
 if [[ -f "${0:A:h}/../scripts/getcontext.zsh" ]]; then

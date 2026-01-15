@@ -35,6 +35,8 @@ stow -v -R --target="$HOME" zsh
 echo "Linking tmux configuration with stow..."
 stow -v -R --target="$HOME" tmux
 
+# Note: wezterm configuration is linked by wezterm/install.sh to ~/.config/wezterm/
+
 # Run git setup
 echo ""
 echo "Setting up git configuration..."
@@ -43,31 +45,16 @@ if [[ -f "$SCRIPT_DIR/git/install.sh" ]]; then
 else
     echo "Warning: git install script not found. Skipping git setup."
 fi
-
 # Create ~/.config/zsh directory and link additional config files
 echo "Creating ~/.config/zsh directory and linking additional config files..."
 mkdir -p "$HOME/.config/zsh"
 ln -sf "$SCRIPT_DIR/zsh/aliash.zsh" "$HOME/.config/zsh/aliash.zsh"
 
-# Ensure p10k configuration is linked
-if [ -f "$SCRIPT_DIR/zsh/.p10k.zsh" ]; then
-    echo "Linking Powerlevel10k configuration with stow..."
-    stow -v -R --target="$HOME" zsh
-else
-    echo "Warning: Powerlevel10k configuration file not found in zsh folder. Skipping."
-fi
-
-# Verify the symlink for .zshrc and .p10k.zsh
+# Verify the symlink for .zshrc
 if [ -L "$HOME/.zshrc" ] && [ -f "$HOME/.zshrc" ]; then
     echo ".zshrc linked successfully."
 else
     echo "Error: .zshrc was not linked. Check your stow setup or folder structure."
-fi
-
-if [ -L "$HOME/.p10k.zsh" ] && [ -f "$HOME/.p10k.zsh" ]; then
-    echo ".p10k.zsh linked successfully."
-else
-    echo "Warning: .p10k.zsh was not linked. Check your stow setup or folder structure."
 fi
 
 if [ -L "$HOME/.tmux.conf" ] && [ -f "$HOME/.tmux.conf" ]; then
@@ -164,6 +151,24 @@ if [[ -f "$SCRIPT_DIR/tmux/install.sh" ]]; then
     bash "$SCRIPT_DIR/tmux/install.sh"
 else
     echo "Warning: tmux install script not found. Skipping tmux setup."
+fi
+
+# Run wezterm setup
+echo ""
+echo "Setting up wezterm configuration..."
+if [[ -f "$SCRIPT_DIR/wezterm/install.sh" ]]; then
+    bash "$SCRIPT_DIR/wezterm/install.sh"
+else
+    echo "Warning: wezterm install script not found. Skipping wezterm setup."
+fi
+
+# Run starship setup
+echo ""
+echo "Setting up starship prompt..."
+if [[ -f "$SCRIPT_DIR/starship/install.sh" ]]; then
+    bash "$SCRIPT_DIR/starship/install.sh"
+else
+    echo "Warning: starship install script not found. Skipping starship setup."
 fi
 
 echo ""
