@@ -1,3 +1,10 @@
+[user]
+    name = Tristan Tibbs
+    email = tristantibbs@gmail.com
+
+[includeIf "gitdir:~/Work/"]
+    path = ~/.gitconfig-work
+
 [init]
     defaultBranch = main
 

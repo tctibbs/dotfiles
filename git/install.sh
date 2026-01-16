@@ -23,9 +23,12 @@ if [ -f "$HOME/.gitconfig" ] && [ ! -L "$HOME/.gitconfig" ]; then
     mv "$HOME/.gitconfig" "$HOME/.gitconfig.backup"
 fi
 
-# Create symlink
+# Create symlinks
 ln -sf "$SCRIPT_DIR/.gitconfig" "$HOME/.gitconfig"
 echo -e "${GREEN}  ✓ Linked .gitconfig${NC}"
+
+ln -sf "$SCRIPT_DIR/.gitconfig-work" "$HOME/.gitconfig-work"
+echo -e "${GREEN}  ✓ Linked .gitconfig-work${NC}"
 
 echo ""
 echo -e "${GREEN}✅ Git configuration installed!${NC}"
