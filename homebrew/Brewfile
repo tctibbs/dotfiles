@@ -3,6 +3,7 @@ brew "bat"           # Better cat
 brew "btop"          # Resource monitor
 brew "dust"          # Better du
 brew "eza"           # Better ls
+brew "fastfetch"     # System info display
 brew "fd"            # Better find
 brew "fileicon"      # Set custom file/app icons
 brew "fzf"           # Fuzzy finder
