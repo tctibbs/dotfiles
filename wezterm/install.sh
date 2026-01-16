@@ -77,7 +77,7 @@ ln -sf "$SCRIPT_DIR/.wezterm.lua" "$CONFIG_DIR/wezterm.lua"
 echo -e "  ${GREEN}Linked wezterm.lua${NC}"
 
 # Module files
-for module in theme platform keys; do
+for module in theme platform keys tabs; do
     if [ -f "$SCRIPT_DIR/${module}.lua" ]; then
         ln -sf "$SCRIPT_DIR/${module}.lua" "$CONFIG_DIR/${module}.lua"
         echo -e "  ${GREEN}Linked ${module}.lua${NC}"
@@ -129,6 +129,7 @@ echo ""
 echo "Features enabled:"
 echo "  - Catppuccin Mocha theme"
 echo "  - FiraCode Nerd Font with ligatures"
+echo "  - Fancy tabs with process icons"
 echo "  - Kitty graphics protocol for images"
 echo "  - WebGPU rendering"
 echo "  - Cross-platform support (macOS/Linux/Windows)"

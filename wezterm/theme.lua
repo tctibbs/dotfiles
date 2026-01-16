@@ -79,8 +79,10 @@ function module.apply(config, wezterm)
         },
     }
 
-    -- Window appearance
-    config.window_decorations = "RESIZE"
+    -- Window appearance (INTEGRATED_BUTTONS gives title bar with native double-click to maximize)
+    config.window_decorations = "INTEGRATED_BUTTONS|RESIZE"
+    config.integrated_title_button_style = "Windows"
+    config.integrated_title_button_alignment = "Right"
     config.window_padding = {
         left = 8,
         right = 8,
@@ -112,8 +114,9 @@ function module.apply(config, wezterm)
 
     -- Tab bar settings
     config.hide_tab_bar_if_only_one_tab = true
-    config.use_fancy_tab_bar = false
+    config.use_fancy_tab_bar = true
     config.tab_bar_at_bottom = false
+    config.tab_max_width = 40
 
     -- Scrollback
     config.scrollback_lines = 10000
@@ -128,6 +131,12 @@ function module.apply(config, wezterm)
 
     -- Enable Kitty graphics protocol (for image.nvim, etc.)
     config.enable_kitty_graphics = true
+
+    -- Cursor styling
+    config.default_cursor_style = "BlinkingBar"
+    config.cursor_blink_rate = 500
+    config.cursor_blink_ease_in = "EaseIn"
+    config.cursor_blink_ease_out = "EaseOut"
 end
 
 return module

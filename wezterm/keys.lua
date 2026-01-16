@@ -119,6 +119,7 @@ function module.apply(config, wezterm)
             }),
         },
     }
+
 end
 
 return module
