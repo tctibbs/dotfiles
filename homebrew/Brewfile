@@ -1,6 +1,10 @@
+# Taps
+tap "mikescher/tap"
+
 # CLI Tools
 brew "bat"           # Better cat
 brew "btop"          # Resource monitor
+brew "difftastic"    # Structural diffs
 brew "dust"          # Better du
 brew "eza"           # Better ls
 brew "fastfetch"     # System info display
@@ -8,7 +12,8 @@ brew "fd"            # Better find
 brew "fileicon"      # Set custom file/app icons
 brew "fzf"           # Fuzzy finder
 brew "git-delta"     # Git syntax highlighting
-brew "difftastic"    # Structural diffs
+brew "lazydocker"    # Docker TUI
+brew "mikescher/tap/dops"  # Better docker ps
 brew "procs"         # Better ps
 brew "starship"      # Shell prompt
 brew "tldr"          # Simplified man pages
