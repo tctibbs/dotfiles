@@ -16,9 +16,8 @@ if ! file "$TMPDIR/dops" | grep -q 'ELF'; then
     exit 1
 fi
 
-echo "Installing dops to ~/.local/bin"
-mkdir -p "$HOME/.local/bin"
-install -m 755 "$TMPDIR/dops" "$HOME/.local/bin/dops"
+echo "Installing dops"
+sudo install -m 755 "$TMPDIR/dops" /usr/local/bin/dops
 
 rm -rf "$TMPDIR"
 
