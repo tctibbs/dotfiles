@@ -80,7 +80,6 @@ function module.apply(config, wezterm)
     }
 
     -- Window appearance
-    config.window_background_opacity = 1.0
     config.window_decorations = "RESIZE"
     config.window_padding = {
         left = 8,
@@ -88,6 +87,28 @@ function module.apply(config, wezterm)
         top = 8,
         bottom = 8,
     }
+
+    -- Background image with dark overlay (optional)
+    -- Download a wallpaper to ~/.config/wezterm/background.jpg
+    local bg_path = wezterm.home_dir .. "/.config/wezterm/background.jpg"
+    local f = io.open(bg_path, "r")
+    if f then
+        f:close()
+        config.background = {
+            {
+                source = { File = bg_path },
+                hsb = { brightness = 0.15 },
+                width = "Cover",
+                height = "Cover",
+            },
+            {
+                source = { Color = "#1e1e2e" },
+                width = "100%",
+                height = "100%",
+                opacity = 0.7,
+            },
+        }
+    end
 
     -- Tab bar settings
     config.hide_tab_bar_if_only_one_tab = true
