@@ -9,29 +9,31 @@ if command -v fastfetch &>/dev/null; then
     exit 0
 fi
 
+TMPDIR="$(mktemp -d)"
 echo "Downloading: $FILE"
-curl -fsSL -o "$FILE" "https://github.com/fastfetch-cli/fastfetch/releases/download/${VERSION}/${FILE}"
+curl -fsSL -o "$TMPDIR/$FILE" "https://github.com/fastfetch-cli/fastfetch/releases/download/${VERSION}/${FILE}"
 
-if ! file "$FILE" | grep -q 'gzip compressed data'; then
+if ! file "$TMPDIR/$FILE" | grep -q 'gzip compressed data'; then
     echo "Invalid gzip archive"
-    cat "$FILE"
+    cat "$TMPDIR/$FILE"
+    rm -rf "$TMPDIR"
     exit 1
 fi
 
-TMPDIR="$(mktemp -d)"
 echo "Extracting to: $TMPDIR"
-tar -xzf "$FILE" -C "$TMPDIR"
+tar -xzf "$TMPDIR/$FILE" -C "$TMPDIR"
 
 BIN=$(find "$TMPDIR" -type f -name fastfetch -perm /111 -print -quit)
 if [[ -z "$BIN" ]]; then
     echo "Failed to find fastfetch binary"
+    rm -rf "$TMPDIR"
     exit 1
 fi
 
 echo "Installing fastfetch"
 sudo install -m 755 "$BIN" /usr/local/bin/fastfetch
 
-rm -rf "$FILE" "$TMPDIR"
+rm -rf "$TMPDIR"
 
 echo "fastfetch installed:"
 fastfetch --version
