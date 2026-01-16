@@ -90,6 +90,12 @@ if [ -d "$SCRIPT_DIR/icons" ]; then
     echo -e "  ${GREEN}Copied icons/${NC}"
 fi
 
+# Symlink background image if present
+if [ -f "$SCRIPT_DIR/background.jpg" ]; then
+    ln -sf "$SCRIPT_DIR/background.jpg" "$CONFIG_DIR/background.jpg"
+    echo -e "  ${GREEN}Linked background.jpg${NC}"
+fi
+
 # Platform-specific icon installation
 echo ""
 echo "Installing custom WezTerm icon..."
