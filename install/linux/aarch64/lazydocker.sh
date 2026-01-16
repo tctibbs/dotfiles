@@ -30,8 +30,9 @@ if [[ -z "$BIN" ]]; then
     exit 1
 fi
 
-echo "Installing lazydocker"
-sudo install -m 755 "$BIN" /usr/local/bin/lazydocker
+echo "Installing lazydocker to ~/.local/bin"
+mkdir -p "$HOME/.local/bin"
+install -m 755 "$BIN" "$HOME/.local/bin/lazydocker"
 
 rm -rf "$TMPDIR"
 
