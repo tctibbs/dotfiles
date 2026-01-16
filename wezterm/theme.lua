@@ -97,7 +97,7 @@ function module.apply(config, wezterm)
         config.background = {
             {
                 source = { File = bg_path },
-                hsb = { brightness = 0.15 },
+                hsb = { brightness = 0.10 },
                 width = "Cover",
                 height = "Cover",
             },
@@ -105,7 +105,7 @@ function module.apply(config, wezterm)
                 source = { Color = "#1e1e2e" },
                 width = "100%",
                 height = "100%",
-                opacity = 0.7,
+                opacity = 0.8,
             },
         }
     end
