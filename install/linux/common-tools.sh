@@ -70,6 +70,15 @@ if command -v cargo &>/dev/null; then
         cargo install treemd
         echo "✅ treemd installed"
     fi
+
+    # onefetch - Git repo info display
+    if command -v onefetch &>/dev/null; then
+        echo "✅ onefetch is already installed"
+    else
+        echo "📦 Installing onefetch via cargo..."
+        cargo install onefetch
+        echo "✅ onefetch installed"
+    fi
 else
-    echo "⚠️  cargo not found - skipping mcat and treemd install"
+    echo "⚠️  cargo not found - skipping mcat, treemd, and onefetch install"
 fi
