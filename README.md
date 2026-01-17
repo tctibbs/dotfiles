@@ -1,95 +1,82 @@
-![Terminal Screenshot](assets/terminal_screenshot.png)
-
 # Dotfiles
 
-This repository contains my personal configuration files (dotfiles) to set up a consistent environment across multiple systems. 
+![Terminal Screenshot](assets/terminal_screenshot.png)
 
-## Contents
+Personal configuration for a consistent dev environment across macOS and Linux, with partial support for Windows.
 
-- **Fonts**: Personal fonts, including Nerd Fonts for powerline-compatible symbols.
-- **Zsh Configuration**: Includes zsh plugins, theme, and aliases for a personalized shell experience.
+## Features
 
-## Included CLI Tools
+### Terminal Stack
+- **WezTerm** - GPU-accelerated terminal with Catppuccin theme, fancy tabs, background image
+- **Tmux** - Terminal multiplexer with session persistence and popup scratchpads
+- **Starship** - Cross-shell prompt with git integration and directory icons
+- **Zsh** - Shell with modern CLI tool aliases
 
-These dotfiles install a suite of modern command-line tools to replace older defaults and enhance productivity:
+### What's Included
 
-| Tool   | Replaces     | Description                                     |
-|--------|--------------|-------------------------------------------------|
-| `eza`  | `ls`          | Modern replacement with color, icons, tree view. |
-| `bat`  | `cat`         | Syntax-highlighted file viewer with pager.     |
-| `dust` | `du`          | Visual disk usage analyzer.                    |
-| `procs`| `ps`          | Improved process viewer with color and layout. |
-| `fd`   | `find`        | Fast, user-friendly file search tool.          |
-| `tldr` | `man`         | Simplified community-driven command help.      |
-| `btop` | `htop` / `top`| Resource monitor with charts and themes.       |
-| `fzf`  | -             | Fuzzy finder for command-line with key bindings.|
-
-These tools are installed automatically by the `setup.sh` script when using a supported system (like Linux aarch64). Aliases for tools like `fd`, `bat`, and `eza` are defined in the `zsh/.alias.zsh` configuration.
+| Category | Tools |
+|----------|-------|
+| Terminal | WezTerm, tmux, starship |
+| Shell | zsh, aliases, exports |
+| CLI Tools | eza, bat, dust, procs, fd, fzf, btop, tldr, fastfetch |
+| Git | Conditional identity (personal/work), delta diffs |
+| AI | Claude Code & Gemini CLI aliases |
 
 ## Installation
 
-To get started with my dotfiles, clone this repository and run the setup script:
-
 ```bash
-git clone https://github.com/username/dotfiles.git
+git clone https://github.com/tctibbs/dotfiles.git
 cd dotfiles
 ./setup.sh
 ```
 
-## Configuring VSCode with Dotfiles
+## Key Bindings
 
-VSCode provides native support for managing dotfiles across remote environments. Follow these steps to set it up:
+### Tmux (Prefix: Ctrl-a)
 
-### 1. Enable Dotfiles Sync in VSCode
+| Key | Action |
+|-----|--------|
+| `\|` | Split horizontal |
+| `-` | Split vertical |
+| `g` | LazyGit popup |
+| `a` | Claude AI popup |
+| `b` | btop popup |
+| `s` | Session picker |
 
-- Open VSCode on your local machine.
-- Navigate to **File > Preferences > Settings** (or press `Ctrl + ,`).
-- Search for **"dotfiles"**.
-- Update the `Remote.SSH: Dotfiles Repository` setting with the Git link to your repository:
+### WezTerm
 
-    ``` bash
-    https://github.com/tctibbs/dotfiles.git
-    ```
+| Key | Action |
+|-----|--------|
+| `Cmd+Enter` | Toggle fullscreen |
+| `Cmd+T` | New tab |
+| `Cmd+W` | Close tab |
+| `Cmd+Shift+R` | Rename tab |
+| `Ctrl+Shift+\|` | Split horizontal |
+| `Ctrl+Shift+_` | Split vertical |
 
-### 2. Apply Dotfiles Automatically on Remote Systems
+## CLI Tool Aliases
 
-- Whenever you connect to a remote system via SSH using VSCode, the repository will automatically clone into the remote user's home directory and execute its `setup.sh` script.
+| Tool   | Replaces     | Description                                     |
+|--------|--------------|-------------------------------------------------|
+| `eza`  | `ls`         | Modern replacement with color, icons, tree view |
+| `bat`  | `cat`        | Syntax-highlighted file viewer with pager       |
+| `dust` | `du`         | Visual disk usage analyzer                      |
+| `procs`| `ps`         | Improved process viewer with color and layout   |
+| `fd`   | `find`       | Fast, user-friendly file search tool            |
+| `tldr` | `man`        | Simplified community-driven command help        |
+| `btop` | `htop`/`top` | Resource monitor with charts and themes         |
+| `fzf`  | -            | Fuzzy finder for command-line                   |
+| `fastfetch` | `neofetch` | Fast system info display                    |
 
-### 3. Example Configuration in settings.json
+## AI CLI Aliases
 
-Update your **settings.json** file with the following:
+| Alias | Command | Description |
+|-------|---------|-------------|
+| `cc`  | `claude --dangerously-skip-permissions` | Claude Code |
+| `ccc` | `claude --dangerously-skip-permissions -c` | Claude Code continue |
+| `gf`  | `gemini --model gemini-2.5-flash` | Gemini Flash |
 
-```json
-{
-    "dotfiles.repository": "https://github.com/tctibbs/dotfiles.git",
-    "dotfiles.installCommand": "~/dotfiles/setup.sh"
-}
-```
+## Documentation
 
-## Handling Multi-Layer SSH Connections
+- [VSCode Integration](docs/vscode.md) - Auto-deploy dotfiles on remote SSH connections
 
-For environments involving multiple layers of SSH (e.g., connecting to a Docker container on a remote Linux server via a Windows PC), configure dotfiles in each layer:
-
-### Layer 1: Local Machine to Remote Linux Server
-
-1. After connecting to the remote server, repeat the above steps within the remote settings of VSCode.
-2. Verify that the dotfiles are correctly applied on the Linux server.
-
-### Layer 2: Remote Linux Server to Docker Container
-
-1. After connecting to the remote server, follow the steps in the previous section to set up dotfiles for the Docker container.
-2. Update the settings.json file inside the remote environment:
-
-    ``` json
-    {
-    "remote.SSH.dotfiles.repository": "https://github.com/tctibbs/dotfiles.git",
-    "remote.SSH.dotfiles.installCommand": "~/dotfiles/setup.sh"
-    }
-    ```
-3. Ensure the Docker container has access to git and the internet to clone the repository.
-
-#### Notes for Multi-Layer Environments
-
-- Each layer (local machine → remote server → container) must be configured individually.
-- Update the dotfiles repository setting within each layer for consistent behavior.
-- Ensure SSH keys or access tokens are correctly configured for Git operations across layers.
