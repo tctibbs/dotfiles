@@ -16,6 +16,7 @@ brew "lazydocker"    # Docker TUI
 brew "mikescher/tap/dops"  # Better docker ps
 brew "procs"         # Better ps
 brew "mcat"          # Markdown cat
+brew "onefetch"      # Git repo info display
 brew "repomix"       # AI context generation
 brew "treemd"        # Markdown directory trees
 brew "starship"      # Shell prompt

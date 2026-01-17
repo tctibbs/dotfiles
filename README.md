@@ -70,6 +70,7 @@ cd dotfiles
 | `repomix` | -            | Pack repo into AI-friendly file             |
 | `mcat`  | -              | Render markdown in terminal                   |
 | `treemd`| `tree`         | Generate markdown directory trees             |
+| `onefetch`| -            | Git repo info display (like neofetch for repos)|
 
 ## AI CLI Aliases
 
