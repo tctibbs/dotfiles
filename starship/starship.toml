@@ -33,6 +33,16 @@ truncation_length = 3
 truncation_symbol = "…/"
 truncate_to_repo = false
 
+[directory.substitutions]
+"~/Documents" = "󰈙 Docs"
+"~/Downloads" = "󰇚 Downloads"
+"~/Music" = "󰝚 Music"
+"~/Pictures" = "󰋩 Pictures"
+"~/Videos" = "󰕧 Videos"
+"~/Code" = "󰅩 Code"
+"~/Work" = "󰃨 Work"
+"~/.config" = "󰒓 Config"
+
 [git_branch]
 style = "fg:green"
 symbol = " "

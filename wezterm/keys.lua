@@ -15,6 +15,9 @@ function module.apply(config, wezterm)
     local mod_shift = is_mac and "CMD|SHIFT" or "CTRL|SHIFT"
 
     config.keys = {
+        -- Toggle fullscreen (Cmd+Enter on Mac, Ctrl+Enter on Windows/Linux)
+        { key = "Enter", mods = mod, action = act.ToggleFullScreen },
+
         -- Tab management (platform-aware)
         { key = "t", mods = mod, action = act.SpawnTab("CurrentPaneDomain") },
         { key = "w", mods = mod, action = act.CloseCurrentTab({ confirm = false }) },
@@ -119,6 +122,7 @@ function module.apply(config, wezterm)
             }),
         },
     }
+
 end
 
 return module
