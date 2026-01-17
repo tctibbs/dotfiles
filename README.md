@@ -18,7 +18,7 @@ Personal configuration for a consistent dev environment across macOS and Linux.
 |----------|-------|
 | Terminal | WezTerm, tmux, starship |
 | Shell | zsh, aliases, exports |
-| CLI Tools | eza, bat, dust, procs, fd, fzf, btop, tldr |
+| CLI Tools | eza, bat, dust, procs, fd, fzf, btop, tldr, fastfetch |
 | Git | Conditional identity (personal/work), delta diffs |
 | AI | Claude Code & Gemini CLI aliases |
 
@@ -66,6 +66,7 @@ cd dotfiles
 | `tldr` | `man`        | Simplified community-driven command help        |
 | `btop` | `htop`/`top` | Resource monitor with charts and themes         |
 | `fzf`  | -            | Fuzzy finder for command-line                   |
+| `fastfetch` | `neofetch` | Fast system info display                    |
 
 ## AI CLI Aliases
 
