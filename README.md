@@ -1,6 +1,6 @@
-![Terminal Screenshot](assets/terminal_screenshot.png)
-
 # Dotfiles
+
+![Terminal Screenshot](assets/terminal_screenshot.png)
 
 Personal configuration for a consistent dev environment across macOS and Linux, with partial support for Windows.
 
