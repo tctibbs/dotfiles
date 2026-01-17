@@ -50,3 +50,26 @@ elif command -v npm &>/dev/null; then
 else
     echo "⚠️  npm not found - skipping repomix install"
 fi
+
+# Install Rust-based tools via cargo
+if command -v cargo &>/dev/null; then
+    # mcat - Markdown cat
+    if command -v mcat &>/dev/null; then
+        echo "✅ mcat is already installed"
+    else
+        echo "📦 Installing mcat via cargo..."
+        cargo install mcat
+        echo "✅ mcat installed"
+    fi
+
+    # treemd - Markdown directory trees
+    if command -v treemd &>/dev/null; then
+        echo "✅ treemd is already installed"
+    else
+        echo "📦 Installing treemd via cargo..."
+        cargo install treemd
+        echo "✅ treemd installed"
+    fi
+else
+    echo "⚠️  cargo not found - skipping mcat and treemd install"
+fi

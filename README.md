@@ -68,6 +68,8 @@ cd dotfiles
 | `fzf`  | -            | Fuzzy finder for command-line                   |
 | `fastfetch` | `neofetch` | Fast system info display                    |
 | `repomix` | -            | Pack repo into AI-friendly file             |
+| `mcat`  | -              | Render markdown in terminal                   |
+| `treemd`| `tree`         | Generate markdown directory trees             |
 
 ## AI CLI Aliases
 
