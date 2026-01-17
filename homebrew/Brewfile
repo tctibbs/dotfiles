@@ -15,6 +15,7 @@ brew "git-delta"     # Git syntax highlighting
 brew "lazydocker"    # Docker TUI
 brew "mikescher/tap/dops"  # Better docker ps
 brew "procs"         # Better ps
+brew "repomix"       # AI context generation
 brew "starship"      # Shell prompt
 brew "tldr"          # Simplified man pages
 brew "tmux"          # Terminal multiplexer
