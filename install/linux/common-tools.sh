@@ -8,6 +8,9 @@ COMMON_TOOLS=(
     "bat"
     "zoxide"
     "tmux"
+    "pgcli"
+    "mycli"
+    "litecli"
 )
 
 echo "📦 Installing common Linux tools via apt..."
@@ -49,21 +52,6 @@ elif command -v npm &>/dev/null; then
     echo "✅ repomix installed"
 else
     echo "⚠️  npm not found - skipping repomix install"
-fi
-
-# Database CLIs via pip
-if command -v pip3 &>/dev/null; then
-    for tool in pgcli mycli litecli; do
-        if command -v "$tool" &>/dev/null; then
-            echo "✅ $tool is already installed"
-        else
-            echo "📦 Installing $tool via pip..."
-            pip3 install --user "$tool"
-            echo "✅ $tool installed"
-        fi
-    done
-else
-    echo "⚠️  pip3 not found - skipping database CLIs (pgcli, mycli, litecli)"
 fi
 
 # Install Rust-based tools via cargo-binstall (downloads pre-built binaries)
