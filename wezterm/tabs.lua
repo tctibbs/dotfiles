@@ -33,6 +33,7 @@ local process_icons = {
     ["lua"] = "󰢱",
     ["ruby"] = "",
     ["brew"] = "󱄖",
+    ["man"] = "󰋖",
     -- AI Agents
     ["claude"] = "󰚩",
     ["gemini"] = "󰊭",
@@ -104,13 +105,13 @@ end
 
 function module.apply(config, wezterm)
     -- Format tab title event
-    wezterm.on("format-tab-title", function(tab, tabs, panes, config, hover, max_width)
+    wezterm.on("format-tab-title", function(tab, _tabs, _panes, _config, hover, max_width)
         local process = get_process(tab)
         local title = get_title(tab)
         local icon = get_icon(process, title)
 
         -- Truncate title to fit (accounting for icon and spacing)
-        local available_width = max_width - 4 -- icon + spaces
+        local available_width = math.max(max_width - 4, 1)
         title = truncate(title, available_width)
 
         -- Colors from Catppuccin Mocha

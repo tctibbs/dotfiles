@@ -79,9 +79,8 @@ function module.apply(config, wezterm)
         },
     }
 
-    -- Window appearance (INTEGRATED_BUTTONS gives title bar with native double-click to maximize)
+    -- Window appearance (INTEGRATED_BUTTONS gives title bar with double-click to maximize)
     config.window_decorations = "INTEGRATED_BUTTONS|RESIZE"
-    config.integrated_title_button_style = "Windows"
     config.integrated_title_button_alignment = "Right"
     config.window_padding = {
         left = 8,
