@@ -84,8 +84,8 @@ if command -v cargo &>/dev/null; then
     if command -v yazi &>/dev/null; then
         echo "✅ yazi is already installed"
     else
-        echo "📦 Installing yazi via cargo..."
-        cargo install --locked yazi-fm yazi-cli
+        echo "📦 Installing yazi via cargo (this may take a while)..."
+        cargo install --force yazi-build
         echo "✅ yazi installed"
     fi
 else
