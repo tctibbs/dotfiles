@@ -40,6 +40,17 @@ else
   echo "⚠️  'procs' not found - skipping procs aliases" >&2
 fi
 
+# Claude Code aliases
+if command -v claude >/dev/null 2>&1; then
+  alias cc='claude --dangerously-skip-permissions'
+  alias ccc='claude --dangerously-skip-permissions -c'
+fi
+
+# Gemini CLI aliases
+if command -v gemini >/dev/null 2>&1; then
+  alias gem='gemini --model gemini-2.5-flash'
+fi
+
 # Source getcontext functions if available
 # Try multiple possible locations for the dotfiles
 if [[ -f "${0:A:h}/../scripts/getcontext.zsh" ]]; then
