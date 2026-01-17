@@ -63,6 +63,11 @@ if command -v yazi &>/dev/null; then
   }
 fi
 
+# Database config editor - quick access to gobang config
+if command -v gobang &>/dev/null; then
+  alias dbconfig='${EDITOR:-nano} ~/.config/gobang/config.toml'
+fi
+
 # Source getcontext functions if available
 # Try multiple possible locations for the dotfiles
 if [[ -f "${0:A:h}/../scripts/getcontext.zsh" ]]; then

@@ -8,6 +8,9 @@ COMMON_TOOLS=(
     "bat"
     "zoxide"
     "tmux"
+    "pgcli"
+    "mycli"
+    "litecli"
 )
 
 echo "📦 Installing common Linux tools via apt..."
@@ -51,43 +54,35 @@ else
     echo "⚠️  npm not found - skipping repomix install"
 fi
 
-# Install Rust-based tools via cargo
+# Install Rust-based tools via cargo-binstall (downloads pre-built binaries)
 if command -v cargo &>/dev/null; then
-    # mcat - Markdown cat
-    if command -v mcat &>/dev/null; then
-        echo "✅ mcat is already installed"
-    else
-        echo "📦 Installing mcat via cargo..."
-        cargo install mcat
-        echo "✅ mcat installed"
+    # Install cargo-binstall if not present (downloads pre-built binary)
+    if ! command -v cargo-binstall &>/dev/null; then
+        echo "📦 Installing cargo-binstall..."
+        curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
     fi
 
-    # treemd - Markdown directory trees
-    if command -v treemd &>/dev/null; then
-        echo "✅ treemd is already installed"
-    else
-        echo "📦 Installing treemd via cargo..."
-        cargo install treemd
-        echo "✅ treemd installed"
-    fi
+    # Tools to install via binstall
+    RUST_TOOLS=(mcat treemd onefetch yazi)
 
-    # onefetch - Git repo info display
-    if command -v onefetch &>/dev/null; then
-        echo "✅ onefetch is already installed"
-    else
-        echo "📦 Installing onefetch via cargo..."
-        cargo install onefetch
-        echo "✅ onefetch installed"
-    fi
+    for tool in "${RUST_TOOLS[@]}"; do
+        if command -v "$tool" &>/dev/null; then
+            echo "✅ $tool is already installed"
+        else
+            echo "📦 Installing $tool via cargo-binstall..."
+            cargo binstall -y "$tool"
+            echo "✅ $tool installed"
+        fi
+    done
 
-    # yazi - Terminal file manager
-    if command -v yazi &>/dev/null; then
-        echo "✅ yazi is already installed"
+    # gobang needs version pin (not fully published to crates.io)
+    if command -v gobang &>/dev/null; then
+        echo "✅ gobang is already installed"
     else
-        echo "📦 Installing yazi via cargo..."
-        cargo install --locked yazi-fm yazi-cli
-        echo "✅ yazi installed"
+        echo "📦 Installing gobang via cargo-binstall..."
+        cargo binstall -y gobang@0.1.0-alpha.5
+        echo "✅ gobang installed"
     fi
 else
-    echo "⚠️  cargo not found - skipping Rust tools (mcat, treemd, onefetch, yazi)"
+    echo "⚠️  cargo not found - skipping Rust tools (gobang, mcat, treemd, onefetch, yazi)"
 fi

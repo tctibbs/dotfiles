@@ -65,6 +65,10 @@ cd dotfiles
 | `fd`   | `find`       | Fast, user-friendly file search tool            |
 | `tldr` | `man`        | Simplified community-driven command help        |
 | `btop` | `htop`/`top` | Resource monitor with charts and themes         |
+| `pgcli`| `psql`       | PostgreSQL CLI with auto-completion             |
+| `mycli`| `mysql`      | MySQL CLI with auto-completion                  |
+| `litecli`| `sqlite3`  | SQLite CLI with auto-completion                 |
+| `gobang`| -           | Database TUI for multiple databases             |
 | `fzf`  | -            | Fuzzy finder for command-line                   |
 | `fastfetch` | `neofetch` | Fast system info display                    |
 | `repomix` | -            | Pack repo into AI-friendly file             |
