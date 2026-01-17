@@ -79,6 +79,15 @@ if command -v cargo &>/dev/null; then
         cargo install onefetch
         echo "✅ onefetch installed"
     fi
+
+    # yazi - Terminal file manager
+    if command -v yazi &>/dev/null; then
+        echo "✅ yazi is already installed"
+    else
+        echo "📦 Installing yazi via cargo..."
+        cargo install --locked yazi-fm yazi-cli
+        echo "✅ yazi installed"
+    fi
 else
-    echo "⚠️  cargo not found - skipping mcat, treemd, and onefetch install"
+    echo "⚠️  cargo not found - skipping Rust tools (mcat, treemd, onefetch, yazi)"
 fi

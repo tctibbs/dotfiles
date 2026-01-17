@@ -19,6 +19,7 @@ brew "mcat"          # Markdown cat
 brew "onefetch"      # Git repo info display
 brew "repomix"       # AI context generation
 brew "treemd"        # Markdown directory trees
+brew "yazi"          # Terminal file manager
 brew "starship"      # Shell prompt
 brew "tldr"          # Simplified man pages
 brew "tmux"          # Terminal multiplexer
