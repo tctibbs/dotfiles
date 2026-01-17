@@ -41,10 +41,12 @@ done
 echo "🎉 All common Linux tools installed successfully!"
 
 # Install repomix via npm (requires Node.js)
-if command -v npm &>/dev/null; then
+if command -v repomix &>/dev/null; then
+    echo "✅ repomix is already installed"
+elif command -v npm &>/dev/null; then
     echo "📦 Installing repomix via npm..."
     npm install -g repomix
     echo "✅ repomix installed"
 else
     echo "⚠️  npm not found - skipping repomix install"
-fi 
+fi
