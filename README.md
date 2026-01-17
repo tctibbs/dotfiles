@@ -1,4 +1,4 @@
-![Dotfiles Banner](assets/dotfiles_banner.png)
+![Terminal Screenshot](assets/terminal_screenshot.png)
 
 # Dotfiles
 
@@ -80,6 +80,3 @@ cd dotfiles
 
 - [VSCode Integration](docs/vscode.md) - Auto-deploy dotfiles on remote SSH connections
 
-## Screenshot
-
-![Terminal Setup](assets/terminal_screenshot.png)
