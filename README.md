@@ -67,6 +67,7 @@ cd dotfiles
 | `btop` | `htop`/`top` | Resource monitor with charts and themes         |
 | `fzf`  | -            | Fuzzy finder for command-line                   |
 | `fastfetch` | `neofetch` | Fast system info display                    |
+| `repomix` | -            | Pack repo into AI-friendly file             |
 
 ## AI CLI Aliases
 
