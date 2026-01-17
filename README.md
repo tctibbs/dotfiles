@@ -75,6 +75,10 @@ cd dotfiles
 | `ccc` | `claude --dangerously-skip-permissions -c` | Claude Code continue |
 | `gf`  | `gemini --model gemini-2.5-flash` | Gemini Flash |
 
+## Documentation
+
+- [VSCode Integration](docs/vscode.md) - Auto-deploy dotfiles on remote SSH connections
+
 ## Screenshot
 
 ![Terminal Setup](assets/terminal_screenshot.png)
