@@ -71,6 +71,7 @@ cd dotfiles
 | `mcat`  | -              | Render markdown in terminal                   |
 | `treemd`| `tree`         | Generate markdown directory trees             |
 | `onefetch`| -            | Git repo info display (like neofetch for repos)|
+| `yazi`  | -              | Terminal file manager with previews             |
 
 ## AI CLI Aliases
 

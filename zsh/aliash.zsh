@@ -51,6 +51,18 @@ if command -v gemini &>/dev/null; then
   alias gf='gemini --model gemini-2.5-flash'
 fi
 
+# yazi - cd to directory on exit
+if command -v yazi &>/dev/null; then
+  function y() {
+    local tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
+    yazi "$@" --cwd-file="$tmp"
+    if cwd="$(cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
+      cd -- "$cwd"
+    fi
+    rm -f -- "$tmp"
+  }
+fi
+
 # Source getcontext functions if available
 # Try multiple possible locations for the dotfiles
 if [[ -f "${0:A:h}/../scripts/getcontext.zsh" ]]; then
