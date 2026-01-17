@@ -2,7 +2,7 @@
 
 # Dotfiles
 
-Personal configuration for a consistent dev environment across macOS and Linux.
+Personal configuration for a consistent dev environment across macOS and Linux, with partial support for Windows.
 
 ## Features
 
