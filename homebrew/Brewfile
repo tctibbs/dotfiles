@@ -1,5 +1,6 @@
 # Taps
 tap "mikescher/tap"
+tap "tako8ki/tap"
 
 # CLI Tools
 brew "bat"           # Better cat
@@ -14,8 +15,12 @@ brew "fzf"           # Fuzzy finder
 brew "git-delta"     # Git syntax highlighting
 brew "lazydocker"    # Docker TUI
 brew "mikescher/tap/dops"  # Better docker ps
+brew "pgcli"         # PostgreSQL CLI
 brew "procs"         # Better ps
+brew "litecli"       # SQLite CLI
 brew "mcat"          # Markdown cat
+brew "mycli"         # MySQL CLI
+brew "tako8ki/tap/gobang"  # Database TUI
 brew "onefetch"      # Git repo info display
 brew "repomix"       # AI context generation
 brew "treemd"        # Markdown directory trees
