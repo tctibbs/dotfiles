@@ -51,7 +51,8 @@ $files = @(
     @{Source = ".wezterm.lua"; Dest = "wezterm.lua"},
     @{Source = "theme.lua"; Dest = "theme.lua"},
     @{Source = "platform.lua"; Dest = "platform.lua"},
-    @{Source = "keys.lua"; Dest = "keys.lua"}
+    @{Source = "keys.lua"; Dest = "keys.lua"},
+    @{Source = "tabs.lua"; Dest = "tabs.lua"}
 )
 
 foreach ($file in $files) {
@@ -80,6 +81,14 @@ if (Test-Path $IconsSource) {
     if (Test-Path $IconsDest) { Remove-Item $IconsDest -Recurse -Force }
     Copy-Item -Recurse $IconsSource $IconsDest
     Write-Host "  Copied icons/" -ForegroundColor Green
+}
+
+# Copy background image
+$BackgroundSource = Join-Path $ScriptDir "background.jpg"
+$BackgroundDest = Join-Path $ConfigDir "background.jpg"
+if (Test-Path $BackgroundSource) {
+    Copy-Item $BackgroundSource $BackgroundDest -Force
+    Write-Host "  Copied background.jpg" -ForegroundColor Green
 }
 
 # Update Start Menu shortcut icon
