@@ -69,9 +69,25 @@ if (Get-Module -ListAvailable -Name PSReadLine) {
     try {
         Import-Module PSReadLine -ErrorAction Stop
 
-        # Enable predictive IntelliSense
-        Set-PSReadLineOption -PredictionSource History
-        Set-PSReadLineOption -PredictionViewStyle ListView
+        # Get PSReadLine version to check for feature availability
+        $psReadLineVersion = (Get-Module PSReadLine).Version
+
+        # Enable predictive IntelliSense (PSReadLine 2.1.0+)
+        if ($psReadLineVersion -ge [Version]"2.1.0") {
+            try {
+                Set-PSReadLineOption -PredictionSource History -ErrorAction SilentlyContinue
+                Set-PSReadLineOption -PredictionViewStyle ListView -ErrorAction SilentlyContinue
+            } catch {
+                # Predictive features not available in this version
+            }
+        } else {
+            # Inform user about PSReadLine update (only show once per session)
+            if (-not $env:PSREADLINE_UPDATE_NOTIFIED) {
+                Write-Host "Tip: Update PSReadLine for predictive IntelliSense (current: $psReadLineVersion)" -ForegroundColor DarkGray
+                Write-Host "  Install-Module PSReadLine -Force -SkipPublisherCheck" -ForegroundColor DarkGray
+                $env:PSREADLINE_UPDATE_NOTIFIED = "1"
+            }
+        }
 
         # Enhanced tab completion
         Set-PSReadLineKeyHandler -Key Tab -Function MenuComplete

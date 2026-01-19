@@ -137,24 +137,28 @@ if (Test-Command cargo) {
     }
 }
 
-# Install cargo-binstall for faster binary installations (works without MSVC)
+# Install cargo-binstall for faster binary installations (also requires MSVC)
 if (Test-Command cargo) {
     if (-not (Test-Command cargo-binstall)) {
-        Write-Host "  Installing cargo-binstall for faster binary downloads..." -ForegroundColor Yellow
-        try {
-            cargo install cargo-binstall
+        if ($HasMSVC) {
+            Write-Host "  Installing cargo-binstall for faster binary downloads..." -ForegroundColor Yellow
+            try {
+                cargo install cargo-binstall
 
-            # Refresh PATH to pick up newly installed binary
-            $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+                # Refresh PATH to pick up newly installed binary
+                $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
 
-            # Verify installation
-            if (Test-Command cargo-binstall) {
-                Write-Host "  cargo-binstall installed" -ForegroundColor Green
-            } else {
-                Write-Host "  cargo-binstall installed but not in PATH - will use cargo install" -ForegroundColor Yellow
+                # Verify installation
+                if (Test-Command cargo-binstall) {
+                    Write-Host "  cargo-binstall installed" -ForegroundColor Green
+                } else {
+                    Write-Host "  cargo-binstall installed but not in PATH - restart PowerShell" -ForegroundColor Yellow
+                }
+            } catch {
+                Write-Host "  Failed to install cargo-binstall" -ForegroundColor Yellow
             }
-        } catch {
-            Write-Host "  Failed to install cargo-binstall - will use cargo install" -ForegroundColor Yellow
+        } else {
+            Write-Host "  Skipping cargo-binstall (requires MSVC to compile)" -ForegroundColor Yellow
         }
     }
 
