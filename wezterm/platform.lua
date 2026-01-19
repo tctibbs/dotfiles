@@ -27,9 +27,9 @@ function module.apply(config, wezterm)
         -- Windows settings (WSL integration)
         config.wsl_domains = wezterm.default_wsl_domains()
 
-        -- Set default to PowerShell (reliable fallback)
-        -- WSL distributions will still be available via launcher menu
-        config.default_prog = { "pwsh.exe", "-NoLogo" }
+        -- Use PowerShell 5 as default (guaranteed to exist on all Windows)
+        -- Users can switch to PowerShell 7 or WSL via the launcher (Ctrl+Shift+P)
+        config.default_prog = { "powershell.exe", "-NoLogo" }
 
         -- Launch menu with common shells
         config.launch_menu = {

@@ -29,6 +29,36 @@ if (-not (Get-Command wezterm -ErrorAction SilentlyContinue)) {
     Write-Host "WezTerm is already installed" -ForegroundColor Green
 }
 
+# Install FiraCode Nerd Font if not present
+Write-Host ""
+Write-Host "Checking for FiraCode Nerd Font..."
+$FontInstalled = $false
+$FontsFolder = [Environment]::GetFolderPath("Fonts")
+
+# Check if font is installed (look for any FiraCode NF file)
+$FontFiles = Get-ChildItem -Path $FontsFolder -Filter "*FiraCode*NF*.ttf" -ErrorAction SilentlyContinue
+if ($FontFiles.Count -gt 0) {
+    Write-Host "FiraCode Nerd Font is already installed" -ForegroundColor Green
+    $FontInstalled = $true
+}
+
+if (-not $FontInstalled) {
+    Write-Host "FiraCode Nerd Font not found. Installing..." -ForegroundColor Yellow
+    if (Get-Command winget -ErrorAction SilentlyContinue) {
+        try {
+            winget install DEVCOM.FiraCodeNerdFont --accept-package-agreements --accept-source-agreements
+            Write-Host "FiraCode Nerd Font installed" -ForegroundColor Green
+            Write-Host "Note: You may need to restart WezTerm to see the font" -ForegroundColor Yellow
+        } catch {
+            Write-Host "Failed to install FiraCode Nerd Font via winget" -ForegroundColor Yellow
+            Write-Host "Download manually from: https://www.nerdfonts.com/font-downloads" -ForegroundColor Yellow
+        }
+    } else {
+        Write-Host "winget not found. Install FiraCode Nerd Font manually from:" -ForegroundColor Yellow
+        Write-Host "  https://www.nerdfonts.com/font-downloads" -ForegroundColor Yellow
+    }
+}
+
 # Create config directory
 New-Item -ItemType Directory -Force -Path $ConfigDir | Out-Null
 
