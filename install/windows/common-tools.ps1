@@ -113,7 +113,31 @@ if (-not (Test-Command cargo)) {
     }
 }
 
-# Install cargo-binstall for faster binary installations
+# Check for MSVC linker (required for cargo compilation)
+$HasMSVC = $false
+if (Test-Command cargo) {
+    # Test if link.exe is available (MSVC linker)
+    if (Get-Command link.exe -ErrorAction SilentlyContinue) {
+        $HasMSVC = $true
+    } else {
+        Write-Host ""
+        Write-Host "  WARNING: MSVC linker (link.exe) not found" -ForegroundColor Yellow
+        Write-Host "  Cargo tools require Visual Studio C++ Build Tools to compile" -ForegroundColor Yellow
+        Write-Host ""
+        Write-Host "  Install via winget:" -ForegroundColor Cyan
+        Write-Host "    winget install Microsoft.VisualStudio.2022.BuildTools" -ForegroundColor Cyan
+        Write-Host "    - Select 'Desktop development with C++' workload" -ForegroundColor Cyan
+        Write-Host ""
+        Write-Host "  Or download manually:" -ForegroundColor Cyan
+        Write-Host "    https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022" -ForegroundColor Cyan
+        Write-Host ""
+        Write-Host "  Skipping cargo tools that require compilation..." -ForegroundColor Yellow
+        Write-Host "  Using cargo-binstall for pre-built binaries where available" -ForegroundColor Yellow
+        Write-Host ""
+    }
+}
+
+# Install cargo-binstall for faster binary installations (works without MSVC)
 if (Test-Command cargo) {
     if (-not (Test-Command cargo-binstall)) {
         Write-Host "  Installing cargo-binstall for faster binary downloads..." -ForegroundColor Yellow
@@ -148,8 +172,12 @@ if (Test-Command cargo) {
         try {
             if (Test-Command cargo-binstall) {
                 cargo-binstall -y $tool
-            } else {
+            } elseif ($HasMSVC) {
                 cargo install $tool
+            } else {
+                Write-Host "  Skipping $toolName (requires MSVC to compile)" -ForegroundColor Yellow
+                $Failed += $toolName
+                continue
             }
             if (Test-Command $toolName) {
                 Write-Host "  $toolName installed" -ForegroundColor Green
@@ -178,8 +206,12 @@ if (Test-Command cargo) {
         try {
             if (Test-Command cargo-binstall) {
                 cargo-binstall -y $tool $argsList
-            } else {
+            } elseif ($HasMSVC) {
                 cargo install $tool $argsList
+            } else {
+                Write-Host "  Skipping $tool (requires MSVC to compile)" -ForegroundColor Yellow
+                $Failed += $tool
+                continue
             }
             if (Test-Command $tool) {
                 Write-Host "  $tool installed" -ForegroundColor Green
