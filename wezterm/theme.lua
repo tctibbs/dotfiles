@@ -5,8 +5,12 @@ local module = {}
 
 function module.apply(config, wezterm)
     -- Font configuration
+    -- Try multiple FiraCode Nerd Font name variants
     config.font = wezterm.font_with_fallback({
+        { family = "FiraCode Nerd Font Mono", weight = "Regular" },
         { family = "FiraCode Nerd Font", weight = "Regular" },
+        { family = "FiraCode NF", weight = "Regular" },
+        { family = "FiraCodeNF", weight = "Regular" },
         "Consolas",
         "Monaco",
     })
