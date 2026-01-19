@@ -44,18 +44,66 @@ if ($FontFiles.Count -gt 0) {
 
 if (-not $FontInstalled) {
     Write-Host "FiraCode Nerd Font not found. Installing..." -ForegroundColor Yellow
-    if (Get-Command winget -ErrorAction SilentlyContinue) {
-        try {
-            winget install DEVCOM.FiraCodeNerdFont --accept-package-agreements --accept-source-agreements
-            Write-Host "FiraCode Nerd Font installed" -ForegroundColor Green
-            Write-Host "Note: You may need to restart WezTerm to see the font" -ForegroundColor Yellow
-        } catch {
-            Write-Host "Failed to install FiraCode Nerd Font via winget" -ForegroundColor Yellow
-            Write-Host "Download manually from: https://www.nerdfonts.com/font-downloads" -ForegroundColor Yellow
+
+    # Download and install directly from GitHub (most reliable)
+    try {
+        $TempDir = Join-Path $env:TEMP "FiraCodeNF"
+        $ZipPath = Join-Path $TempDir "FiraCode.zip"
+        New-Item -ItemType Directory -Force -Path $TempDir | Out-Null
+
+        Write-Host "  Downloading FiraCode Nerd Font from GitHub..." -ForegroundColor Cyan
+        $FontUrl = "https://github.com/ryanoasis/nerd-fonts/releases/download/v3.1.1/FiraCode.zip"
+        Invoke-WebRequest -Uri $FontUrl -OutFile $ZipPath -UseBasicParsing
+
+        Write-Host "  Extracting font files..." -ForegroundColor Cyan
+        Expand-Archive -Path $ZipPath -DestinationPath $TempDir -Force
+
+        Write-Host "  Installing fonts..." -ForegroundColor Cyan
+        $FontFiles = Get-ChildItem -Path $TempDir -Filter "*.ttf" | Where-Object { $_.Name -notmatch "Windows Compatible" }
+
+        # Install fonts (requires admin for system-wide, but user fonts work too)
+        $FontsInstalled = 0
+        $FONTS = 0x14
+        $Shell = New-Object -ComObject Shell.Application
+        $FontsFolder = $Shell.Namespace($FONTS)
+
+        foreach ($FontFile in $FontFiles) {
+            try {
+                # Copy to user fonts directory (doesn't need admin)
+                $UserFontsPath = Join-Path $env:LOCALAPPDATA "Microsoft\Windows\Fonts"
+                New-Item -ItemType Directory -Force -Path $UserFontsPath | Out-Null
+                Copy-Item $FontFile.FullName -Destination $UserFontsPath -Force
+
+                # Register font in registry
+                $FontName = [System.IO.Path]::GetFileNameWithoutExtension($FontFile.Name)
+                $RegPath = "HKCU:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts"
+                New-ItemProperty -Path $RegPath -Name "$FontName (TrueType)" -Value $FontFile.Name -PropertyType String -Force | Out-Null
+
+                $FontsInstalled++
+            } catch {
+                # Silent fail for individual fonts
+            }
         }
-    } else {
-        Write-Host "winget not found. Install FiraCode Nerd Font manually from:" -ForegroundColor Yellow
-        Write-Host "  https://www.nerdfonts.com/font-downloads" -ForegroundColor Yellow
+
+        # Cleanup
+        Remove-Item -Path $TempDir -Recurse -Force -ErrorAction SilentlyContinue
+
+        if ($FontsInstalled -gt 0) {
+            Write-Host "FiraCode Nerd Font installed ($FontsInstalled files)" -ForegroundColor Green
+            Write-Host "Note: Restart WezTerm to see the font" -ForegroundColor Yellow
+            $FontInstalled = $true
+        } else {
+            throw "No fonts were installed"
+        }
+
+    } catch {
+        Write-Host "  Automatic installation failed: $_" -ForegroundColor Yellow
+        Write-Host ""
+        Write-Host "  Please install manually:" -ForegroundColor Yellow
+        Write-Host "    1. Download: https://github.com/ryanoasis/nerd-fonts/releases/download/v3.1.1/FiraCode.zip" -ForegroundColor Cyan
+        Write-Host "    2. Extract and right-click .ttf files" -ForegroundColor Cyan
+        Write-Host "    3. Select 'Install' or 'Install for all users'" -ForegroundColor Cyan
+        Write-Host ""
     }
 }
 
