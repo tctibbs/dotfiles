@@ -17,17 +17,29 @@ $env:BAT_THEME = "Visual Studio Dark+"
 # PATH Configuration
 # ============================================================================
 
+# Helper function to add paths without duplication
+function Add-ToPath {
+    param(
+        [string]$PathToAdd
+    )
+    if (Test-Path $PathToAdd) {
+        # Check if path is already in PATH (case-insensitive)
+        $currentPaths = $env:PATH -split ';'
+        $pathExists = $currentPaths | Where-Object { $_.TrimEnd('\') -eq $PathToAdd.TrimEnd('\') }
+
+        if (-not $pathExists) {
+            $env:PATH = "$PathToAdd;$env:PATH"
+        }
+    }
+}
+
 # Add user local bin to PATH
 $LocalBin = Join-Path $env:USERPROFILE ".local\bin"
-if (Test-Path $LocalBin) {
-    $env:PATH = "$LocalBin;$env:PATH"
-}
+Add-ToPath $LocalBin
 
 # Add cargo bin to PATH
 $CargoBin = Join-Path $env:USERPROFILE ".cargo\bin"
-if (Test-Path $CargoBin) {
-    $env:PATH = "$CargoBin;$env:PATH"
-}
+Add-ToPath $CargoBin
 
 # ============================================================================
 # Tool Initialization
@@ -54,26 +66,30 @@ if (Get-Command fnm -ErrorAction SilentlyContinue) {
 
 # Import PSReadLine module
 if (Get-Module -ListAvailable -Name PSReadLine) {
-    Import-Module PSReadLine
+    try {
+        Import-Module PSReadLine -ErrorAction Stop
 
-    # Enable predictive IntelliSense
-    Set-PSReadLineOption -PredictionSource History
-    Set-PSReadLineOption -PredictionViewStyle ListView
+        # Enable predictive IntelliSense
+        Set-PSReadLineOption -PredictionSource History
+        Set-PSReadLineOption -PredictionViewStyle ListView
 
-    # Enhanced tab completion
-    Set-PSReadLineKeyHandler -Key Tab -Function MenuComplete
+        # Enhanced tab completion
+        Set-PSReadLineKeyHandler -Key Tab -Function MenuComplete
 
-    # Bash-like completion
-    Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward
-    Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward
+        # Bash-like completion
+        Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward
+        Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward
 
-    # Useful shortcuts
-    Set-PSReadLineKeyHandler -Chord 'Ctrl+d' -Function DeleteChar
-    Set-PSReadLineKeyHandler -Chord 'Ctrl+w' -Function BackwardDeleteWord
+        # Useful shortcuts
+        Set-PSReadLineKeyHandler -Chord 'Ctrl+d' -Function DeleteChar
+        Set-PSReadLineKeyHandler -Chord 'Ctrl+w' -Function BackwardDeleteWord
 
-    # Better history
-    Set-PSReadLineOption -HistorySearchCursorMovesToEnd
-    Set-PSReadLineOption -MaximumHistoryCount 10000
+        # Better history
+        Set-PSReadLineOption -HistorySearchCursorMovesToEnd
+        Set-PSReadLineOption -MaximumHistoryCount 10000
+    } catch {
+        Write-Warning "Failed to configure PSReadLine: $_"
+    }
 }
 
 # ============================================================================

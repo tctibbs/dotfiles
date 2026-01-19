@@ -76,7 +76,7 @@ Write-ColorOutput "========================================" "Blue"
 Write-ColorOutput "   Setting up Starship prompt..." "Blue"
 Write-ColorOutput "========================================" "Blue"
 Write-Host ""
-$StarshipScript = Join-Path $ScriptDir "starship" "install.ps1"
+$StarshipScript = Join-Path (Join-Path $ScriptDir "starship") "install.ps1"
 if (Test-Path $StarshipScript) {
     & $StarshipScript
 } else {
@@ -89,7 +89,7 @@ Write-ColorOutput "========================================" "Blue"
 Write-ColorOutput "   Setting up WezTerm..." "Blue"
 Write-ColorOutput "========================================" "Blue"
 Write-Host ""
-$WeztermScript = Join-Path $ScriptDir "wezterm" "install.ps1"
+$WeztermScript = Join-Path (Join-Path $ScriptDir "wezterm") "install.ps1"
 if (Test-Path $WeztermScript) {
     & $WeztermScript
 } else {
@@ -102,7 +102,7 @@ Write-ColorOutput "========================================" "Blue"
 Write-ColorOutput "   Setting up Git configuration..." "Blue"
 Write-ColorOutput "========================================" "Blue"
 Write-Host ""
-$GitScript = Join-Path $ScriptDir "git" "install.ps1"
+$GitScript = Join-Path (Join-Path $ScriptDir "git") "install.ps1"
 if (Test-Path $GitScript) {
     & $GitScript
 } else {
@@ -115,7 +115,7 @@ Write-ColorOutput "========================================" "Blue"
 Write-ColorOutput "   Installing common CLI tools..." "Blue"
 Write-ColorOutput "========================================" "Blue"
 Write-Host ""
-$ToolsScript = Join-Path $ScriptDir "install" "windows" "common-tools.ps1"
+$ToolsScript = Join-Path (Join-Path (Join-Path $ScriptDir "install") "windows") "common-tools.ps1"
 if (Test-Path $ToolsScript) {
     & $ToolsScript
 } else {
@@ -128,7 +128,7 @@ Write-ColorOutput "========================================" "Blue"
 Write-ColorOutput "   Setting up PowerShell profile..." "Blue"
 Write-ColorOutput "========================================" "Blue"
 Write-Host ""
-$ProfileScript = Join-Path $ScriptDir "install" "windows" "setup-powershell.ps1"
+$ProfileScript = Join-Path (Join-Path (Join-Path $ScriptDir "install") "windows") "setup-powershell.ps1"
 if (Test-Path $ProfileScript) {
     & $ProfileScript
 } else {

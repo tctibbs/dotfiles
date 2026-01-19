@@ -3,6 +3,11 @@
 # ================================
 # Links PowerShell profile and aliases to correct locations
 
+param(
+    [switch]$SkipReload,
+    [switch]$NonInteractive
+)
+
 $ErrorActionPreference = "Stop"
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -139,16 +144,23 @@ Write-Host "  . `$PROFILE" -ForegroundColor Cyan
 Write-Host ""
 
 # Offer to reload profile
-$Reload = Read-Host "Reload profile now? (y/n)"
-if ($Reload -eq 'y' -or $Reload -eq 'Y') {
-    try {
-        . $ProfilePath
-        Write-Host ""
-        Write-Host "Profile reloaded successfully" -ForegroundColor Green
-    } catch {
-        Write-Host ""
-        Write-Host "Error reloading profile: $_" -ForegroundColor Red
-        Write-Host "Please restart PowerShell to load the new profile" -ForegroundColor Yellow
+if (-not $SkipReload -and -not $NonInteractive) {
+    # Check if running in non-interactive mode
+    if ([Environment]::UserInteractive -and -not [Console]::IsInputRedirected) {
+        $Reload = Read-Host "Reload profile now? (y/n)"
+        if ($Reload -eq 'y' -or $Reload -eq 'Y') {
+            try {
+                . $ProfilePath
+                Write-Host ""
+                Write-Host "Profile reloaded successfully" -ForegroundColor Green
+            } catch {
+                Write-Host ""
+                Write-Host "Error reloading profile: $_" -ForegroundColor Red
+                Write-Host "Please restart PowerShell to load the new profile" -ForegroundColor Yellow
+            }
+        }
+    } else {
+        Write-Host "Running in non-interactive mode - skipping profile reload" -ForegroundColor Yellow
     }
 }
 

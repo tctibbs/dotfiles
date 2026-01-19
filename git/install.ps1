@@ -18,11 +18,20 @@ if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
     Write-Host "Git is not installed. Installing via winget..." -ForegroundColor Yellow
 
     if (Get-Command winget -ErrorAction SilentlyContinue) {
-        winget install Git.Git --accept-package-agreements --accept-source-agreements
-        Write-Host "Git installed" -ForegroundColor Green
+        $installResult = winget install Git.Git --accept-package-agreements --accept-source-agreements
 
         # Refresh PATH for current session
         $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+
+        # Verify Git is now available
+        if (Get-Command git -ErrorAction SilentlyContinue) {
+            Write-Host "Git installed" -ForegroundColor Green
+        } else {
+            Write-Host "Git installation completed but not found in PATH" -ForegroundColor Yellow
+            Write-Host "Please restart PowerShell and run this script again" -ForegroundColor Yellow
+            Write-Host "If the issue persists, install Git manually from: https://git-scm.com/download/win" -ForegroundColor Yellow
+            exit 0
+        }
     } else {
         Write-Host "winget not found. Please install Git manually from:" -ForegroundColor Red
         Write-Host "  https://git-scm.com/download/win" -ForegroundColor Red

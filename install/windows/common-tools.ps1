@@ -119,14 +119,20 @@ if (Test-Command cargo) {
         Write-Host "  Installing cargo-binstall for faster binary downloads..." -ForegroundColor Yellow
         try {
             cargo install cargo-binstall
-            Write-Host "  cargo-binstall installed" -ForegroundColor Green
+
+            # Refresh PATH to pick up newly installed binary
+            $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+
+            # Verify installation
+            if (Test-Command cargo-binstall) {
+                Write-Host "  cargo-binstall installed" -ForegroundColor Green
+            } else {
+                Write-Host "  cargo-binstall installed but not in PATH - will use cargo install" -ForegroundColor Yellow
+            }
         } catch {
             Write-Host "  Failed to install cargo-binstall - will use cargo install" -ForegroundColor Yellow
         }
     }
-
-    # Determine install command (prefer binstall if available)
-    $cargoInstallCmd = if (Test-Command cargo-binstall) { "cargo-binstall -y" } else { "cargo install" }
 
     # Install regular cargo tools
     foreach ($tool in $CargoTools) {
@@ -140,7 +146,11 @@ if (Test-Command cargo) {
 
         Write-Host "  Installing $toolName via cargo..." -ForegroundColor Yellow
         try {
-            Invoke-Expression "$cargoInstallCmd $tool"
+            if (Test-Command cargo-binstall) {
+                cargo-binstall -y $tool
+            } else {
+                cargo install $tool
+            }
             if (Test-Command $toolName) {
                 Write-Host "  $toolName installed" -ForegroundColor Green
                 $Installed += $toolName
@@ -162,10 +172,15 @@ if (Test-Command cargo) {
             continue
         }
 
-        $args = $SpecialCargoTools[$tool]
+        $toolArgs = $SpecialCargoTools[$tool]
+        $argsList = $toolArgs.Split(' ')
         Write-Host "  Installing $tool via cargo..." -ForegroundColor Yellow
         try {
-            Invoke-Expression "$cargoInstallCmd $tool $args"
+            if (Test-Command cargo-binstall) {
+                cargo-binstall -y $tool $argsList
+            } else {
+                cargo install $tool $argsList
+            }
             if (Test-Command $tool) {
                 Write-Host "  $tool installed" -ForegroundColor Green
                 $Installed += $tool
