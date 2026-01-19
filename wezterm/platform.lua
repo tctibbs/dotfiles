@@ -25,11 +25,16 @@ function module.apply(config, wezterm)
 
     elseif is_windows then
         -- Windows settings (WSL integration)
-        config.default_domain = "WSL:Ubuntu"
         config.wsl_domains = wezterm.default_wsl_domains()
-        -- Fallback if WSL not available
+
+        -- Set default to PowerShell (reliable fallback)
+        -- WSL distributions will still be available via launcher menu
+        config.default_prog = { "pwsh.exe", "-NoLogo" }
+
+        -- Launch menu with common shells
         config.launch_menu = {
-            { label = "PowerShell", args = { "powershell.exe", "-NoLogo" } },
+            { label = "PowerShell 7", args = { "pwsh.exe", "-NoLogo" } },
+            { label = "PowerShell 5", args = { "powershell.exe", "-NoLogo" } },
             { label = "Command Prompt", args = { "cmd.exe" } },
         }
 
