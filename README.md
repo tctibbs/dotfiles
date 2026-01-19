@@ -2,7 +2,7 @@
 
 ![Terminal Screenshot](assets/terminal_screenshot.png)
 
-Personal configuration for a consistent dev environment across macOS and Linux, with partial support for Windows.
+Personal configuration for a consistent dev environment across macOS, Linux, and Windows.
 
 ## Features
 
@@ -24,11 +24,35 @@ Personal configuration for a consistent dev environment across macOS and Linux, 
 
 ## Installation
 
+### Linux / macOS
+
 ```bash
 git clone https://github.com/tctibbs/dotfiles.git
 cd dotfiles
 ./setup.sh
 ```
+
+### Windows
+
+```powershell
+# In PowerShell (Administrator recommended for symlinks)
+git clone https://github.com/tctibbs/dotfiles.git
+cd dotfiles
+.\setup.ps1
+```
+
+**Windows Notes:**
+- **Symlinks**: Enable Developer Mode in Windows Settings or run PowerShell as Administrator to create symlinks. If symlinks fail, files will be copied automatically with a warning.
+- **Package Manager**: Requires [winget](https://aka.ms/getwinget) (built into Windows 11, available for Windows 10).
+- **Tools**: Installs modern CLI tools via winget and cargo (Rust tools like eza, dust, yazi).
+- **Restart Required**: Restart PowerShell after installation to load the new configuration.
+
+**What Gets Installed on Windows:**
+- WezTerm with Catppuccin theme
+- Starship prompt
+- PowerShell profile with modern CLI aliases
+- Git configuration
+- Common CLI tools: eza, bat, dust, fd, fzf, zoxide, tldr, yazi, and more
 
 ## Key Bindings
 
