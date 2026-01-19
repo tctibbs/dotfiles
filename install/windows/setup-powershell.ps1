@@ -31,8 +31,8 @@ if (-not (Test-Path $ProfileDir)) {
 }
 
 # Source files in dotfiles
-$SourceProfile = Join-Path $DotfilesRoot "windows" "Microsoft.PowerShell_profile.ps1"
-$SourceAliases = Join-Path $DotfilesRoot "windows" "aliases.ps1"
+$SourceProfile = Join-Path (Join-Path $DotfilesRoot "windows") "Microsoft.PowerShell_profile.ps1"
+$SourceAliases = Join-Path (Join-Path $DotfilesRoot "windows") "aliases.ps1"
 
 # Check if source files exist
 if (-not (Test-Path $SourceProfile)) {
