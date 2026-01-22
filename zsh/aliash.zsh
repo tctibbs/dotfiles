@@ -51,6 +51,11 @@ if command -v gemini &>/dev/null; then
   alias gf='gemini --model gemini-2.5-flash'
 fi
 
+# OneFetch - use nerd fonts by default
+if command -v onefetch &>/dev/null; then
+  alias onefetch='onefetch --nerd-fonts'
+fi
+
 # yazi - cd to directory on exit
 if command -v yazi &>/dev/null; then
   function y() {
