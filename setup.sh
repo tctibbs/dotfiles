@@ -1,22 +1,76 @@
 #!/bin/bash
-# Setup file for docker dev containers extension for VS Code
+# Dotfiles setup script with install profiles
+#
+# Usage:
+#   ./setup.sh           # Interactive prompt
+#   ./setup.sh full      # Full install (GUI apps, fonts, all tools)
+#   ./setup.sh lite      # Lite install (CLI tools only, no GUI)
+#   ./setup.sh minimal   # Minimal (just shell/git config)
 
-SUDO=""
-if [ "$EUID" -ne 0 ]; then
-    SUDO="sudo"
-fi
+set -e
+
+# Colors
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
 
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Detect OS and use the appropriate package manager
+# Profile selection
+PROFILE="${1:-}"
+
+if [[ -z "$PROFILE" ]]; then
+    echo -e "${BLUE}Select install profile:${NC}"
+    echo "  1) full    - Everything: GUI apps, fonts, all CLI tools"
+    echo "  2) lite    - All CLI tools, skip GUI apps and fonts"
+    echo "  3) minimal - Just shell and git config"
+    echo ""
+    select PROFILE in "full" "lite" "minimal"; do
+        [[ -n "$PROFILE" ]] && break
+    done
+fi
+
+# Validate profile
+if [[ ! "$PROFILE" =~ ^(full|lite|minimal)$ ]]; then
+    echo -e "${YELLOW}Invalid profile: $PROFILE${NC}"
+    echo "Valid profiles: full, lite, minimal"
+    exit 1
+fi
+
+echo -e "${GREEN}Installing with profile: $PROFILE${NC}"
+echo ""
+
+# Sudo detection - only set CAN_SUDO if we can use sudo without password prompt
+SUDO=""
+CAN_SUDO="false"
+if [ "$EUID" -eq 0 ]; then
+    # Running as root
+    CAN_SUDO="true"
+elif command -v sudo &>/dev/null && sudo -n true 2>/dev/null; then
+    # sudo available and doesn't require password
+    SUDO="sudo"
+    CAN_SUDO="true"
+fi
+
+# Ensure ~/.local/bin exists and is in PATH
+mkdir -p "$HOME/.local/bin"
+export PATH="$HOME/.local/bin:$PATH"
+
+# Detect OS and install base packages
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    $SUDO apt update
-    $SUDO apt install -y zsh stow
+    if [[ "$CAN_SUDO" == "true" ]]; then
+        echo -e "${BLUE}Installing base packages via apt...${NC}"
+        $SUDO apt update
+        $SUDO apt install -y zsh stow git
+    else
+        echo -e "${YELLOW}No sudo access - assuming zsh/stow/git are available${NC}"
+    fi
 elif [[ "$OSTYPE" == "darwin"* ]]; then
     # Check if Homebrew is installed, install if missing
     if ! command -v brew &>/dev/null; then
-        echo "Homebrew not found. Installing Homebrew..."
+        echo -e "${BLUE}Homebrew not found. Installing Homebrew...${NC}"
         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         # Add brew to PATH for Apple Silicon
         if [[ -f "/opt/homebrew/bin/brew" ]]; then
@@ -24,12 +78,12 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
         fi
     fi
 
-    # Install all packages via Brewfile
-    if [[ -f "$SCRIPT_DIR/homebrew/install.sh" ]]; then
-        bash "$SCRIPT_DIR/homebrew/install.sh"
+    # Install packages via Brewfile (skip for minimal)
+    if [[ "$PROFILE" != "minimal" ]] && [[ -f "$SCRIPT_DIR/homebrew/install.sh" ]]; then
+        bash "$SCRIPT_DIR/homebrew/install.sh" "$PROFILE"
     else
-        # Fallback: install essentials
-        brew install zsh stow
+        # Minimal: just install essentials
+        brew install zsh stow git
     fi
 else
     echo "Unsupported OS. This script only works on Linux and macOS."
@@ -72,23 +126,23 @@ else
     echo "Warning: .tmux.conf was not linked. Check your stow setup or folder structure."
 fi
 
-# Install Tmux Plugin Manager (TPM) and plugins
-if command -v tmux &>/dev/null; then
+# Install Tmux Plugin Manager (TPM) and plugins (skip for minimal)
+if [[ "$PROFILE" != "minimal" ]] && command -v tmux &>/dev/null; then
     TMUX_PLUGINS_DIR="$HOME/.tmux/plugins"
     mkdir -p "$TMUX_PLUGINS_DIR"
 
     # Install TPM itself
     TPM_DIR="$TMUX_PLUGINS_DIR/tpm"
     if [ ! -d "$TPM_DIR" ]; then
-        echo "📦 Installing Tmux Plugin Manager (TPM)..."
+        echo "Installing Tmux Plugin Manager (TPM)..."
         git clone --quiet https://github.com/tmux-plugins/tpm "$TPM_DIR"
-        echo "✅ TPM installed"
+        echo -e "${GREEN}TPM installed${NC}"
     else
-        echo "✅ TPM is already installed"
+        echo -e "${GREEN}TPM is already installed${NC}"
     fi
 
     # Install plugins directly (same plugins as configured in .tmux.conf)
-    echo "📦 Installing tmux plugins..."
+    echo "Installing tmux plugins..."
 
     declare -A PLUGINS=(
         ["tmux-sensible"]="https://github.com/tmux-plugins/tmux-sensible"
@@ -105,71 +159,84 @@ if command -v tmux &>/dev/null; then
     for plugin in "${!PLUGINS[@]}"; do
         PLUGIN_DIR="$TMUX_PLUGINS_DIR/$plugin"
         if [ ! -d "$PLUGIN_DIR" ]; then
-            echo "  📥 Installing $plugin..."
+            echo "  Installing $plugin..."
             git clone --quiet "${PLUGINS[$plugin]}" "$PLUGIN_DIR"
         else
-            echo "  ✅ $plugin already installed"
+            echo "  $plugin already installed"
         fi
     done
 
-    echo "✅ All tmux plugins installed"
+    echo -e "${GREEN}All tmux plugins installed${NC}"
+elif [[ "$PROFILE" == "minimal" ]]; then
+    echo "Skipping tmux plugins (minimal profile)"
 else
-    echo "⚠️  Tmux not found. Skipping TPM installation."
+    echo -e "${YELLOW}Tmux not found. Skipping TPM installation.${NC}"
 fi
 
-# Run platform-specific installation scripts (Linux only - macOS uses Brewfile)
-if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+# Run platform-specific installation scripts (Linux only, skip for minimal)
+if [[ "$OSTYPE" == "linux-gnu"* ]] && [[ "$PROFILE" != "minimal" ]]; then
     ARCH="$(uname -m)"  # x86_64, aarch64, etc.
     INSTALL_DIR="$SCRIPT_DIR/install/linux/${ARCH}"
 
     if [[ -d "$INSTALL_DIR" ]]; then
-        echo "Running Linux install scripts in $INSTALL_DIR..."
+        echo -e "${BLUE}Running Linux install scripts...${NC}"
 
         # First, run the consolidated common tools script if it exists
         COMMON_TOOLS_SCRIPT="$SCRIPT_DIR/install/linux/common-tools.sh"
         if [[ -f "$COMMON_TOOLS_SCRIPT" ]]; then
             echo "Running consolidated common tools script..."
-            bash "$COMMON_TOOLS_SCRIPT"
+            CAN_SUDO=$CAN_SUDO bash "$COMMON_TOOLS_SCRIPT"
         fi
 
         # Then run individual scripts
         for script in "$INSTALL_DIR"/*.sh; do
             if [[ -f "$script" ]]; then
                 echo "Running $script..."
-                bash "$script"
+                CAN_SUDO=$CAN_SUDO bash "$script"
             fi
         done
     else
-        echo "No install directory found for ARCH=$ARCH"
+        echo -e "${YELLOW}No install directory found for ARCH=$ARCH${NC}"
     fi
 fi
 
-# Run tmux setup
-echo ""
-echo "Setting up tmux configuration..."
-if [[ -f "$SCRIPT_DIR/tmux/install.sh" ]]; then
-    bash "$SCRIPT_DIR/tmux/install.sh"
-else
-    echo "Warning: tmux install script not found. Skipping tmux setup."
+# Run tmux setup (skip for minimal - just uses the stowed config)
+if [[ "$PROFILE" != "minimal" ]]; then
+    echo ""
+    echo -e "${BLUE}Setting up tmux configuration...${NC}"
+    if [[ -f "$SCRIPT_DIR/tmux/install.sh" ]]; then
+        bash "$SCRIPT_DIR/tmux/install.sh"
+    else
+        echo -e "${YELLOW}Warning: tmux install script not found. Skipping tmux setup.${NC}"
+    fi
 fi
 
-# Run wezterm setup
-echo ""
-echo "Setting up wezterm configuration..."
-if [[ -f "$SCRIPT_DIR/wezterm/install.sh" ]]; then
-    bash "$SCRIPT_DIR/wezterm/install.sh"
-else
-    echo "Warning: wezterm install script not found. Skipping wezterm setup."
+# Run wezterm setup (full profile only - requires GUI)
+if [[ "$PROFILE" == "full" ]]; then
+    echo ""
+    echo -e "${BLUE}Setting up wezterm configuration...${NC}"
+    if [[ -f "$SCRIPT_DIR/wezterm/install.sh" ]]; then
+        bash "$SCRIPT_DIR/wezterm/install.sh"
+    else
+        echo -e "${YELLOW}Warning: wezterm install script not found. Skipping wezterm setup.${NC}"
+    fi
 fi
 
-# Run starship setup
-echo ""
-echo "Setting up starship prompt..."
-if [[ -f "$SCRIPT_DIR/starship/install.sh" ]]; then
-    bash "$SCRIPT_DIR/starship/install.sh"
-else
-    echo "Warning: starship install script not found. Skipping starship setup."
+# Run starship setup (skip for minimal)
+if [[ "$PROFILE" != "minimal" ]]; then
+    echo ""
+    echo -e "${BLUE}Setting up starship prompt...${NC}"
+    if [[ -f "$SCRIPT_DIR/starship/install.sh" ]]; then
+        bash "$SCRIPT_DIR/starship/install.sh"
+    else
+        echo -e "${YELLOW}Warning: starship install script not found. Skipping starship setup.${NC}"
+    fi
 fi
 
 echo ""
-echo "Setup complete!"
+echo -e "${GREEN}Setup complete! (profile: $PROFILE)${NC}"
+echo ""
+if [[ "$PROFILE" == "minimal" ]]; then
+    echo "Minimal install done. Shell config is ready."
+    echo "Run with 'lite' or 'full' profile to install CLI tools."
+fi
