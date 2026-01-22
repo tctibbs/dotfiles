@@ -13,7 +13,7 @@ fi
 # Determine install location based on sudo availability
 CAN_SUDO="${CAN_SUDO:-false}"
 if [[ "$CAN_SUDO" != "true" ]] && command -v sudo &>/dev/null && sudo -n true 2>/dev/null; then
-    CAN_SUDO=true
+    CAN_SUDO="true"
 fi
 
 if [[ "$CAN_SUDO" == "true" ]]; then

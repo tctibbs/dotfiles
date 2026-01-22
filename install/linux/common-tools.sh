@@ -6,7 +6,7 @@ CAN_SUDO="${CAN_SUDO:-false}"
 if [[ "$CAN_SUDO" != "true" ]]; then
     # Try to detect sudo availability
     if command -v sudo &>/dev/null && sudo -n true 2>/dev/null; then
-        CAN_SUDO=true
+        CAN_SUDO="true"
     fi
 fi
 
