@@ -1,0 +1,22 @@
+# Ghostty configuration
+
+# Font
+font-family = FiraCode Nerd Font
+font-size = 13
+
+# Theme - auto light/dark switching
+theme = light:Catppuccin Latte,dark:Catppuccin Mocha
+
+# Window
+window-padding-x = 8
+window-padding-y = 8
+
+# Cursor
+cursor-style = bar
+
+# Shell integration
+shell-integration = true
+
+# macOS specific
+macos-titlebar-style = unified
+macos-option-as-alt = true

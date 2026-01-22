@@ -222,6 +222,13 @@ if [[ "$PROFILE" == "full" ]]; then
     fi
 fi
 
+# Run ghostty setup (full profile only - requires GUI)
+if [[ "$PROFILE" == "full" ]]; then
+    if [[ -f "$SCRIPT_DIR/ghostty/install.sh" ]]; then
+        bash "$SCRIPT_DIR/ghostty/install.sh"
+    fi
+fi
+
 # Run starship setup (skip for minimal)
 if [[ "$PROFILE" != "minimal" ]]; then
     echo ""
