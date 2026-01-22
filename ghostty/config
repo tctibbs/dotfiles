@@ -10,6 +10,7 @@ theme = light:Catppuccin Latte,dark:Catppuccin Mocha
 # Window
 window-padding-x = 8
 window-padding-y = 8
+scrollback-limit = 10000
 
 # Cursor
 cursor-style = bar
@@ -17,6 +18,14 @@ cursor-style = bar
 # Shell integration
 shell-integration = true
 
-# macOS specific
+# Keybindings
+keybind = cmd+t=new_tab
+keybind = cmd+w=close_surface
+keybind = cmd+shift+enter=new_split:right
+keybind = cmd+shift+minus=new_split:down
+keybind = ctrl+shift+up=jump_to_prompt:-1
+keybind = ctrl+shift+down=jump_to_prompt:1
+
+# macOS specific (ignored on Linux)
 macos-titlebar-style = unified
 macos-option-as-alt = true
