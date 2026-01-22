@@ -142,25 +142,31 @@ if [[ "$PROFILE" != "minimal" ]] && command -v tmux &>/dev/null; then
     fi
 
     # Install plugins directly (same plugins as configured in .tmux.conf)
+    # Using simple array format for bash 3.2 compatibility (macOS default)
     echo "Installing tmux plugins..."
 
-    declare -A PLUGINS=(
-        ["tmux-sensible"]="https://github.com/tmux-plugins/tmux-sensible"
-        ["tmux-resurrect"]="https://github.com/tmux-plugins/tmux-resurrect"
-        ["tmux-continuum"]="https://github.com/tmux-plugins/tmux-continuum"
-        ["tmux-yank"]="https://github.com/tmux-plugins/tmux-yank"
-        ["tmux-fzf"]="https://github.com/sainnhe/tmux-fzf"
-        ["tmux-battery"]="https://github.com/tmux-plugins/tmux-battery"
-        ["tmux-cpu"]="https://github.com/tmux-plugins/tmux-cpu"
-        ["tmux-prefix-highlight"]="https://github.com/tmux-plugins/tmux-prefix-highlight"
-        ["tmux-open"]="https://github.com/tmux-plugins/tmux-open"
-    )
+    PLUGINS="
+        tmux-sensible|https://github.com/tmux-plugins/tmux-sensible
+        tmux-resurrect|https://github.com/tmux-plugins/tmux-resurrect
+        tmux-continuum|https://github.com/tmux-plugins/tmux-continuum
+        tmux-yank|https://github.com/tmux-plugins/tmux-yank
+        tmux-fzf|https://github.com/sainnhe/tmux-fzf
+        tmux-battery|https://github.com/tmux-plugins/tmux-battery
+        tmux-cpu|https://github.com/tmux-plugins/tmux-cpu
+        tmux-prefix-highlight|https://github.com/tmux-plugins/tmux-prefix-highlight
+        tmux-open|https://github.com/tmux-plugins/tmux-open
+    "
 
-    for plugin in "${!PLUGINS[@]}"; do
+    echo "$PLUGINS" | while read -r line; do
+        [[ -z "$line" ]] && continue
+        plugin="${line%%|*}"
+        url="${line##*|}"
+        plugin=$(echo "$plugin" | xargs)  # trim whitespace
+        url=$(echo "$url" | xargs)
         PLUGIN_DIR="$TMUX_PLUGINS_DIR/$plugin"
         if [ ! -d "$PLUGIN_DIR" ]; then
             echo "  Installing $plugin..."
-            git clone --quiet "${PLUGINS[$plugin]}" "$PLUGIN_DIR"
+            git clone --quiet "$url" "$PLUGIN_DIR"
         else
             echo "  $plugin already installed"
         fi
