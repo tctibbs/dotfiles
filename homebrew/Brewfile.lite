@@ -1,0 +1,36 @@
+# Brewfile.lite - CLI tools only (no GUI apps or fonts)
+# Used for: SSH machines, dev containers, servers
+
+# Taps
+tap "mikescher/tap"
+tap "tako8ki/tap"
+
+# CLI Tools
+brew "bat"           # Better cat
+brew "btop"          # Resource monitor
+brew "difftastic"    # Structural diffs
+brew "dust"          # Better du
+brew "eza"           # Better ls
+brew "fastfetch"     # System info display
+brew "fd"            # Better find
+brew "fzf"           # Fuzzy finder
+brew "git-delta"     # Git syntax highlighting
+brew "lazydocker"    # Docker TUI
+brew "mikescher/tap/dops"  # Better docker ps
+brew "pgcli"         # PostgreSQL CLI
+brew "procs"         # Better ps
+brew "litecli"       # SQLite CLI
+brew "mcat"          # Markdown cat
+brew "mycli"         # MySQL CLI
+brew "tako8ki/tap/gobang"  # Database TUI
+brew "onefetch"      # Git repo info display
+brew "repomix"       # AI context generation
+brew "treemd"        # Markdown directory trees
+brew "yazi"          # Terminal file manager
+brew "starship"      # Shell prompt
+brew "tldr"          # Simplified man pages
+brew "tmux"          # Terminal multiplexer
+brew "zoxide"        # Smart cd
+
+# No casks - this is for CLI-only environments
+# For full install with GUI apps, use Brewfile instead

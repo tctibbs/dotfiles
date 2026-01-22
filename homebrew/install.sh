@@ -1,7 +1,12 @@
 #!/bin/bash
 # Homebrew Bundle Installation Script
 # ====================================
-# Installs all packages from Brewfile (macOS only)
+# Installs packages from Brewfile (macOS only)
+#
+# Usage:
+#   ./install.sh         # Full install (with GUI apps)
+#   ./install.sh full    # Full install (with GUI apps)
+#   ./install.sh lite    # CLI tools only (no GUI apps/fonts)
 
 set -e
 
@@ -18,9 +23,17 @@ if [[ "$OSTYPE" != "darwin"* ]]; then
 fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROFILE="${1:-full}"
 
-echo ""
-echo -e "${BLUE}Installing Homebrew packages...${NC}"
+# Select Brewfile based on profile
+if [[ "$PROFILE" == "lite" ]]; then
+    BREWFILE="$SCRIPT_DIR/Brewfile.lite"
+    echo -e "${BLUE}Installing Homebrew packages (lite - CLI only)...${NC}"
+else
+    BREWFILE="$SCRIPT_DIR/Brewfile"
+    echo -e "${BLUE}Installing Homebrew packages (full - with GUI apps)...${NC}"
+fi
+
 echo ""
 
 # Install Homebrew if not present
@@ -35,8 +48,8 @@ if ! command -v brew &>/dev/null; then
 fi
 
 # Run bundle
-echo "Running brew bundle..."
-brew bundle --file="$SCRIPT_DIR/Brewfile"
+echo "Running brew bundle with $BREWFILE..."
+brew bundle --file="$BREWFILE"
 
 echo ""
 echo -e "${GREEN}Homebrew packages installed!${NC}"

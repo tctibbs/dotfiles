@@ -1,8 +1,21 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# List of tools to install via apt
-COMMON_TOOLS=(
+# Check if we can use sudo (passed from setup.sh or detect here)
+CAN_SUDO="${CAN_SUDO:-false}"
+if [[ "$CAN_SUDO" != "true" ]]; then
+    # Try to detect sudo availability
+    if command -v sudo &>/dev/null && sudo -n true 2>/dev/null; then
+        CAN_SUDO=true
+    fi
+fi
+
+# Ensure ~/.local/bin exists
+mkdir -p "$HOME/.local/bin"
+export PATH="$HOME/.local/bin:$PATH"
+
+# List of tools to install via apt (requires sudo)
+APT_TOOLS=(
     "btop"
     "tldr"
     "bat"
@@ -13,35 +26,38 @@ COMMON_TOOLS=(
     "litecli"
 )
 
-echo "📦 Installing common Linux tools via apt..."
+if [[ "$CAN_SUDO" == "true" ]]; then
+    echo "Installing common Linux tools via apt..."
 
-# Update package list once
-echo "🔄 Updating package list..."
-sudo apt update
+    # Update package list once
+    echo "Updating package list..."
+    sudo apt update
 
-# Install each tool
-for tool in "${COMMON_TOOLS[@]}"; do
-    if command -v "$tool" &>/dev/null; then
-        echo "✅ $tool is already installed"
-        continue
-    fi
-    
-    echo "📦 Installing $tool..."
-    sudo apt install -y "$tool"
-    
-    # Special handling for bat (Debian/Ubuntu naming quirk)
-    if [[ "$tool" == "bat" ]]; then
-        if command -v batcat &>/dev/null && ! command -v bat &>/dev/null; then
-            echo "🔧 Creating 'bat' symlink for 'batcat'"
-            sudo ln -s "$(command -v batcat)" /usr/local/bin/bat
+    # Install each tool
+    for tool in "${APT_TOOLS[@]}"; do
+        if command -v "$tool" &>/dev/null; then
+            echo "$tool is already installed"
+            continue
         fi
-    fi
-    
-    echo "✅ $tool installed:"
-    "$tool" --version
-done
 
-echo "🎉 All common Linux tools installed successfully!"
+        echo "Installing $tool..."
+        sudo apt install -y "$tool" || echo "Warning: Failed to install $tool"
+
+        # Special handling for bat (Debian/Ubuntu naming quirk)
+        if [[ "$tool" == "bat" ]]; then
+            if command -v batcat &>/dev/null && ! command -v bat &>/dev/null; then
+                echo "Creating 'bat' symlink for 'batcat'"
+                sudo ln -s "$(command -v batcat)" /usr/local/bin/bat 2>/dev/null || \
+                    ln -sf "$(command -v batcat)" "$HOME/.local/bin/bat"
+            fi
+        fi
+    done
+
+    echo "APT tools installed!"
+else
+    echo "No sudo access - skipping apt packages"
+    echo "The following tools require manual installation: ${APT_TOOLS[*]}"
+fi
 
 # Install repomix via npm (requires Node.js)
 if command -v repomix &>/dev/null; then
