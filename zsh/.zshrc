@@ -11,23 +11,32 @@ export HISTFILE=~/.zsh_history        # Location for saved command history
 }
 source ~/.config/zsh/znap/znap.zsh
 
+# Completion configuration
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'  # Case-insensitive
+zstyle ':completion:*' menu select                          # Interactive menu
+zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}      # Colorized completions
+zstyle ':completion:*:descriptions' format '%F{green}-- %d --%f'
+zstyle ':completion:*:warnings' format '%F{red}-- no matches --%f'
+
 # Load optional custom configurations (aliases, exports, functions)
 [[ -f "$HOME/.config/zsh/aliash.zsh" ]] && source "$HOME/.config/zsh/aliash.zsh"
 [[ -f "$HOME/.config/zsh/exports.zsh" ]] && source "$HOME/.config/zsh/exports.zsh"
 
 # Plugins
 
-# zsh-autosuggestions: Suggests commands from history as you type.
-znap source zsh-users/zsh-autosuggestions
+# zsh-autocomplete: Real-time type-ahead completion (from Znap's author)
+znap source marlonrichert/zsh-autocomplete
 
-# zsh-syntax-highlighting: Adds color-coded syntax highlighting.
-znap source zsh-users/zsh-syntax-highlighting
+# you-should-use: Reminds you of aliases when you type the full command
+znap source MichaelAquilina/zsh-you-should-use
 
-# zsh-history-substring-search: Searches through history with partial input.
+# fast-syntax-highlighting: Feature-rich syntax highlighting
+znap source zdharma-continuum/fast-syntax-highlighting
+
+# zsh-history-substring-search: Searches through history with partial input
 znap source zsh-users/zsh-history-substring-search
 
-# Keybindings
-bindkey '^ ' autosuggest-accept                         # Accept autosuggestions with space
+# Keybindings (zsh-autocomplete handles most completion bindings automatically)
 bindkey '^[[A' history-substring-search-up              # Search history (up arrow)
 bindkey '^[[B' history-substring-search-down            # Search history (down arrow)
 
@@ -44,7 +53,6 @@ else
   echo "zoxide not found - skipping zoxide integration" >&2
 fi
 
-unset ZSH_AUTOSUGGEST_USE_ASYNC
 export PATH="$HOME/.local/bin:$PATH"
 
 # Initialize Starship prompt
