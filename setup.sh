@@ -32,21 +32,26 @@ if [[ -z "$PROFILE" ]]; then
     done
 fi
 
+# Validate profile
+if [[ ! "$PROFILE" =~ ^(full|lite|minimal)$ ]]; then
+    echo -e "${YELLOW}Invalid profile: $PROFILE${NC}"
+    echo "Valid profiles: full, lite, minimal"
+    exit 1
+fi
+
 echo -e "${GREEN}Installing with profile: $PROFILE${NC}"
 echo ""
 
-# Sudo detection - use if available, skip if not (for containers)
+# Sudo detection - only set CAN_SUDO if we can use sudo without password prompt
 SUDO=""
-CAN_SUDO=false
-if [ "$EUID" -ne 0 ]; then
-    if command -v sudo &>/dev/null && sudo -n true 2>/dev/null; then
-        SUDO="sudo"
-        CAN_SUDO=true
-    elif command -v sudo &>/dev/null; then
-        # sudo exists but might need password - try it
-        SUDO="sudo"
-        CAN_SUDO=true
-    fi
+CAN_SUDO="false"
+if [ "$EUID" -eq 0 ]; then
+    # Running as root
+    CAN_SUDO="true"
+elif command -v sudo &>/dev/null && sudo -n true 2>/dev/null; then
+    # sudo available and doesn't require password
+    SUDO="sudo"
+    CAN_SUDO="true"
 fi
 
 # Ensure ~/.local/bin exists and is in PATH
@@ -55,7 +60,7 @@ export PATH="$HOME/.local/bin:$PATH"
 
 # Detect OS and install base packages
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    if [[ "$CAN_SUDO" == true ]]; then
+    if [[ "$CAN_SUDO" == "true" ]]; then
         echo -e "${BLUE}Installing base packages via apt...${NC}"
         $SUDO apt update
         $SUDO apt install -y zsh stow git
