@@ -8,6 +8,7 @@ Personal configuration for a consistent dev environment across macOS and Linux, 
 
 ### Terminal Stack
 - **WezTerm** - GPU-accelerated terminal with Catppuccin theme, fancy tabs, background image
+- **Windows Terminal** - Windows-native terminal with matching Catppuccin theme and keybindings
 - **Tmux** - Terminal multiplexer with session persistence and popup scratchpads
 - **Starship** - Cross-shell prompt with git integration and directory icons
 - **Zsh** - Shell with modern CLI tool aliases
@@ -16,7 +17,7 @@ Personal configuration for a consistent dev environment across macOS and Linux, 
 
 | Category | Tools |
 |----------|-------|
-| Terminal | WezTerm, tmux, starship |
+| Terminal | WezTerm, Windows Terminal, tmux, starship |
 | Shell | zsh, aliases, exports |
 | CLI Tools | eza, bat, dust, procs, fd, fzf, btop, tldr, fastfetch |
 | Git | Conditional identity (personal/work), delta diffs |
@@ -53,6 +54,18 @@ cd dotfiles
 | `Cmd+Shift+R` | Rename tab |
 | `Ctrl+Shift+\|` | Split horizontal |
 | `Ctrl+Shift+_` | Split vertical |
+
+### Windows Terminal
+
+| Key | Action |
+|-----|--------|
+| `Ctrl+Enter` | Toggle fullscreen |
+| `Ctrl+T` | New tab |
+| `Ctrl+W` | Close tab |
+| `Ctrl+Shift+\` | Split vertical |
+| `Ctrl+Shift+-` | Split horizontal |
+| `Ctrl+Shift+Arrow` | Navigate panes |
+| `Alt+1-5` | Switch tabs |
 
 ## CLI Tool Aliases
 
