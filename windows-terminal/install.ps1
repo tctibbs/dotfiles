@@ -1,6 +1,9 @@
 # Windows Terminal Configuration Installer
 # Backs up existing settings and installs dotfiles configuration
 
+[CmdletBinding(SupportsShouldProcess)]
+param()
+
 $ErrorActionPreference = "Stop"
 
 # Paths
@@ -8,7 +11,6 @@ $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $SourceSettings = Join-Path $ScriptDir "settings.json"
 $TerminalLocalState = "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState"
 $TerminalPreviewLocalState = "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminalPreview_8wekyb3d8bbwe\LocalState"
-$TargetSettings = Join-Path $TerminalLocalState "settings.json"
 
 function Write-Status {
     param([string]$Message, [string]$Type = "Info")
@@ -52,8 +54,10 @@ function Install-Settings {
     Backup-Settings -SettingsPath $targetPath | Out-Null
 
     # Copy new settings
-    Copy-Item -Path $SourcePath -Destination $targetPath -Force
-    Write-Status "Installed settings to: $targetPath" "Success"
+    if ($PSCmdlet.ShouldProcess($targetPath, "Install settings")) {
+        Copy-Item -Path $SourcePath -Destination $targetPath -Force
+        Write-Status "Installed settings to: $targetPath" "Success"
+    }
     return $true
 }
 

@@ -22,7 +22,7 @@
             "historySize": 10000,
             "bellStyle": "visual",
             "useAcrylic": true,
-            "acrylicOpacity": 0.85
+            "opacity": 85
         },
         "list": [
             {
@@ -88,8 +88,8 @@
         { "command": { "action": "moveFocus", "direction": "down" }, "keys": "ctrl+shift+down" },
         { "command": { "action": "closePane" }, "keys": "ctrl+shift+w" },
         { "command": { "action": "toggleFullscreen" }, "keys": "ctrl+enter" },
-        { "command": { "action": "copy" }, "keys": "ctrl+c" },
-        { "command": { "action": "paste" }, "keys": "ctrl+v" },
+        { "command": { "action": "copy" }, "keys": "ctrl+shift+c" },
+        { "command": { "action": "paste" }, "keys": "ctrl+shift+v" },
         { "command": { "action": "switchToTab", "index": 0 }, "keys": "alt+1" },
         { "command": { "action": "switchToTab", "index": 1 }, "keys": "alt+2" },
         { "command": { "action": "switchToTab", "index": 2 }, "keys": "alt+3" },

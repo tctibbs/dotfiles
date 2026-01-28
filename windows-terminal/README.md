@@ -8,6 +8,11 @@ Windows Terminal settings matching the WezTerm configuration with Catppuccin Moc
 .\install.ps1
 ```
 
+Dry-run mode:
+```powershell
+.\install.ps1 -WhatIf
+```
+
 The script will:
 - Backup existing settings.json (timestamped)
 - Install to Windows Terminal (stable)
@@ -36,9 +41,13 @@ The script will:
 | `Ctrl+Shift+W` | Close pane |
 | `Alt+1-5` | Switch tabs |
 | `Ctrl+Enter` | Toggle fullscreen |
-| `Ctrl+C` | Copy |
-| `Ctrl+V` | Paste |
+| `Ctrl+Shift+C` | Copy |
+| `Ctrl+Shift+V` | Paste |
 | `Ctrl+Shift+F` | Find |
+
+## Customization
+
+The `profiles.list` in settings.json includes common shells (PowerShell, cmd, Ubuntu WSL). You may need to modify this section based on your installed shells. Windows Terminal will auto-detect installed profiles on first run.
 
 ## Requirements
 
