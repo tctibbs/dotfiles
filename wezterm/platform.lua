@@ -25,11 +25,16 @@ function module.apply(config, wezterm)
 
     elseif is_windows then
         -- Windows settings (WSL integration)
-        config.default_domain = "WSL:Ubuntu"
         config.wsl_domains = wezterm.default_wsl_domains()
-        -- Fallback if WSL not available
+
+        -- Use PowerShell 5 as default (guaranteed to exist on all Windows)
+        -- Users can switch to PowerShell 7 or WSL via the launcher (Ctrl+Shift+P)
+        config.default_prog = { "powershell.exe", "-NoLogo" }
+
+        -- Launch menu with common shells
         config.launch_menu = {
-            { label = "PowerShell", args = { "powershell.exe", "-NoLogo" } },
+            { label = "PowerShell 7", args = { "pwsh.exe", "-NoLogo" } },
+            { label = "PowerShell 5", args = { "powershell.exe", "-NoLogo" } },
             { label = "Command Prompt", args = { "cmd.exe" } },
         }
 
