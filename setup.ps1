@@ -96,6 +96,19 @@ if (Test-Path $WeztermScript) {
     Write-ColorOutput "Warning: wezterm/install.ps1 not found. Skipping wezterm setup." "Yellow"
 }
 
+# Run Windows Terminal setup
+Write-Host ""
+Write-ColorOutput "========================================" "Blue"
+Write-ColorOutput "   Setting up Windows Terminal..." "Blue"
+Write-ColorOutput "========================================" "Blue"
+Write-Host ""
+$WinTermScript = Join-Path (Join-Path $ScriptDir "windows-terminal") "install.ps1"
+if (Test-Path $WinTermScript) {
+    & $WinTermScript
+} else {
+    Write-ColorOutput "Note: windows-terminal/install.ps1 not found. Skipping Windows Terminal setup." "Yellow"
+}
+
 # Run Git setup
 Write-Host ""
 Write-ColorOutput "========================================" "Blue"
@@ -143,7 +156,7 @@ Write-ColorOutput "========================================" "Green"
 Write-Host ""
 Write-ColorOutput "Next steps:" "Blue"
 Write-Host "  1. Restart PowerShell to load new configuration"
-Write-Host "  2. Launch WezTerm to see your new terminal setup"
+Write-Host "  2. Launch WezTerm or Windows Terminal to see your new terminal setup"
 Write-Host "  3. Run 'starship --version' to verify Starship is installed"
 Write-Host ""
 Write-ColorOutput "To enable symlinks (recommended):" "Yellow"
@@ -153,5 +166,6 @@ Write-Host ""
 Write-ColorOutput "If you encounter any issues, check the individual install scripts in:" "Blue"
 Write-Host "  - starship/install.ps1"
 Write-Host "  - wezterm/install.ps1"
+Write-Host "  - windows-terminal/install.ps1"
 Write-Host "  - install/windows/common-tools.ps1"
 Write-Host ""

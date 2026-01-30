@@ -8,6 +8,7 @@ Personal configuration for a consistent dev environment across macOS, Linux, and
 
 ### Terminal Stack
 - **WezTerm** - GPU-accelerated terminal with Catppuccin theme, fancy tabs, background image
+- **Windows Terminal** - Native Windows terminal with matching Catppuccin theme, acrylic blur, background image
 - **Tmux** - Terminal multiplexer with session persistence and popup scratchpads
 - **Starship** - Cross-shell prompt with git integration and directory icons
 - **Zsh** - Shell with modern CLI tool aliases
@@ -16,7 +17,7 @@ Personal configuration for a consistent dev environment across macOS, Linux, and
 
 | Category | Tools |
 |----------|-------|
-| Terminal | WezTerm, tmux, starship |
+| Terminal | WezTerm, Windows Terminal, tmux, starship |
 | Shell | zsh, aliases, exports |
 | CLI Tools | eza, bat, dust, procs, fd, fzf, btop, tldr, fastfetch |
 | Git | Conditional identity (personal/work), delta diffs |
@@ -48,7 +49,8 @@ cd dotfiles
 - **Restart Required**: Restart PowerShell after installation to load the new configuration.
 
 **What Gets Installed on Windows:**
-- WezTerm with Catppuccin theme
+- WezTerm with Catppuccin theme and background image
+- Windows Terminal with matching Catppuccin theme, acrylic blur, background image
 - Starship prompt
 - PowerShell profile with modern CLI aliases
 - Git configuration
@@ -77,6 +79,19 @@ cd dotfiles
 | `Cmd+Shift+R` | Rename tab |
 | `Ctrl+Shift+\|` | Split horizontal |
 | `Ctrl+Shift+_` | Split vertical |
+
+### Windows Terminal
+
+| Key | Action |
+|-----|--------|
+| `Ctrl+Enter` | Toggle fullscreen |
+| `Ctrl+T` | New tab |
+| `Ctrl+W` | Close tab |
+| `Alt+1-5` | Switch to tab 1-5 |
+| `Ctrl+Shift+\` | Split vertical |
+| `Ctrl+Shift+-` | Split horizontal |
+| `Ctrl+Shift+Arrow` | Navigate panes |
+| `Ctrl+Shift+W` | Close pane |
 
 ## CLI Tool Aliases
 
