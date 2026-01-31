@@ -30,13 +30,13 @@ docs/
 # Skip Windows-specific files on non-Windows
 Documents/
 AppData/
-run_once_before_install-packages-windows.ps1.tmpl
+install-packages-windows.ps1
 {{ end }}
 
 {{ if eq .chezmoi.os "windows" }}
 # Skip Unix-specific files on Windows
-run_once_before_install-packages.sh.tmpl
-run_onchange_after_setup-tmux.sh.tmpl
+install-packages.sh
+setup-tmux.sh
 .tmux.conf
 .tmux.mac.conf
 .tmux.linux.conf
@@ -44,9 +44,9 @@ run_onchange_after_setup-tmux.sh.tmpl
 
 # Container environments: skip heavy installs
 {{ if .isContainer }}
-run_once_before_install-packages.sh.tmpl
-run_once_before_install-packages-windows.ps1.tmpl
-run_onchange_after_setup-tmux.sh.tmpl
+install-packages.sh
+install-packages-windows.ps1
+setup-tmux.sh
 .tmux.conf
 .tmux.mac.conf
 .tmux.linux.conf
@@ -60,7 +60,7 @@ run_onchange_after_setup-tmux.sh.tmpl
 # Profile-based ignores
 {{ if eq .profile "minimal" }}
 # Minimal profile: skip most extras
-run_once_before_install-packages.sh.tmpl
-run_once_before_install-packages-windows.ps1.tmpl
-run_onchange_after_setup-tmux.sh.tmpl
+install-packages.sh
+install-packages-windows.ps1
+setup-tmux.sh
 {{ end }}
