@@ -210,7 +210,7 @@ if ! command -v tldr &>/dev/null; then
         curl -sL "https://github.com/dbrgn/tealdeer/releases/download/${TLDR_VERSION}/tealdeer-linux-x86_64-musl" -o "$HOME/.local/bin/tldr"
         chmod +x "$HOME/.local/bin/tldr"
     elif [ "$ARCH" = "aarch64" ]; then
-        curl -sL "https://github.com/dbrgn/tealdeer/releases/download/${TLDR_VERSION}/tealdeer-linux-arm-musleabihf" -o "$HOME/.local/bin/tldr"
+        curl -sL "https://github.com/dbrgn/tealdeer/releases/download/${TLDR_VERSION}/tealdeer-linux-aarch64-musl" -o "$HOME/.local/bin/tldr"
         chmod +x "$HOME/.local/bin/tldr"
     fi
 fi

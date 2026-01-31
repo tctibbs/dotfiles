@@ -147,9 +147,11 @@ if (-not (Test-Command starship)) {
     if (Test-Command winget) {
         winget install Starship.Starship --accept-package-agreements --accept-source-agreements 2>&1 | Out-Null
         Write-Host "  Starship installed" -ForegroundColor Green
+        $Installed += "starship"
     }
 } else {
     Write-Host "  Starship already installed" -ForegroundColor Green
+    $Skipped += "starship"
 }
 
 {{ if eq .profile "full" -}}
@@ -181,7 +183,8 @@ foreach ($app in $GuiApps.Keys) {
 Write-Host ""
 Write-Host "Installing FiraCode Nerd Font..." -ForegroundColor Cyan
 $FontsFolder = Join-Path $env:LOCALAPPDATA "Microsoft\Windows\Fonts"
-if (-not (Test-Path (Join-Path $FontsFolder "FiraCodeNerdFont*.ttf"))) {
+$FontsInstalled = (Get-ChildItem -Path $FontsFolder -Filter "FiraCodeNerdFont*.ttf" -ErrorAction SilentlyContinue).Count -gt 0
+if (-not $FontsInstalled) {
     $NerdFontUrl = "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FiraCode.zip"
     $TempZip = Join-Path $env:TEMP "FiraCode.zip"
     $TempExtract = Join-Path $env:TEMP "FiraCodeNerdFont"
