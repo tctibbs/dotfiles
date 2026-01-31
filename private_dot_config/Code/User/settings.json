@@ -5,6 +5,24 @@
     "editor.formatOnSave": true,
     "editor.defaultFormatter": "charliermarsh.ruff",
 
+    // Chezmoi file associations for syntax highlighting
+    "files.associations": {
+        "dot_zshrc": "shellscript",
+        "dot_bashrc": "shellscript",
+        "dot_profile": "shellscript",
+        "dot_tmux.conf": "tmux",
+        "dot_tmux*.conf": "tmux",
+        "dot_gitconfig": "properties",
+        "dot_gitconfig*": "properties",
+        "dot_wezterm.lua": "lua",
+        "*.lua": "lua",
+        ".chezmoiignore": "ignore",
+        ".chezmoi*.yaml": "yaml",
+        ".chezmoi*.toml": "toml",
+        "run_*.tmpl": "shellscript",
+        "*.zsh": "shellscript"
+    },
+
     // Terminal Settings
     "terminal.integrated.fontFamily": "'FiraCode Nerd Font', monospace",
     "terminal.integrated.fontLigatures": true,
