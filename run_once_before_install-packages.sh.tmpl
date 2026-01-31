@@ -218,14 +218,18 @@ if ! command -v tldr &>/dev/null; then
     fi
 fi
 
-# Install onefetch
+# Install onefetch (x86_64 only has pre-built binary, aarch64 needs cargo)
 if ! command -v onefetch &>/dev/null; then
     echo -e "${BLUE}Installing onefetch...${NC}"
-    ONEFETCH_VERSION=$(curl -s https://api.github.com/repos/o2sh/onefetch/releases/latest | grep tag_name | cut -d'"' -f4)
     if [ "$ARCH" = "x86_64" ]; then
+        ONEFETCH_VERSION=$(curl -s https://api.github.com/repos/o2sh/onefetch/releases/latest | grep tag_name | cut -d'"' -f4)
         curl -sL "https://github.com/o2sh/onefetch/releases/download/${ONEFETCH_VERSION}/onefetch-linux.tar.gz" | tar xz -C "$HOME/.local/bin" onefetch
     elif [ "$ARCH" = "aarch64" ]; then
-        curl -sL "https://github.com/o2sh/onefetch/releases/download/${ONEFETCH_VERSION}/onefetch-linux-arm.tar.gz" | tar xz -C "$HOME/.local/bin" onefetch
+        if command -v cargo &>/dev/null; then
+            cargo install onefetch || echo -e "${YELLOW}Failed to install onefetch via cargo${NC}"
+        else
+            echo -e "${YELLOW}onefetch: no pre-built aarch64 binary, cargo not available${NC}"
+        fi
     fi
 fi
 
@@ -246,7 +250,7 @@ fi
 if ! command -v repomix &>/dev/null; then
     if command -v npm &>/dev/null; then
         echo -e "${BLUE}Installing repomix via npm...${NC}"
-        npm install -g repomix 2>/dev/null || echo -e "${YELLOW}Failed to install repomix (npm error)${NC}"
+        npm install -g repomix || echo -e "${YELLOW}Failed to install repomix${NC}"
     else
         echo -e "${YELLOW}npm not found - skipping repomix${NC}"
     fi
@@ -259,19 +263,19 @@ if command -v cargo &>/dev/null; then
     # mcat - markdown cat
     if ! command -v mcat &>/dev/null; then
         echo -e "${BLUE}Installing mcat...${NC}"
-        cargo install mcat 2>/dev/null || echo -e "${YELLOW}Failed to install mcat${NC}"
+        cargo install mcat || echo -e "${YELLOW}Failed to install mcat${NC}"
     fi
 
     # treemd - markdown tree generator
     if ! command -v treemd &>/dev/null; then
         echo -e "${BLUE}Installing treemd...${NC}"
-        cargo install treemd 2>/dev/null || echo -e "${YELLOW}Failed to install treemd${NC}"
+        cargo install treemd || echo -e "${YELLOW}Failed to install treemd${NC}"
     fi
 
     # gobang - database TUI
     if ! command -v gobang &>/dev/null; then
         echo -e "${BLUE}Installing gobang...${NC}"
-        cargo install gobang --version 0.1.0-alpha.5 2>/dev/null || echo -e "${YELLOW}Failed to install gobang${NC}"
+        cargo install gobang --version 0.1.0-alpha.5 || echo -e "${YELLOW}Failed to install gobang${NC}"
     fi
 else
     echo -e "${YELLOW}cargo not found - skipping Rust tools (mcat, treemd, gobang)${NC}"
