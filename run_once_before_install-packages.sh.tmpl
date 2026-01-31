@@ -293,6 +293,40 @@ else
     echo -e "${YELLOW}Install Rust via: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh${NC}"
 fi
 
+{{ if eq .profile "full" -}}
+# Full profile: Install fonts and GUI apps on Linux
+echo -e "${BLUE}Installing fonts and GUI apps (full profile)...${NC}"
+
+# Install FiraCode Nerd Font
+FONTS_DIR="$HOME/.local/share/fonts"
+mkdir -p "$FONTS_DIR"
+if [ ! -f "$FONTS_DIR/FiraCodeNerdFont-Regular.ttf" ]; then
+    echo -e "${BLUE}Installing FiraCode Nerd Font...${NC}"
+    NERD_FONT_VERSION=$(curl -s https://api.github.com/repos/ryanoasis/nerd-fonts/releases/latest | grep tag_name | cut -d'"' -f4)
+    curl -sL "https://github.com/ryanoasis/nerd-fonts/releases/download/${NERD_FONT_VERSION}/FiraCode.zip" -o /tmp/FiraCode.zip
+    unzip -o /tmp/FiraCode.zip -d "$FONTS_DIR" && rm /tmp/FiraCode.zip
+    # Refresh font cache
+    if command -v fc-cache &>/dev/null; then
+        fc-cache -fv "$FONTS_DIR" 2>/dev/null || true
+    fi
+    echo -e "${GREEN}FiraCode Nerd Font installed${NC}"
+else
+    echo -e "${GREEN}FiraCode Nerd Font already installed${NC}"
+fi
+
+# Install WezTerm via Flatpak if available
+if ! command -v wezterm &>/dev/null; then
+    if command -v flatpak &>/dev/null; then
+        echo -e "${BLUE}Installing WezTerm via Flatpak...${NC}"
+        flatpak install --user -y flathub org.wezfurlong.wezterm 2>/dev/null || echo -e "${YELLOW}WezTerm flatpak install failed${NC}"
+    else
+        echo -e "${YELLOW}WezTerm: flatpak not available. Install manually from https://wezfurlong.org/wezterm/${NC}"
+    fi
+else
+    echo -e "${GREEN}WezTerm already installed${NC}"
+fi
+{{ end -}}
+
 {{ end -}}
 
 echo -e "${GREEN}Package installation complete!${NC}"
