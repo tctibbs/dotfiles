@@ -1,0 +1,56 @@
+{{- /* ========================================
+       Chezmoi Configuration Template
+       ======================================== */ -}}
+
+{{- /* --- Environment Detection --- */ -}}
+{{- $isContainer := or (env "REMOTE_CONTAINERS") (env "CODESPACES") (stat "/.dockerenv") -}}
+{{- $isWSL := false -}}
+{{- if eq .chezmoi.os "linux" -}}
+{{-   $isWSL = output "sh" "-c" "grep -qi microsoft /proc/version 2>/dev/null && echo true || echo false" | trim | eq "true" -}}
+{{- end -}}
+{{- $isSSH := ne (env "SSH_CLIENT") "" -}}
+{{- $isHeadless := or $isContainer $isSSH -}}
+
+{{- /* --- User Prompts (skip profile prompt in containers) --- */ -}}
+{{- $identity := promptStringOnce . "identity" "Git identity (personal/work)" -}}
+
+{{- /* Auto-select minimal profile in containers */ -}}
+{{- $profile := "full" -}}
+{{- if $isContainer -}}
+{{-   $profile = "minimal" -}}
+{{- else -}}
+{{-   $profile = promptStringOnce . "profile" "Install profile (full/lite/minimal)" -}}
+{{- end -}}
+
+{{- /* --- Derived Values --- */ -}}
+{{- $email := "" -}}
+{{- if eq $identity "personal" -}}
+{{-   $email = "tristantibbs@gmail.com" -}}
+{{- else if eq $identity "work" -}}
+{{-   $email = "tristan.tibbs@plexus.com" -}}
+{{- else -}}
+{{-   $email = "tristantibbs@gmail.com" -}}
+{{- end -}}
+
+sourceDir: {{ .chezmoi.sourceDir | quote }}
+
+data:
+  # User identity
+  identity: {{ $identity | quote }}
+  email: {{ $email | quote }}
+  name: "Tristan Tibbs"
+
+  # Install profile
+  profile: {{ $profile | quote }}
+
+  # Environment flags
+  isContainer: {{ $isContainer }}
+  isWSL: {{ $isWSL }}
+  isSSH: {{ $isSSH }}
+  isHeadless: {{ $isHeadless }}
+
+# Age encryption for secrets (uncomment when key is generated)
+# encryption: age
+# age:
+#   identity: ~/.config/sops/age/keys.txt
+#   recipient: age1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx

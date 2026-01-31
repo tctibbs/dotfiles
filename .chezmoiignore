@@ -1,0 +1,54 @@
+# Files to ignore from chezmoi management
+# Syntax: https://www.chezmoi.io/reference/special-files-and-directories/chezmoiignore/
+
+# Repository files (not dotfiles)
+README.md
+LICENSE
+CLAUDE.md
+.gitignore
+assets/
+docs/
+
+# Git files (managed by chezmoi, not synced)
+.git/
+.claude/
+
+# OS-specific ignores
+{{ if ne .chezmoi.os "darwin" }}
+# Skip macOS-specific files on non-macOS
+.tmux.mac.conf
+{{ end }}
+
+{{ if ne .chezmoi.os "linux" }}
+# Skip Linux-specific files on non-Linux
+.tmux.linux.conf
+# VSCode settings path differs on non-Linux
+.config/Code/
+{{ end }}
+
+{{ if ne .chezmoi.os "windows" }}
+# Skip Windows-specific files on non-Windows
+Documents/
+AppData/
+{{ end }}
+
+# Container environments: skip heavy installs
+{{ if .isContainer }}
+run_once_before_install-packages.sh.tmpl
+run_onchange_after_setup-tmux.sh.tmpl
+.tmux.conf
+.tmux.mac.conf
+.tmux.linux.conf
+{{ end }}
+
+# WSL: skip macOS-specific but keep CLI tools
+{{ if .isWSL }}
+.tmux.mac.conf
+{{ end }}
+
+# Profile-based ignores
+{{ if eq .profile "minimal" }}
+# Minimal profile: skip most extras
+run_once_before_install-packages.sh.tmpl
+run_onchange_after_setup-tmux.sh.tmpl
+{{ end }}

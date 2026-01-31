@@ -25,36 +25,55 @@ Personal configuration for a consistent dev environment across macOS, Linux, and
 
 ## Installation
 
-### Linux / macOS
+### Quick Start (New Machine)
 
 ```bash
-git clone https://github.com/tctibbs/dotfiles.git
-cd dotfiles
-./setup.sh
+# One command installs chezmoi + applies dotfiles
+sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply tctibbs/dotfiles
 ```
+
+You'll be prompted for:
+- **identity**: `personal` or `work` (sets git email)
+- **profile**: `full`, `lite`, or `minimal` (controls package installation)
+
+### Manual Installation
+
+```bash
+# Clone and initialize
+git clone https://github.com/tctibbs/dotfiles.git ~/dotfiles
+cd ~/dotfiles
+
+chezmoi init --source=. --apply
+```
+
+### Install Profiles
+
+| Profile | Description |
+|---------|-------------|
+| `full` | Everything: GUI apps (WezTerm, VSCode), fonts, all CLI tools |
+| `lite` | All CLI tools, skip GUI apps and fonts (for SSH, containers) |
+| `minimal` | Just shell and git config (fastest) |
 
 ### Windows
 
 ```powershell
-# In PowerShell (Administrator recommended for symlinks)
-git clone https://github.com/tctibbs/dotfiles.git
-cd dotfiles
-.\setup.ps1
+# Install chezmoi via winget
+winget install twpayne.chezmoi
+
+# Apply dotfiles
+chezmoi init --apply tctibbs/dotfiles
 ```
 
-**Windows Notes:**
-- **Symlinks**: Enable Developer Mode in Windows Settings or run PowerShell as Administrator to create symlinks. If symlinks fail, files will be copied automatically with a warning.
-- **Package Manager**: Requires [winget](https://aka.ms/getwinget) (built into Windows 11, available for Windows 10).
-- **Tools**: Installs modern CLI tools via winget and cargo (Rust tools like eza, dust, yazi).
-- **Restart Required**: Restart PowerShell after installation to load the new configuration.
+## Daily Usage
 
-**What Gets Installed on Windows:**
-- WezTerm with Catppuccin theme and background image
-- Windows Terminal with matching Catppuccin theme, acrylic blur, background image
-- Starship prompt
-- PowerShell profile with modern CLI aliases
-- Git configuration
-- Common CLI tools: eza, bat, dust, fd, fzf, zoxide, tldr, yazi, and more
+```bash
+chezmoi diff          # Preview changes
+chezmoi apply         # Apply changes
+chezmoi edit ~/.zshrc # Edit source, auto-applies
+chezmoi add ~/.newfile # Add new dotfile to management
+chezmoi cd            # Go to source directory
+chezmoi update        # Pull latest and apply
+```
 
 ## Key Bindings
 
@@ -124,7 +143,50 @@ cd dotfiles
 | `ccc` | `claude --dangerously-skip-permissions -c` | Claude Code continue |
 | `gf`  | `gemini --model gemini-2.5-flash` | Gemini Flash |
 
+## Architecture
+
+### Chezmoi Structure
+
+```
+dotfiles/                          # Chezmoi source directory
+├── .chezmoi.yaml.tmpl            # Machine config (identity, profile)
+├── .chezmoiignore                # Conditional file ignores
+├── dot_zshrc                     # ~/.zshrc
+├── dot_gitconfig.tmpl            # ~/.gitconfig (templated)
+├── dot_tmux.conf                 # ~/.tmux.conf
+├── dot_wezterm.lua               # ~/.wezterm.lua
+├── private_dot_config/
+│   ├── zsh/
+│   │   ├── aliash.zsh
+│   │   └── exports.zsh
+│   ├── wezterm/                  # ~/.config/wezterm/
+│   │   ├── keys.lua
+│   │   ├── tabs.lua
+│   │   ├── theme.lua
+│   │   └── platform.lua
+│   ├── fastfetch/
+│   │   └── config.jsonc
+│   ├── starship.toml
+│   └── Code/User/settings.json   # VSCode (Linux)
+├── private_dot_local/
+│   └── private_bin/
+│       └── executable_getcontext.zsh
+├── Documents/PowerShell/         # Windows PowerShell profile
+├── AppData/.../WindowsTerminal/  # Windows Terminal settings
+├── run_once_install-packages.sh.tmpl   # One-time package install
+└── run_onchange_setup-tmux.sh.tmpl     # Tmux plugin install
+```
+
+### Naming Conventions
+
+| Prefix | Meaning |
+|--------|---------|
+| `dot_` | File starts with `.` (dot_zshrc → ~/.zshrc) |
+| `private_` | File mode 600 (not world-readable) |
+| `.tmpl` | Go template, rendered with variables |
+| `run_once_` | Script runs once per machine |
+| `run_onchange_` | Script runs when content changes |
+
 ## Documentation
 
 - [VSCode Integration](docs/vscode.md) - Auto-deploy dotfiles on remote SSH connections
-

@@ -3,3 +3,7 @@
 CLAUDE.md
 AGENTS.md
 tmux/tmux-client-*.log
+
+# Chezmoi working files (not tracked in repo)
+# The actual chezmoi config is stored in ~/.config/chezmoi/chezmoi.yaml
+# which is machine-specific and not part of the source repo
