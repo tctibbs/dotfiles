@@ -117,12 +117,13 @@ if (Test-Command cargo) {
         }
 
         Write-Host "  Installing $tool (this may take a while)..." -ForegroundColor Yellow
-        try {
-            cargo install $tool 2>&1 | Out-Null
+        $output = cargo install $tool 2>&1
+        if ($LASTEXITCODE -eq 0) {
             Write-Host "  $tool installed" -ForegroundColor Green
             $Installed += $tool
-        } catch {
+        } else {
             Write-Host "  Failed: $tool" -ForegroundColor Red
+            Write-Host "  Error: $output" -ForegroundColor Red
             $Failed += $tool
         }
     }
@@ -130,7 +131,17 @@ if (Test-Command cargo) {
     # Install gobang with specific version
     if (-not (Test-Command gobang)) {
         Write-Host "  Installing gobang..." -ForegroundColor Yellow
-        cargo install gobang --version 0.1.0-alpha.5 2>&1 | Out-Null
+        $output = cargo install gobang --version 0.1.0-alpha.5 2>&1
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "  gobang installed" -ForegroundColor Green
+            $Installed += "gobang"
+        } else {
+            Write-Host "  Failed: gobang" -ForegroundColor Red
+            Write-Host "  Error: $output" -ForegroundColor Red
+            $Failed += "gobang"
+        }
+    } else {
+        $Skipped += "gobang"
     }
 } else {
     Write-Host "  Cargo not available - skipping Rust tools" -ForegroundColor Yellow

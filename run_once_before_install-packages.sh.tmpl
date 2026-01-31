@@ -70,6 +70,9 @@ if [ -n "$SUDO" ] || [ "$EUID" -eq 0 ]; then
     echo -e "${BLUE}Installing base packages via apt...${NC}"
     ${SUDO} apt update
     ${SUDO} apt install -y zsh git curl wget unzip tmux btop pgcli mycli litecli
+else
+    echo -e "${YELLOW}No sudo access - skipping apt packages (zsh, tmux, btop, pgcli, mycli, litecli)${NC}"
+    echo -e "${YELLOW}These tools will need to be installed manually or by an admin${NC}"
 fi
 
 # Install starship
@@ -213,6 +216,66 @@ if ! command -v tldr &>/dev/null; then
         curl -sL "https://github.com/dbrgn/tealdeer/releases/download/${TLDR_VERSION}/tealdeer-linux-aarch64-musl" -o "$HOME/.local/bin/tldr"
         chmod +x "$HOME/.local/bin/tldr"
     fi
+fi
+
+# Install onefetch
+if ! command -v onefetch &>/dev/null; then
+    echo -e "${BLUE}Installing onefetch...${NC}"
+    ONEFETCH_VERSION=$(curl -s https://api.github.com/repos/o2sh/onefetch/releases/latest | grep tag_name | cut -d'"' -f4)
+    if [ "$ARCH" = "x86_64" ]; then
+        curl -sL "https://github.com/o2sh/onefetch/releases/download/${ONEFETCH_VERSION}/onefetch-linux.tar.gz" | tar xz -C "$HOME/.local/bin" onefetch
+    elif [ "$ARCH" = "aarch64" ]; then
+        curl -sL "https://github.com/o2sh/onefetch/releases/download/${ONEFETCH_VERSION}/onefetch-linux-arm.tar.gz" | tar xz -C "$HOME/.local/bin" onefetch
+    fi
+fi
+
+# Install yazi
+if ! command -v yazi &>/dev/null; then
+    echo -e "${BLUE}Installing yazi...${NC}"
+    YAZI_VERSION=$(curl -s https://api.github.com/repos/sxyazi/yazi/releases/latest | grep tag_name | cut -d'"' -f4)
+    if [ "$ARCH" = "x86_64" ]; then
+        curl -sL "https://github.com/sxyazi/yazi/releases/download/${YAZI_VERSION}/yazi-x86_64-unknown-linux-gnu.zip" -o /tmp/yazi.zip
+        unzip -o /tmp/yazi.zip -d /tmp && mv /tmp/yazi-x86_64-unknown-linux-gnu/yazi "$HOME/.local/bin/" && rm -rf /tmp/yazi.zip /tmp/yazi-x86_64-unknown-linux-gnu
+    elif [ "$ARCH" = "aarch64" ]; then
+        curl -sL "https://github.com/sxyazi/yazi/releases/download/${YAZI_VERSION}/yazi-aarch64-unknown-linux-gnu.zip" -o /tmp/yazi.zip
+        unzip -o /tmp/yazi.zip -d /tmp && mv /tmp/yazi-aarch64-unknown-linux-gnu/yazi "$HOME/.local/bin/" && rm -rf /tmp/yazi.zip /tmp/yazi-aarch64-unknown-linux-gnu
+    fi
+fi
+
+# Install repomix via npm (if npm is available)
+if ! command -v repomix &>/dev/null; then
+    if command -v npm &>/dev/null; then
+        echo -e "${BLUE}Installing repomix via npm...${NC}"
+        npm install -g repomix 2>/dev/null || echo -e "${YELLOW}Failed to install repomix (npm error)${NC}"
+    else
+        echo -e "${YELLOW}npm not found - skipping repomix${NC}"
+    fi
+fi
+
+# Install Rust-based tools via cargo (if cargo is available)
+if command -v cargo &>/dev/null; then
+    echo -e "${BLUE}Installing Rust-based tools via cargo...${NC}"
+
+    # mcat - markdown cat
+    if ! command -v mcat &>/dev/null; then
+        echo -e "${BLUE}Installing mcat...${NC}"
+        cargo install mcat 2>/dev/null || echo -e "${YELLOW}Failed to install mcat${NC}"
+    fi
+
+    # treemd - markdown tree generator
+    if ! command -v treemd &>/dev/null; then
+        echo -e "${BLUE}Installing treemd...${NC}"
+        cargo install treemd 2>/dev/null || echo -e "${YELLOW}Failed to install treemd${NC}"
+    fi
+
+    # gobang - database TUI
+    if ! command -v gobang &>/dev/null; then
+        echo -e "${BLUE}Installing gobang...${NC}"
+        cargo install gobang --version 0.1.0-alpha.5 2>/dev/null || echo -e "${YELLOW}Failed to install gobang${NC}"
+    fi
+else
+    echo -e "${YELLOW}cargo not found - skipping Rust tools (mcat, treemd, gobang)${NC}"
+    echo -e "${YELLOW}Install Rust via: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh${NC}"
 fi
 
 {{ end -}}
