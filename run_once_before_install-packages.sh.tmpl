@@ -38,7 +38,7 @@ brew tap tako8ki/tap 2>/dev/null || true
 
 # CLI Tools (all profiles except minimal)
 brew install bat btop difftastic dust eza fastfetch fd fzf git-delta \
-    lazydocker mikescher/tap/dops pgcli procs litecli mcat mycli \
+    lazydocker lazygit mikescher/tap/dops pgcli procs litecli mcat mycli \
     tako8ki/tap/gobang onefetch repomix treemd yazi starship tldr tmux zoxide \
     2>/dev/null || true
 
@@ -168,6 +168,17 @@ if ! command -v lazydocker &>/dev/null; then
         curl -sL "https://github.com/jesseduffield/lazydocker/releases/download/v${LAZYDOCKER_VERSION}/lazydocker_${LAZYDOCKER_VERSION}_Linux_x86_64.tar.gz" | tar xz -C "$HOME/.local/bin" lazydocker
     elif [ "$ARCH" = "aarch64" ]; then
         curl -sL "https://github.com/jesseduffield/lazydocker/releases/download/v${LAZYDOCKER_VERSION}/lazydocker_${LAZYDOCKER_VERSION}_Linux_arm64.tar.gz" | tar xz -C "$HOME/.local/bin" lazydocker
+    fi
+fi
+
+# Install lazygit
+if ! command -v lazygit &>/dev/null; then
+    echo -e "${BLUE}Installing lazygit...${NC}"
+    LAZYGIT_VERSION=$(curl -s https://api.github.com/repos/jesseduffield/lazygit/releases/latest | grep tag_name | cut -d'"' -f4 | sed 's/v//')
+    if [ "$ARCH" = "x86_64" ]; then
+        curl -sL "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz" | tar xz -C "$HOME/.local/bin" lazygit
+    elif [ "$ARCH" = "aarch64" ]; then
+        curl -sL "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_Linux_arm64.tar.gz" | tar xz -C "$HOME/.local/bin" lazygit
     fi
 fi
 
