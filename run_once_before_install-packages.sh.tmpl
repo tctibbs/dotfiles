@@ -69,7 +69,7 @@ fi
 if [ -n "$SUDO" ] || [ "$EUID" -eq 0 ]; then
     echo -e "${BLUE}Installing base packages via apt...${NC}"
     ${SUDO} apt update
-    ${SUDO} apt install -y zsh git curl wget unzip
+    ${SUDO} apt install -y zsh git curl wget unzip tmux btop
 fi
 
 # Install starship
@@ -150,6 +150,30 @@ if ! command -v delta &>/dev/null; then
         curl -sL "https://github.com/dandavison/delta/releases/download/${DELTA_VERSION}/delta-${DELTA_VERSION}-x86_64-unknown-linux-gnu.tar.gz" | tar xz --strip-components=1 -C "$HOME/.local/bin" "delta-${DELTA_VERSION}-x86_64-unknown-linux-gnu/delta"
     elif [ "$ARCH" = "aarch64" ]; then
         curl -sL "https://github.com/dandavison/delta/releases/download/${DELTA_VERSION}/delta-${DELTA_VERSION}-aarch64-unknown-linux-gnu.tar.gz" | tar xz --strip-components=1 -C "$HOME/.local/bin" "delta-${DELTA_VERSION}-aarch64-unknown-linux-gnu/delta"
+    fi
+fi
+
+# Install fastfetch
+if ! command -v fastfetch &>/dev/null; then
+    echo -e "${BLUE}Installing fastfetch...${NC}"
+    FASTFETCH_VERSION=$(curl -s https://api.github.com/repos/fastfetch-cli/fastfetch/releases/latest | grep tag_name | cut -d'"' -f4)
+    if [ "$ARCH" = "x86_64" ]; then
+        curl -sL "https://github.com/fastfetch-cli/fastfetch/releases/download/${FASTFETCH_VERSION}/fastfetch-linux-amd64.tar.gz" | tar xz --strip-components=1 -C "$HOME/.local/bin" "fastfetch-linux-amd64/usr/bin/fastfetch"
+    elif [ "$ARCH" = "aarch64" ]; then
+        curl -sL "https://github.com/fastfetch-cli/fastfetch/releases/download/${FASTFETCH_VERSION}/fastfetch-linux-aarch64.tar.gz" | tar xz --strip-components=1 -C "$HOME/.local/bin" "fastfetch-linux-aarch64/usr/bin/fastfetch"
+    fi
+fi
+
+# Install tldr (tealdeer - fast tldr client)
+if ! command -v tldr &>/dev/null; then
+    echo -e "${BLUE}Installing tldr...${NC}"
+    TLDR_VERSION=$(curl -s https://api.github.com/repos/dbrgn/tealdeer/releases/latest | grep tag_name | cut -d'"' -f4)
+    if [ "$ARCH" = "x86_64" ]; then
+        curl -sL "https://github.com/dbrgn/tealdeer/releases/download/${TLDR_VERSION}/tealdeer-linux-x86_64-musl" -o "$HOME/.local/bin/tldr"
+        chmod +x "$HOME/.local/bin/tldr"
+    elif [ "$ARCH" = "aarch64" ]; then
+        curl -sL "https://github.com/dbrgn/tealdeer/releases/download/${TLDR_VERSION}/tealdeer-linux-arm-musleabihf" -o "$HOME/.local/bin/tldr"
+        chmod +x "$HOME/.local/bin/tldr"
     fi
 fi
 

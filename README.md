@@ -167,14 +167,14 @@ dotfiles/                          # Chezmoi source directory
 │   ├── fastfetch/
 │   │   └── config.jsonc
 │   ├── starship.toml
-│   └── Code/User/settings.json   # VSCode (Linux)
+│   └── Code/User/settings.json   # VSCode (Linux only)
 ├── private_dot_local/
 │   └── private_bin/
 │       └── executable_getcontext.zsh
 ├── Documents/PowerShell/         # Windows PowerShell profile
 ├── AppData/.../WindowsTerminal/  # Windows Terminal settings
-├── run_once_install-packages.sh.tmpl   # One-time package install
-└── run_onchange_setup-tmux.sh.tmpl     # Tmux plugin install
+├── run_once_before_install-packages.sh.tmpl  # One-time package install
+└── run_onchange_after_setup-tmux.sh.tmpl     # Tmux plugin install
 ```
 
 ### Naming Conventions
