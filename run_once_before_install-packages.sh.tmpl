@@ -69,7 +69,7 @@ fi
 if [ -n "$SUDO" ] || [ "$EUID" -eq 0 ]; then
     echo -e "${BLUE}Installing base packages via apt...${NC}"
     ${SUDO} apt update
-    ${SUDO} apt install -y zsh git curl wget unzip tmux btop
+    ${SUDO} apt install -y zsh git curl wget unzip tmux btop pgcli mycli litecli
 fi
 
 # Install starship
@@ -140,6 +140,44 @@ if ! command -v procs &>/dev/null; then
     if [ "$ARCH" = "x86_64" ]; then
         curl -sL "https://github.com/dalance/procs/releases/download/${PROCS_VERSION}/procs-${PROCS_VERSION}-x86_64-linux.zip" -o /tmp/procs.zip
         unzip -o /tmp/procs.zip -d "$HOME/.local/bin" && rm /tmp/procs.zip
+    elif [ "$ARCH" = "aarch64" ]; then
+        curl -sL "https://github.com/dalance/procs/releases/download/${PROCS_VERSION}/procs-${PROCS_VERSION}-aarch64-linux.zip" -o /tmp/procs.zip
+        unzip -o /tmp/procs.zip -d "$HOME/.local/bin" && rm /tmp/procs.zip
+    fi
+fi
+
+# Install difftastic
+if ! command -v difft &>/dev/null; then
+    echo -e "${BLUE}Installing difftastic...${NC}"
+    DIFFT_VERSION=$(curl -s https://api.github.com/repos/Wilfred/difftastic/releases/latest | grep tag_name | cut -d'"' -f4)
+    if [ "$ARCH" = "x86_64" ]; then
+        curl -sL "https://github.com/Wilfred/difftastic/releases/download/${DIFFT_VERSION}/difft-x86_64-unknown-linux-gnu.tar.gz" | tar xz -C "$HOME/.local/bin"
+    elif [ "$ARCH" = "aarch64" ]; then
+        curl -sL "https://github.com/Wilfred/difftastic/releases/download/${DIFFT_VERSION}/difft-aarch64-unknown-linux-gnu.tar.gz" | tar xz -C "$HOME/.local/bin"
+    fi
+fi
+
+# Install lazydocker
+if ! command -v lazydocker &>/dev/null; then
+    echo -e "${BLUE}Installing lazydocker...${NC}"
+    LAZYDOCKER_VERSION=$(curl -s https://api.github.com/repos/jesseduffield/lazydocker/releases/latest | grep tag_name | cut -d'"' -f4 | sed 's/v//')
+    if [ "$ARCH" = "x86_64" ]; then
+        curl -sL "https://github.com/jesseduffield/lazydocker/releases/download/v${LAZYDOCKER_VERSION}/lazydocker_${LAZYDOCKER_VERSION}_Linux_x86_64.tar.gz" | tar xz -C "$HOME/.local/bin" lazydocker
+    elif [ "$ARCH" = "aarch64" ]; then
+        curl -sL "https://github.com/jesseduffield/lazydocker/releases/download/v${LAZYDOCKER_VERSION}/lazydocker_${LAZYDOCKER_VERSION}_Linux_arm64.tar.gz" | tar xz -C "$HOME/.local/bin" lazydocker
+    fi
+fi
+
+# Install dops (docker ps replacement)
+if ! command -v dops &>/dev/null; then
+    echo -e "${BLUE}Installing dops...${NC}"
+    DOPS_VERSION=$(curl -s https://api.github.com/repos/Mikescher/better-docker-ps/releases/latest | grep tag_name | cut -d'"' -f4 | sed 's/v//')
+    if [ "$ARCH" = "x86_64" ]; then
+        curl -sL "https://github.com/Mikescher/better-docker-ps/releases/download/v${DOPS_VERSION}/dops_linux-amd64" -o "$HOME/.local/bin/dops"
+        chmod +x "$HOME/.local/bin/dops"
+    elif [ "$ARCH" = "aarch64" ]; then
+        curl -sL "https://github.com/Mikescher/better-docker-ps/releases/download/v${DOPS_VERSION}/dops_linux-arm64" -o "$HOME/.local/bin/dops"
+        chmod +x "$HOME/.local/bin/dops"
     fi
 fi
 

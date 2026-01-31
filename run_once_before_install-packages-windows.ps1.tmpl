@@ -1,0 +1,227 @@
+#!/usr/bin/env pwsh
+# Chezmoi run_once script for Windows: Runs once per machine
+# Install profile: {{ .profile }}
+
+$ErrorActionPreference = "Continue"
+
+Write-Host ""
+Write-Host "Installing packages for profile: {{ .profile }}" -ForegroundColor Blue
+Write-Host ""
+
+{{ if eq .profile "minimal" -}}
+Write-Host "Minimal profile selected - skipping package installation" -ForegroundColor Yellow
+Write-Host "Shell configuration applied. Run chezmoi with profile=lite or profile=full for tools."
+exit 0
+{{ end -}}
+
+# Track results
+$Installed = @()
+$Skipped = @()
+$Failed = @()
+
+function Test-Command {
+    param([string]$Command)
+    return $null -ne (Get-Command $Command -ErrorAction SilentlyContinue)
+}
+
+# ============================================================================
+# Winget Tools
+# ============================================================================
+
+$WingetTools = @{
+    "bat" = "sharkdp.bat"
+    "fd" = "sharkdp.fd"
+    "fzf" = "junegunn.fzf"
+    "zoxide" = "ajeetdsouza.zoxide"
+    "tldr" = "tldr-pages.tlrc"
+    "eza" = "eza-community.eza"
+    "delta" = "dandavison.delta"
+    "fastfetch" = "Fastfetch-cli.Fastfetch"
+    "btop" = "aristocratos.btop4win"
+}
+
+Write-Host "Installing tools via winget..." -ForegroundColor Cyan
+
+if (Test-Command winget) {
+    foreach ($tool in $WingetTools.Keys) {
+        $package = $WingetTools[$tool]
+
+        if (Test-Command $tool) {
+            Write-Host "  $tool already installed" -ForegroundColor Green
+            $Skipped += $tool
+            continue
+        }
+
+        Write-Host "  Installing $tool..." -ForegroundColor Yellow
+        try {
+            winget install $package --accept-package-agreements --accept-source-agreements 2>&1 | Out-Null
+            if ($LASTEXITCODE -eq 0 -or (Test-Command $tool)) {
+                Write-Host "  $tool installed" -ForegroundColor Green
+                $Installed += $tool
+            } else {
+                $Failed += $tool
+            }
+        } catch {
+            Write-Host "  Failed: $tool" -ForegroundColor Red
+            $Failed += $tool
+        }
+    }
+} else {
+    Write-Host "  winget not found - install from https://aka.ms/getwinget" -ForegroundColor Yellow
+}
+
+# ============================================================================
+# Cargo Tools (requires Rust)
+# ============================================================================
+
+$CargoTools = @(
+    "dust",
+    "procs",
+    "yazi-fm",
+    "mcat",
+    "treemd",
+    "onefetch",
+    "difftastic"
+)
+
+Write-Host ""
+Write-Host "Installing Rust tools via cargo..." -ForegroundColor Cyan
+
+# Install Rust if needed
+if (-not (Test-Command cargo)) {
+    Write-Host "  Installing Rust via winget..." -ForegroundColor Yellow
+    if (Test-Command winget) {
+        winget install Rustlang.Rustup --accept-package-agreements --accept-source-agreements 2>&1 | Out-Null
+
+        # Add cargo to PATH
+        $CargoPath = Join-Path $env:USERPROFILE ".cargo\bin"
+        if (Test-Path $CargoPath) {
+            $env:PATH = "$CargoPath;$env:PATH"
+        }
+
+        # Initialize rustup
+        if (Test-Command rustup) {
+            rustup default stable 2>&1 | Out-Null
+        }
+    }
+}
+
+if (Test-Command cargo) {
+    foreach ($tool in $CargoTools) {
+        $cmdName = $tool -replace "-fm$", ""  # yazi-fm -> yazi
+
+        if (Test-Command $cmdName) {
+            Write-Host "  $tool already installed" -ForegroundColor Green
+            $Skipped += $tool
+            continue
+        }
+
+        Write-Host "  Installing $tool (this may take a while)..." -ForegroundColor Yellow
+        try {
+            cargo install $tool 2>&1 | Out-Null
+            Write-Host "  $tool installed" -ForegroundColor Green
+            $Installed += $tool
+        } catch {
+            Write-Host "  Failed: $tool" -ForegroundColor Red
+            $Failed += $tool
+        }
+    }
+
+    # Install gobang with specific version
+    if (-not (Test-Command gobang)) {
+        Write-Host "  Installing gobang..." -ForegroundColor Yellow
+        cargo install gobang --version 0.1.0-alpha.5 2>&1 | Out-Null
+    }
+} else {
+    Write-Host "  Cargo not available - skipping Rust tools" -ForegroundColor Yellow
+}
+
+# ============================================================================
+# Starship Prompt
+# ============================================================================
+
+Write-Host ""
+Write-Host "Installing Starship prompt..." -ForegroundColor Cyan
+
+if (-not (Test-Command starship)) {
+    if (Test-Command winget) {
+        winget install Starship.Starship --accept-package-agreements --accept-source-agreements 2>&1 | Out-Null
+        Write-Host "  Starship installed" -ForegroundColor Green
+    }
+} else {
+    Write-Host "  Starship already installed" -ForegroundColor Green
+}
+
+{{ if eq .profile "full" -}}
+# ============================================================================
+# Full Profile: GUI Apps & Fonts
+# ============================================================================
+
+Write-Host ""
+Write-Host "Installing GUI apps (full profile)..." -ForegroundColor Cyan
+
+$GuiApps = @{
+    "wezterm" = "wez.wezterm"
+    "code" = "Microsoft.VisualStudioCode"
+}
+
+foreach ($app in $GuiApps.Keys) {
+    $package = $GuiApps[$app]
+
+    if (Test-Command $app) {
+        Write-Host "  $app already installed" -ForegroundColor Green
+        continue
+    }
+
+    Write-Host "  Installing $app..." -ForegroundColor Yellow
+    winget install $package --accept-package-agreements --accept-source-agreements 2>&1 | Out-Null
+}
+
+# Install Nerd Font
+Write-Host ""
+Write-Host "Installing FiraCode Nerd Font..." -ForegroundColor Cyan
+$FontsFolder = Join-Path $env:LOCALAPPDATA "Microsoft\Windows\Fonts"
+if (-not (Test-Path (Join-Path $FontsFolder "FiraCodeNerdFont*.ttf"))) {
+    $NerdFontUrl = "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FiraCode.zip"
+    $TempZip = Join-Path $env:TEMP "FiraCode.zip"
+    $TempExtract = Join-Path $env:TEMP "FiraCodeNerdFont"
+
+    try {
+        Invoke-WebRequest -Uri $NerdFontUrl -OutFile $TempZip
+        Expand-Archive -Path $TempZip -DestinationPath $TempExtract -Force
+
+        # Install fonts
+        $Fonts = Get-ChildItem -Path $TempExtract -Filter "*.ttf"
+        foreach ($Font in $Fonts) {
+            Copy-Item $Font.FullName -Destination $FontsFolder -Force
+        }
+
+        Write-Host "  FiraCode Nerd Font installed" -ForegroundColor Green
+
+        # Cleanup
+        Remove-Item $TempZip -Force -ErrorAction SilentlyContinue
+        Remove-Item $TempExtract -Recurse -Force -ErrorAction SilentlyContinue
+    } catch {
+        Write-Host "  Font installation failed: $_" -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "  FiraCode Nerd Font already installed" -ForegroundColor Green
+}
+{{ end -}}
+
+# ============================================================================
+# Summary
+# ============================================================================
+
+Write-Host ""
+Write-Host "========================================" -ForegroundColor Green
+Write-Host "   Installation Complete!" -ForegroundColor Green
+Write-Host "========================================" -ForegroundColor Green
+Write-Host ""
+Write-Host "Installed: $($Installed.Count) tools" -ForegroundColor Green
+Write-Host "Skipped (already installed): $($Skipped.Count) tools" -ForegroundColor Cyan
+if ($Failed.Count -gt 0) {
+    Write-Host "Failed: $($Failed -join ', ')" -ForegroundColor Yellow
+}
+Write-Host ""
+Write-Host "Restart PowerShell to load new tools into PATH" -ForegroundColor Yellow

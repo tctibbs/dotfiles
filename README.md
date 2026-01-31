@@ -173,7 +173,8 @@ dotfiles/                          # Chezmoi source directory
 │       └── executable_getcontext.zsh
 ├── Documents/PowerShell/         # Windows PowerShell profile
 ├── AppData/.../WindowsTerminal/  # Windows Terminal settings
-├── run_once_before_install-packages.sh.tmpl  # One-time package install
+├── run_once_before_install-packages.sh.tmpl  # Package install (macOS/Linux)
+├── run_once_before_install-packages-windows.ps1.tmpl  # Package install (Windows)
 └── run_onchange_after_setup-tmux.sh.tmpl     # Tmux plugin install
 ```
 
