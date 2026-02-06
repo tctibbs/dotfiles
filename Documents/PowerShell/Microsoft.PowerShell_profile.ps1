@@ -109,6 +109,34 @@ if (Get-Module -ListAvailable -Name PSReadLine) {
 }
 
 # ============================================================================
+# Terminal-Icons (file/folder icons in listings)
+# ============================================================================
+
+if (Get-Module -ListAvailable -Name Terminal-Icons) {
+    Import-Module Terminal-Icons -ErrorAction SilentlyContinue
+}
+
+# ============================================================================
+# PSFzf (Fuzzy Finder Integration)
+# ============================================================================
+
+# Provides Ctrl+R for fuzzy history search, Ctrl+F for file finding
+# Requires fzf to be installed
+if ((Get-Module -ListAvailable -Name PSFzf) -and (Get-Command fzf -ErrorAction SilentlyContinue)) {
+    Import-Module PSFzf -ErrorAction SilentlyContinue
+    Set-PsFzfOption -PSReadlineChordProvider 'Ctrl+f' -PSReadlineChordReverseHistory 'Ctrl+r'
+}
+
+# ============================================================================
+# CompletionPredictor (Enhanced Predictions)
+# ============================================================================
+
+if (Get-Module -ListAvailable -Name CompletionPredictor) {
+    Import-Module CompletionPredictor -ErrorAction SilentlyContinue
+    Set-PSReadLineOption -PredictionSource HistoryAndPlugin -ErrorAction SilentlyContinue
+}
+
+# ============================================================================
 # Source Aliases
 # ============================================================================
 
