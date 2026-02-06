@@ -38,6 +38,8 @@ $WingetTools = @{
     "delta" = "dandavison.delta"
     "fastfetch" = "Fastfetch-cli.Fastfetch"
     "btop" = "aristocratos.btop4win"
+    "lazygit" = "JesseDuffield.lazygit"
+    "lazydocker" = "JesseDuffield.lazydocker"
 }
 
 Write-Host "Installing tools via winget..." -ForegroundColor Cyan
@@ -75,7 +77,7 @@ if (Test-Command winget) {
 # ============================================================================
 
 $CargoTools = @(
-    "dust",
+    "du-dust",
     "procs",
     "yazi-fm",
     "mcat",
@@ -108,7 +110,12 @@ if (-not (Test-Command cargo)) {
 
 if (Test-Command cargo) {
     foreach ($tool in $CargoTools) {
-        $cmdName = $tool -replace "-fm$", ""  # yazi-fm -> yazi
+        # Map crate names to command names
+        $cmdName = switch ($tool) {
+            "yazi-fm" { "yazi" }
+            "du-dust" { "dust" }
+            default { $tool }
+        }
 
         if (Test-Command $cmdName) {
             Write-Host "  $tool already installed" -ForegroundColor Green
@@ -222,6 +229,43 @@ if (-not $FontsInstalled) {
     Write-Host "  FiraCode Nerd Font already installed" -ForegroundColor Green
 }
 {{ end -}}
+
+# ============================================================================
+# PowerShell Modules
+# ============================================================================
+
+Write-Host ""
+Write-Host "Installing PowerShell modules..." -ForegroundColor Cyan
+
+# Ensure NuGet provider is installed (required for Install-Module)
+$nugetProvider = Get-PackageProvider -Name NuGet -ErrorAction SilentlyContinue
+if (-not $nugetProvider -or $nugetProvider.Version -lt [Version]"2.8.5.201") {
+    Write-Host "  Installing NuGet provider..." -ForegroundColor Yellow
+    try {
+        Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Scope CurrentUser | Out-Null
+    } catch {
+        Write-Host "  NuGet provider installation failed - skipping PowerShell modules" -ForegroundColor Yellow
+    }
+}
+
+$PSModules = @("PSFzf", "Terminal-Icons", "CompletionPredictor")
+
+foreach ($moduleName in $PSModules) {
+    if (Get-Module -ListAvailable -Name $moduleName) {
+        Write-Host "  $moduleName already installed" -ForegroundColor Green
+        $Skipped += $moduleName
+    } else {
+        Write-Host "  Installing $moduleName..." -ForegroundColor Yellow
+        try {
+            Install-Module -Name $moduleName -Scope CurrentUser -Force -AllowClobber -SkipPublisherCheck
+            Write-Host "  $moduleName installed" -ForegroundColor Green
+            $Installed += $moduleName
+        } catch {
+            Write-Host "  Failed: $moduleName - $_" -ForegroundColor Red
+            $Failed += $moduleName
+        }
+    }
+}
 
 # ============================================================================
 # Summary
