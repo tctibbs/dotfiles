@@ -5,10 +5,18 @@
 set -e
 
 # Colors
+RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
+
+# Tracks skipped tools to summarise at the end
+SKIPPED=()
+
+warn() { echo -e "${YELLOW}WARNING: $*${NC}" >&2; }
+skip() { warn "$*"; SKIPPED+=("$*"); }
+die()  { echo -e "${RED}ERROR: $*${NC}" >&2; exit 1; }
 
 echo -e "${BLUE}Installing packages for profile: {{ .profile }}${NC}"
 
@@ -59,21 +67,62 @@ export PATH="$HOME/.local/bin:$PATH"
 # Detect architecture
 ARCH="$(uname -m)"
 
-# Check for sudo access
+# ---------------------------------------------------------------------------
+# Sudo detection — try passwordless first, then prompt
+# ---------------------------------------------------------------------------
 SUDO=""
-if [ "$EUID" -ne 0 ] && command -v sudo &>/dev/null && sudo -n true 2>/dev/null; then
-    SUDO="sudo"
+if [ "$EUID" -ne 0 ]; then
+    if command -v sudo &>/dev/null; then
+        if sudo -n true 2>/dev/null; then
+            SUDO="sudo"
+        else
+            echo -e "${BLUE}sudo requires a password for apt installs (zsh, tmux, etc.)${NC}"
+            if sudo true 2>/dev/null; then
+                SUDO="sudo"
+            else
+                skip "sudo not available — apt packages (zsh, tmux, btop, pgcli, mycli, litecli) will not be installed"
+            fi
+        fi
+    else
+        skip "sudo not found — apt packages (zsh, tmux, btop, pgcli, mycli, litecli) will not be installed"
+    fi
 fi
 
-# Install base packages via apt if we have sudo
+# Install base packages via apt
 if [ -n "$SUDO" ] || [ "$EUID" -eq 0 ]; then
     echo -e "${BLUE}Installing base packages via apt...${NC}"
-    ${SUDO} apt update
-    ${SUDO} apt install -y zsh git curl wget unzip tmux btop pgcli mycli litecli
-else
-    echo -e "${YELLOW}No sudo access - skipping apt packages (zsh, tmux, btop, pgcli, mycli, litecli)${NC}"
-    echo -e "${YELLOW}These tools will need to be installed manually or by an admin${NC}"
+    ${SUDO} apt-get update -qq
+    ${SUDO} apt-get install -y zsh git curl wget unzip tmux btop pgcli mycli litecli
 fi
+
+# ---------------------------------------------------------------------------
+# Helper: fetch latest GitHub release tag, skip tool on failure
+# Usage: gh_version owner/repo  → prints tag, returns 1 on rate-limit/error
+# ---------------------------------------------------------------------------
+gh_version() {
+    local repo="$1"
+    local tag
+    tag=$(curl -sf "https://api.github.com/repos/${repo}/releases/latest" \
+          | grep '"tag_name"' | cut -d'"' -f4)
+    if [ -z "$tag" ]; then
+        skip "${repo}: could not fetch latest version (GitHub rate limit? Try again later or set GITHUB_TOKEN)"
+        return 1
+    fi
+    echo "$tag"
+}
+
+# ---------------------------------------------------------------------------
+# Helper: verify a binary was actually installed after a download attempt
+# Usage: verify_installed <binary> <tool-name>
+# ---------------------------------------------------------------------------
+verify_installed() {
+    local bin="$1" name="$2"
+    if ! command -v "$bin" &>/dev/null && [ ! -f "$HOME/.local/bin/$bin" ]; then
+        skip "${name}: download appeared to succeed but binary not found — may need a retry"
+    else
+        echo -e "${GREEN}${name} installed${NC}"
+    fi
+}
 
 # Install starship
 if ! command -v starship &>/dev/null; then
@@ -94,233 +143,236 @@ if ! command -v zoxide &>/dev/null; then
     curl -sSfL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | sh
 fi
 
-# Architecture-specific binaries
+# ---------------------------------------------------------------------------
+# Architecture-specific binaries (GitHub releases)
+# ---------------------------------------------------------------------------
 echo -e "${BLUE}Installing CLI tools for $ARCH...${NC}"
 
 # Install eza
 if ! command -v eza &>/dev/null; then
-    EZA_VERSION=$(curl -s https://api.github.com/repos/eza-community/eza/releases/latest | grep tag_name | cut -d'"' -f4)
-    if [ "$ARCH" = "x86_64" ]; then
-        curl -sL "https://github.com/eza-community/eza/releases/download/${EZA_VERSION}/eza_${ARCH}-unknown-linux-gnu.tar.gz" | tar xz -C "$HOME/.local/bin"
-    elif [ "$ARCH" = "aarch64" ]; then
-        curl -sL "https://github.com/eza-community/eza/releases/download/${EZA_VERSION}/eza_${ARCH}-unknown-linux-gnu.tar.gz" | tar xz -C "$HOME/.local/bin"
+    if V=$(gh_version "eza-community/eza"); then
+        curl -sL "https://github.com/eza-community/eza/releases/download/${V}/eza_${ARCH}-unknown-linux-gnu.tar.gz" | tar xz -C "$HOME/.local/bin"
+        verify_installed eza eza
     fi
 fi
 
 # Install bat
 if ! command -v bat &>/dev/null; then
-    BAT_VERSION=$(curl -s https://api.github.com/repos/sharkdp/bat/releases/latest | grep tag_name | cut -d'"' -f4)
-    if [ "$ARCH" = "x86_64" ]; then
-        curl -sL "https://github.com/sharkdp/bat/releases/download/${BAT_VERSION}/bat-${BAT_VERSION}-x86_64-unknown-linux-gnu.tar.gz" | tar xz --strip-components=1 -C "$HOME/.local/bin" "bat-${BAT_VERSION}-x86_64-unknown-linux-gnu/bat"
-    elif [ "$ARCH" = "aarch64" ]; then
-        curl -sL "https://github.com/sharkdp/bat/releases/download/${BAT_VERSION}/bat-${BAT_VERSION}-aarch64-unknown-linux-gnu.tar.gz" | tar xz --strip-components=1 -C "$HOME/.local/bin" "bat-${BAT_VERSION}-aarch64-unknown-linux-gnu/bat"
+    if V=$(gh_version "sharkdp/bat"); then
+        curl -sL "https://github.com/sharkdp/bat/releases/download/${V}/bat-${V}-${ARCH}-unknown-linux-gnu.tar.gz" \
+            | tar xz --strip-components=1 -C "$HOME/.local/bin" "bat-${V}-${ARCH}-unknown-linux-gnu/bat"
+        verify_installed bat bat
     fi
 fi
 
 # Install fd
 if ! command -v fd &>/dev/null; then
-    FD_VERSION=$(curl -s https://api.github.com/repos/sharkdp/fd/releases/latest | grep tag_name | cut -d'"' -f4)
-    if [ "$ARCH" = "x86_64" ]; then
-        curl -sL "https://github.com/sharkdp/fd/releases/download/${FD_VERSION}/fd-${FD_VERSION}-x86_64-unknown-linux-gnu.tar.gz" | tar xz --strip-components=1 -C "$HOME/.local/bin" "fd-${FD_VERSION}-x86_64-unknown-linux-gnu/fd"
-    elif [ "$ARCH" = "aarch64" ]; then
-        curl -sL "https://github.com/sharkdp/fd/releases/download/${FD_VERSION}/fd-${FD_VERSION}-aarch64-unknown-linux-gnu.tar.gz" | tar xz --strip-components=1 -C "$HOME/.local/bin" "fd-${FD_VERSION}-aarch64-unknown-linux-gnu/fd"
+    if V=$(gh_version "sharkdp/fd"); then
+        curl -sL "https://github.com/sharkdp/fd/releases/download/${V}/fd-${V}-${ARCH}-unknown-linux-gnu.tar.gz" \
+            | tar xz --strip-components=1 -C "$HOME/.local/bin" "fd-${V}-${ARCH}-unknown-linux-gnu/fd"
+        verify_installed fd fd
     fi
 fi
 
 # Install dust
 if ! command -v dust &>/dev/null; then
-    DUST_VERSION=$(curl -s https://api.github.com/repos/bootandy/dust/releases/latest | grep tag_name | cut -d'"' -f4)
-    if [ "$ARCH" = "x86_64" ]; then
-        curl -sL "https://github.com/bootandy/dust/releases/download/${DUST_VERSION}/dust-${DUST_VERSION}-x86_64-unknown-linux-gnu.tar.gz" | tar xz --strip-components=1 -C "$HOME/.local/bin" "dust-${DUST_VERSION}-x86_64-unknown-linux-gnu/dust"
-    elif [ "$ARCH" = "aarch64" ]; then
-        curl -sL "https://github.com/bootandy/dust/releases/download/${DUST_VERSION}/dust-${DUST_VERSION}-aarch64-unknown-linux-gnu.tar.gz" | tar xz --strip-components=1 -C "$HOME/.local/bin" "dust-${DUST_VERSION}-aarch64-unknown-linux-gnu/dust"
+    if V=$(gh_version "bootandy/dust"); then
+        curl -sL "https://github.com/bootandy/dust/releases/download/${V}/dust-${V}-${ARCH}-unknown-linux-gnu.tar.gz" \
+            | tar xz --strip-components=1 -C "$HOME/.local/bin" "dust-${V}-${ARCH}-unknown-linux-gnu/dust"
+        verify_installed dust dust
     fi
 fi
 
 # Install procs
 if ! command -v procs &>/dev/null; then
-    PROCS_VERSION=$(curl -s https://api.github.com/repos/dalance/procs/releases/latest | grep tag_name | cut -d'"' -f4)
-    if [ "$ARCH" = "x86_64" ]; then
-        curl -sL "https://github.com/dalance/procs/releases/download/${PROCS_VERSION}/procs-${PROCS_VERSION}-x86_64-linux.zip" -o /tmp/procs.zip
-        unzip -o /tmp/procs.zip -d "$HOME/.local/bin" && rm /tmp/procs.zip
-    elif [ "$ARCH" = "aarch64" ]; then
-        curl -sL "https://github.com/dalance/procs/releases/download/${PROCS_VERSION}/procs-${PROCS_VERSION}-aarch64-linux.zip" -o /tmp/procs.zip
-        unzip -o /tmp/procs.zip -d "$HOME/.local/bin" && rm /tmp/procs.zip
+    if V=$(gh_version "dalance/procs"); then
+        if [ "$ARCH" = "x86_64" ]; then
+            curl -sL "https://github.com/dalance/procs/releases/download/${V}/procs-${V}-x86_64-linux.zip" -o /tmp/procs.zip \
+                && unzip -o /tmp/procs.zip -d "$HOME/.local/bin" && rm /tmp/procs.zip
+        elif [ "$ARCH" = "aarch64" ]; then
+            curl -sL "https://github.com/dalance/procs/releases/download/${V}/procs-${V}-aarch64-linux.zip" -o /tmp/procs.zip \
+                && unzip -o /tmp/procs.zip -d "$HOME/.local/bin" && rm /tmp/procs.zip
+        fi
+        verify_installed procs procs
     fi
 fi
 
 # Install difftastic
 if ! command -v difft &>/dev/null; then
-    echo -e "${BLUE}Installing difftastic...${NC}"
-    DIFFT_VERSION=$(curl -s https://api.github.com/repos/Wilfred/difftastic/releases/latest | grep tag_name | cut -d'"' -f4)
-    if [ "$ARCH" = "x86_64" ]; then
-        curl -sL "https://github.com/Wilfred/difftastic/releases/download/${DIFFT_VERSION}/difft-x86_64-unknown-linux-gnu.tar.gz" | tar xz -C "$HOME/.local/bin"
-    elif [ "$ARCH" = "aarch64" ]; then
-        curl -sL "https://github.com/Wilfred/difftastic/releases/download/${DIFFT_VERSION}/difft-aarch64-unknown-linux-gnu.tar.gz" | tar xz -C "$HOME/.local/bin"
+    if V=$(gh_version "Wilfred/difftastic"); then
+        curl -sL "https://github.com/Wilfred/difftastic/releases/download/${V}/difft-${ARCH}-unknown-linux-gnu.tar.gz" \
+            | tar xz -C "$HOME/.local/bin"
+        verify_installed difft difftastic
     fi
 fi
 
 # Install lazydocker
 if ! command -v lazydocker &>/dev/null; then
-    echo -e "${BLUE}Installing lazydocker...${NC}"
-    LAZYDOCKER_VERSION=$(curl -s https://api.github.com/repos/jesseduffield/lazydocker/releases/latest | grep tag_name | cut -d'"' -f4 | sed 's/v//')
-    if [ "$ARCH" = "x86_64" ]; then
-        curl -sL "https://github.com/jesseduffield/lazydocker/releases/download/v${LAZYDOCKER_VERSION}/lazydocker_${LAZYDOCKER_VERSION}_Linux_x86_64.tar.gz" | tar xz -C "$HOME/.local/bin" lazydocker
-    elif [ "$ARCH" = "aarch64" ]; then
-        curl -sL "https://github.com/jesseduffield/lazydocker/releases/download/v${LAZYDOCKER_VERSION}/lazydocker_${LAZYDOCKER_VERSION}_Linux_arm64.tar.gz" | tar xz -C "$HOME/.local/bin" lazydocker
+    if V=$(gh_version "jesseduffield/lazydocker"); then
+        V="${V#v}"
+        if [ "$ARCH" = "x86_64" ]; then
+            curl -sL "https://github.com/jesseduffield/lazydocker/releases/download/v${V}/lazydocker_${V}_Linux_x86_64.tar.gz" \
+                | tar xz -C "$HOME/.local/bin" lazydocker
+        elif [ "$ARCH" = "aarch64" ]; then
+            curl -sL "https://github.com/jesseduffield/lazydocker/releases/download/v${V}/lazydocker_${V}_Linux_arm64.tar.gz" \
+                | tar xz -C "$HOME/.local/bin" lazydocker
+        fi
+        verify_installed lazydocker lazydocker
     fi
 fi
 
 # Install lazygit
 if ! command -v lazygit &>/dev/null; then
-    echo -e "${BLUE}Installing lazygit...${NC}"
-    LAZYGIT_VERSION=$(curl -s https://api.github.com/repos/jesseduffield/lazygit/releases/latest | grep tag_name | cut -d'"' -f4 | sed 's/v//')
-    if [ "$ARCH" = "x86_64" ]; then
-        curl -sL "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz" | tar xz -C "$HOME/.local/bin" lazygit
-    elif [ "$ARCH" = "aarch64" ]; then
-        curl -sL "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_Linux_arm64.tar.gz" | tar xz -C "$HOME/.local/bin" lazygit
+    if V=$(gh_version "jesseduffield/lazygit"); then
+        V="${V#v}"
+        if [ "$ARCH" = "x86_64" ]; then
+            curl -sL "https://github.com/jesseduffield/lazygit/releases/download/v${V}/lazygit_${V}_Linux_x86_64.tar.gz" \
+                | tar xz -C "$HOME/.local/bin" lazygit
+        elif [ "$ARCH" = "aarch64" ]; then
+            curl -sL "https://github.com/jesseduffield/lazygit/releases/download/v${V}/lazygit_${V}_Linux_arm64.tar.gz" \
+                | tar xz -C "$HOME/.local/bin" lazygit
+        fi
+        verify_installed lazygit lazygit
     fi
 fi
 
 # Install dops (docker ps replacement)
 if ! command -v dops &>/dev/null; then
-    echo -e "${BLUE}Installing dops...${NC}"
-    DOPS_VERSION=$(curl -s https://api.github.com/repos/Mikescher/better-docker-ps/releases/latest | grep tag_name | cut -d'"' -f4 | sed 's/v//')
-    if [ "$ARCH" = "x86_64" ]; then
-        curl -sL "https://github.com/Mikescher/better-docker-ps/releases/download/v${DOPS_VERSION}/dops_linux-amd64" -o "$HOME/.local/bin/dops"
-        chmod +x "$HOME/.local/bin/dops"
-    elif [ "$ARCH" = "aarch64" ]; then
-        curl -sL "https://github.com/Mikescher/better-docker-ps/releases/download/v${DOPS_VERSION}/dops_linux-arm64" -o "$HOME/.local/bin/dops"
-        chmod +x "$HOME/.local/bin/dops"
+    if V=$(gh_version "Mikescher/better-docker-ps"); then
+        V="${V#v}"
+        if [ "$ARCH" = "x86_64" ]; then
+            curl -sL "https://github.com/Mikescher/better-docker-ps/releases/download/v${V}/dops_linux-amd64" \
+                -o "$HOME/.local/bin/dops" && chmod +x "$HOME/.local/bin/dops"
+        elif [ "$ARCH" = "aarch64" ]; then
+            curl -sL "https://github.com/Mikescher/better-docker-ps/releases/download/v${V}/dops_linux-arm64" \
+                -o "$HOME/.local/bin/dops" && chmod +x "$HOME/.local/bin/dops"
+        fi
+        verify_installed dops dops
     fi
 fi
 
 # Install delta
 if ! command -v delta &>/dev/null; then
-    DELTA_VERSION=$(curl -s https://api.github.com/repos/dandavison/delta/releases/latest | grep tag_name | cut -d'"' -f4)
-    if [ "$ARCH" = "x86_64" ]; then
-        curl -sL "https://github.com/dandavison/delta/releases/download/${DELTA_VERSION}/delta-${DELTA_VERSION}-x86_64-unknown-linux-gnu.tar.gz" | tar xz --strip-components=1 -C "$HOME/.local/bin" "delta-${DELTA_VERSION}-x86_64-unknown-linux-gnu/delta"
-    elif [ "$ARCH" = "aarch64" ]; then
-        curl -sL "https://github.com/dandavison/delta/releases/download/${DELTA_VERSION}/delta-${DELTA_VERSION}-aarch64-unknown-linux-gnu.tar.gz" | tar xz --strip-components=1 -C "$HOME/.local/bin" "delta-${DELTA_VERSION}-aarch64-unknown-linux-gnu/delta"
+    if V=$(gh_version "dandavison/delta"); then
+        curl -sL "https://github.com/dandavison/delta/releases/download/${V}/delta-${V}-${ARCH}-unknown-linux-gnu.tar.gz" \
+            | tar xz --strip-components=1 -C "$HOME/.local/bin" "delta-${V}-${ARCH}-unknown-linux-gnu/delta"
+        verify_installed delta delta
     fi
 fi
 
 # Install fastfetch
 if ! command -v fastfetch &>/dev/null; then
-    echo -e "${BLUE}Installing fastfetch...${NC}"
-    FASTFETCH_VERSION=$(curl -s https://api.github.com/repos/fastfetch-cli/fastfetch/releases/latest | grep tag_name | cut -d'"' -f4)
-    if [ "$ARCH" = "x86_64" ]; then
-        curl -sL "https://github.com/fastfetch-cli/fastfetch/releases/download/${FASTFETCH_VERSION}/fastfetch-linux-amd64.tar.gz" | tar xz --strip-components=1 -C "$HOME/.local/bin" "fastfetch-linux-amd64/usr/bin/fastfetch"
-    elif [ "$ARCH" = "aarch64" ]; then
-        curl -sL "https://github.com/fastfetch-cli/fastfetch/releases/download/${FASTFETCH_VERSION}/fastfetch-linux-aarch64.tar.gz" | tar xz --strip-components=1 -C "$HOME/.local/bin" "fastfetch-linux-aarch64/usr/bin/fastfetch"
+    if V=$(gh_version "fastfetch-cli/fastfetch"); then
+        if [ "$ARCH" = "x86_64" ]; then
+            curl -sL "https://github.com/fastfetch-cli/fastfetch/releases/download/${V}/fastfetch-linux-amd64.tar.gz" \
+                | tar xz --strip-components=1 -C "$HOME/.local/bin" "fastfetch-linux-amd64/usr/bin/fastfetch"
+        elif [ "$ARCH" = "aarch64" ]; then
+            curl -sL "https://github.com/fastfetch-cli/fastfetch/releases/download/${V}/fastfetch-linux-aarch64.tar.gz" \
+                | tar xz --strip-components=1 -C "$HOME/.local/bin" "fastfetch-linux-aarch64/usr/bin/fastfetch"
+        fi
+        verify_installed fastfetch fastfetch
     fi
 fi
 
-# Install tldr (tealdeer - fast tldr client)
+# Install tldr (tealdeer)
 if ! command -v tldr &>/dev/null; then
-    echo -e "${BLUE}Installing tldr...${NC}"
-    TLDR_VERSION=$(curl -s https://api.github.com/repos/dbrgn/tealdeer/releases/latest | grep tag_name | cut -d'"' -f4)
-    if [ "$ARCH" = "x86_64" ]; then
-        curl -sL "https://github.com/dbrgn/tealdeer/releases/download/${TLDR_VERSION}/tealdeer-linux-x86_64-musl" -o "$HOME/.local/bin/tldr"
-        chmod +x "$HOME/.local/bin/tldr"
-    elif [ "$ARCH" = "aarch64" ]; then
-        curl -sL "https://github.com/dbrgn/tealdeer/releases/download/${TLDR_VERSION}/tealdeer-linux-aarch64-musl" -o "$HOME/.local/bin/tldr"
-        chmod +x "$HOME/.local/bin/tldr"
+    if V=$(gh_version "dbrgn/tealdeer"); then
+        if [ "$ARCH" = "x86_64" ]; then
+            curl -sL "https://github.com/dbrgn/tealdeer/releases/download/${V}/tealdeer-linux-x86_64-musl" \
+                -o "$HOME/.local/bin/tldr" && chmod +x "$HOME/.local/bin/tldr"
+        elif [ "$ARCH" = "aarch64" ]; then
+            curl -sL "https://github.com/dbrgn/tealdeer/releases/download/${V}/tealdeer-linux-aarch64-musl" \
+                -o "$HOME/.local/bin/tldr" && chmod +x "$HOME/.local/bin/tldr"
+        fi
+        verify_installed tldr tldr
     fi
 fi
 
-# Install onefetch (x86_64 only has pre-built binary, aarch64 needs cargo)
+# Install onefetch (x86_64 pre-built; aarch64 needs cargo)
 if ! command -v onefetch &>/dev/null; then
-    echo -e "${BLUE}Installing onefetch...${NC}"
     if [ "$ARCH" = "x86_64" ]; then
-        ONEFETCH_VERSION=$(curl -s https://api.github.com/repos/o2sh/onefetch/releases/latest | grep tag_name | cut -d'"' -f4)
-        curl -sL "https://github.com/o2sh/onefetch/releases/download/${ONEFETCH_VERSION}/onefetch-linux.tar.gz" | tar xz -C "$HOME/.local/bin" onefetch
+        if V=$(gh_version "o2sh/onefetch"); then
+            curl -sL "https://github.com/o2sh/onefetch/releases/download/${V}/onefetch-linux.tar.gz" \
+                | tar xz -C "$HOME/.local/bin" onefetch
+            verify_installed onefetch onefetch
+        fi
     elif [ "$ARCH" = "aarch64" ]; then
         if command -v cargo &>/dev/null; then
-            cargo install onefetch || echo -e "${YELLOW}Failed to install onefetch via cargo${NC}"
+            cargo install onefetch || skip "onefetch: cargo install failed"
         else
-            echo -e "${YELLOW}onefetch: no pre-built aarch64 binary, cargo not available${NC}"
+            skip "onefetch: no pre-built aarch64 binary and cargo not available — install Rust first"
         fi
     fi
 fi
 
 # Install yazi
 if ! command -v yazi &>/dev/null; then
-    echo -e "${BLUE}Installing yazi...${NC}"
-    YAZI_VERSION=$(curl -s https://api.github.com/repos/sxyazi/yazi/releases/latest | grep tag_name | cut -d'"' -f4)
-    if [ "$ARCH" = "x86_64" ]; then
-        curl -sL "https://github.com/sxyazi/yazi/releases/download/${YAZI_VERSION}/yazi-x86_64-unknown-linux-gnu.zip" -o /tmp/yazi.zip
-        unzip -o /tmp/yazi.zip -d /tmp && mv /tmp/yazi-x86_64-unknown-linux-gnu/yazi "$HOME/.local/bin/" && rm -rf /tmp/yazi.zip /tmp/yazi-x86_64-unknown-linux-gnu
-    elif [ "$ARCH" = "aarch64" ]; then
-        curl -sL "https://github.com/sxyazi/yazi/releases/download/${YAZI_VERSION}/yazi-aarch64-unknown-linux-gnu.zip" -o /tmp/yazi.zip
-        unzip -o /tmp/yazi.zip -d /tmp && mv /tmp/yazi-aarch64-unknown-linux-gnu/yazi "$HOME/.local/bin/" && rm -rf /tmp/yazi.zip /tmp/yazi-aarch64-unknown-linux-gnu
+    if V=$(gh_version "sxyazi/yazi"); then
+        if [ "$ARCH" = "x86_64" ]; then
+            curl -sL "https://github.com/sxyazi/yazi/releases/download/${V}/yazi-x86_64-unknown-linux-gnu.zip" -o /tmp/yazi.zip \
+                && unzip -o /tmp/yazi.zip -d /tmp \
+                && mv /tmp/yazi-x86_64-unknown-linux-gnu/yazi "$HOME/.local/bin/" \
+                && rm -rf /tmp/yazi.zip /tmp/yazi-x86_64-unknown-linux-gnu
+        elif [ "$ARCH" = "aarch64" ]; then
+            curl -sL "https://github.com/sxyazi/yazi/releases/download/${V}/yazi-aarch64-unknown-linux-gnu.zip" -o /tmp/yazi.zip \
+                && unzip -o /tmp/yazi.zip -d /tmp \
+                && mv /tmp/yazi-aarch64-unknown-linux-gnu/yazi "$HOME/.local/bin/" \
+                && rm -rf /tmp/yazi.zip /tmp/yazi-aarch64-unknown-linux-gnu
+        fi
+        verify_installed yazi yazi
     fi
 fi
 
-# Install repomix via npm (if npm is available)
+# Install repomix via npm
 if ! command -v repomix &>/dev/null; then
     if command -v npm &>/dev/null; then
         echo -e "${BLUE}Installing repomix via npm...${NC}"
-        npm install -g repomix || echo -e "${YELLOW}Failed to install repomix${NC}"
+        npm install -g repomix || skip "repomix: npm install failed"
     else
-        echo -e "${YELLOW}npm not found - skipping repomix${NC}"
+        skip "repomix: npm not found — install Node.js first, then: npm install -g repomix"
     fi
 fi
 
-# Install Rust-based tools via cargo (if cargo is available)
+# Install Rust-based tools via cargo
 if command -v cargo &>/dev/null; then
     echo -e "${BLUE}Installing Rust-based tools via cargo...${NC}"
-
-    # mcat - markdown cat
     if ! command -v mcat &>/dev/null; then
-        echo -e "${BLUE}Installing mcat...${NC}"
-        cargo install mcat || echo -e "${YELLOW}Failed to install mcat${NC}"
+        cargo install mcat || skip "mcat: cargo install failed"
     fi
-
-    # treemd - markdown tree generator
     if ! command -v treemd &>/dev/null; then
-        echo -e "${BLUE}Installing treemd...${NC}"
-        cargo install treemd || echo -e "${YELLOW}Failed to install treemd${NC}"
+        cargo install treemd || skip "treemd: cargo install failed"
     fi
-
-    # gobang - database TUI
     if ! command -v gobang &>/dev/null; then
-        echo -e "${BLUE}Installing gobang...${NC}"
-        cargo install gobang --version 0.1.0-alpha.5 || echo -e "${YELLOW}Failed to install gobang${NC}"
+        cargo install gobang --version 0.1.0-alpha.5 || skip "gobang: cargo install failed"
     fi
 else
-    echo -e "${YELLOW}cargo not found - skipping Rust tools (mcat, treemd, gobang)${NC}"
-    echo -e "${YELLOW}Install Rust via: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh${NC}"
+    skip "mcat, treemd, gobang: cargo not found — install Rust first: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
 fi
 
 {{ if eq .profile "full" -}}
 # Full profile: Install fonts and GUI apps on Linux
 echo -e "${BLUE}Installing fonts and GUI apps (full profile)...${NC}"
 
-# Install FiraCode Nerd Font
 FONTS_DIR="$HOME/.local/share/fonts"
 mkdir -p "$FONTS_DIR"
 if [ ! -f "$FONTS_DIR/FiraCodeNerdFont-Regular.ttf" ]; then
-    echo -e "${BLUE}Installing FiraCode Nerd Font...${NC}"
-    NERD_FONT_VERSION=$(curl -s https://api.github.com/repos/ryanoasis/nerd-fonts/releases/latest | grep tag_name | cut -d'"' -f4)
-    curl -sL "https://github.com/ryanoasis/nerd-fonts/releases/download/${NERD_FONT_VERSION}/FiraCode.zip" -o /tmp/FiraCode.zip
-    unzip -o /tmp/FiraCode.zip -d "$FONTS_DIR" && rm /tmp/FiraCode.zip
-    # Refresh font cache
-    if command -v fc-cache &>/dev/null; then
-        fc-cache -fv "$FONTS_DIR" 2>/dev/null || true
+    if V=$(gh_version "ryanoasis/nerd-fonts"); then
+        curl -sL "https://github.com/ryanoasis/nerd-fonts/releases/download/${V}/FiraCode.zip" -o /tmp/FiraCode.zip \
+            && unzip -o /tmp/FiraCode.zip -d "$FONTS_DIR" && rm /tmp/FiraCode.zip
+        command -v fc-cache &>/dev/null && fc-cache -fv "$FONTS_DIR" 2>/dev/null || true
+        echo -e "${GREEN}FiraCode Nerd Font installed${NC}"
     fi
-    echo -e "${GREEN}FiraCode Nerd Font installed${NC}"
 else
     echo -e "${GREEN}FiraCode Nerd Font already installed${NC}"
 fi
 
-# Install WezTerm via Flatpak if available
 if ! command -v wezterm &>/dev/null; then
     if command -v flatpak &>/dev/null; then
         echo -e "${BLUE}Installing WezTerm via Flatpak...${NC}"
-        flatpak install --user -y flathub org.wezfurlong.wezterm 2>/dev/null || echo -e "${YELLOW}WezTerm flatpak install failed${NC}"
+        flatpak install --user -y flathub org.wezfurlong.wezterm 2>/dev/null \
+            || skip "WezTerm: flatpak install failed — install manually from https://wezfurlong.org/wezterm/"
     else
-        echo -e "${YELLOW}WezTerm: flatpak not available. Install manually from https://wezfurlong.org/wezterm/${NC}"
+        skip "WezTerm: flatpak not available — install manually from https://wezfurlong.org/wezterm/"
     fi
 else
     echo -e "${GREEN}WezTerm already installed${NC}"
@@ -329,4 +381,15 @@ fi
 
 {{ end -}}
 
-echo -e "${GREEN}Package installation complete!${NC}"
+# ---------------------------------------------------------------------------
+# Summary
+# ---------------------------------------------------------------------------
+if [ ${#SKIPPED[@]} -gt 0 ]; then
+    echo -e "\n${YELLOW}⚠ Installation complete with ${#SKIPPED[@]} skipped item(s):${NC}"
+    for msg in "${SKIPPED[@]}"; do
+        echo -e "  ${YELLOW}• ${msg}${NC}"
+    done
+    echo -e "${YELLOW}Re-run after fixing the above: chezmoi state delete-bucket --bucket=scriptState && chezmoi apply${NC}"
+else
+    echo -e "\n${GREEN}✓ Installation complete — all tools installed${NC}"
+fi
