@@ -3,7 +3,10 @@
        ======================================== */ -}}
 
 {{- /* --- Environment Detection --- */ -}}
-{{- $isContainer := or (env "REMOTE_CONTAINERS") (env "CODESPACES") (stat "/.dockerenv") -}}
+{{- $isContainer := false -}}
+{{- if or (env "REMOTE_CONTAINERS") (env "CODESPACES") (stat "/.dockerenv") -}}
+{{-   $isContainer = true -}}
+{{- end -}}
 {{- $isWSL := false -}}
 {{- if eq .chezmoi.os "linux" -}}
 {{-   $isWSL = output "sh" "-c" "grep -qi microsoft /proc/version 2>/dev/null && echo true || echo false" | trim | eq "true" -}}
