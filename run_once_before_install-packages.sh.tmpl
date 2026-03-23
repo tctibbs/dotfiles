@@ -389,7 +389,7 @@ if [ ${#SKIPPED[@]} -gt 0 ]; then
     for msg in "${SKIPPED[@]}"; do
         echo -e "  ${YELLOW}• ${msg}${NC}"
     done
-    echo -e "${YELLOW}Re-run after fixing the above: chezmoi state delete-bucket --bucket=scriptState && chezmoi apply${NC}"
+    echo -e "${YELLOW}Re-run after fixing the above: chezmoi state delete-bucket --bucket=entryState && chezmoi apply${NC}"
 else
     echo -e "\n${GREEN}✓ Installation complete — all tools installed${NC}"
 fi
