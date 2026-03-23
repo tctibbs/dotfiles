@@ -18,9 +18,12 @@ zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}      # Colorized completio
 zstyle ':completion:*:descriptions' format '%F{green}-- %d --%f'
 zstyle ':completion:*:warnings' format '%F{red}-- no matches --%f'
 
-# Load optional custom configurations (aliases, exports, functions)
-[[ -f "$HOME/.config/zsh/aliash.zsh" ]] && source "$HOME/.config/zsh/aliash.zsh"
+# Ensure ~/.local/bin is in PATH before sourcing aliases (tools like claude live there)
+export PATH="$HOME/.local/bin:$PATH"
+
+# Load optional custom configurations (exports first so PATH is set before aliases)
 [[ -f "$HOME/.config/zsh/exports.zsh" ]] && source "$HOME/.config/zsh/exports.zsh"
+[[ -f "$HOME/.config/zsh/aliash.zsh" ]] && source "$HOME/.config/zsh/aliash.zsh"
 
 # Plugins
 
@@ -52,8 +55,6 @@ if command -v zoxide &>/dev/null; then
 else
   echo "zoxide not found - skipping zoxide integration" >&2
 fi
-
-export PATH="$HOME/.local/bin:$PATH"
 
 # Initialize Starship prompt
 if command -v starship &>/dev/null; then
