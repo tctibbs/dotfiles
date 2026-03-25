@@ -255,20 +255,20 @@ $PSModules = @("PSFzf", "Terminal-Icons", "CompletionPredictor")
 if (-not $hasNuGet) {
     foreach ($moduleName in $PSModules) { $Failed += $moduleName }
 } else {
-
-foreach ($moduleName in $PSModules) {
-    if (Get-Module -ListAvailable -Name $moduleName) {
-        Write-Host "  $moduleName already installed" -ForegroundColor Green
-        $Skipped += $moduleName
-    } else {
-        Write-Host "  Installing $moduleName..." -ForegroundColor Yellow
-        try {
-            Install-Module -Name $moduleName -Scope CurrentUser -Force -AllowClobber -SkipPublisherCheck
-            Write-Host "  $moduleName installed" -ForegroundColor Green
-            $Installed += $moduleName
-        } catch {
-            Write-Host "  Failed: $moduleName - $_" -ForegroundColor Red
-            $Failed += $moduleName
+    foreach ($moduleName in $PSModules) {
+        if (Get-Module -ListAvailable -Name $moduleName) {
+            Write-Host "  $moduleName already installed" -ForegroundColor Green
+            $Skipped += $moduleName
+        } else {
+            Write-Host "  Installing $moduleName..." -ForegroundColor Yellow
+            try {
+                Install-Module -Name $moduleName -Scope CurrentUser -Force -AllowClobber -SkipPublisherCheck
+                Write-Host "  $moduleName installed" -ForegroundColor Green
+                $Installed += $moduleName
+            } catch {
+                Write-Host "  Failed: $moduleName - $_" -ForegroundColor Red
+                $Failed += $moduleName
+            }
         }
     }
 }
