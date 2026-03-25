@@ -238,6 +238,7 @@ Write-Host ""
 Write-Host "Installing PowerShell modules..." -ForegroundColor Cyan
 
 # Ensure NuGet provider is installed (required for Install-Module)
+$hasNuGet = $true
 $nugetProvider = Get-PackageProvider -Name NuGet -ErrorAction SilentlyContinue
 if (-not $nugetProvider -or $nugetProvider.Version -lt [Version]"2.8.5.201") {
     Write-Host "  Installing NuGet provider..." -ForegroundColor Yellow
@@ -245,10 +246,15 @@ if (-not $nugetProvider -or $nugetProvider.Version -lt [Version]"2.8.5.201") {
         Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Scope CurrentUser | Out-Null
     } catch {
         Write-Host "  NuGet provider installation failed - skipping PowerShell modules" -ForegroundColor Yellow
+        $hasNuGet = $false
     }
 }
 
 $PSModules = @("PSFzf", "Terminal-Icons", "CompletionPredictor")
+
+if (-not $hasNuGet) {
+    foreach ($moduleName in $PSModules) { $Failed += $moduleName }
+} else {
 
 foreach ($moduleName in $PSModules) {
     if (Get-Module -ListAvailable -Name $moduleName) {

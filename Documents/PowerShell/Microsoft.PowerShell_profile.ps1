@@ -75,6 +75,7 @@ if (Get-Module -ListAvailable -Name PSReadLine) {
         # Enable predictive IntelliSense (PSReadLine 2.1.0+)
         if ($psReadLineVersion -ge [Version]"2.1.0") {
             try {
+                # Note: CompletionPredictor section below upgrades this to HistoryAndPlugin
                 Set-PSReadLineOption -PredictionSource History -ErrorAction SilentlyContinue
                 Set-PSReadLineOption -PredictionViewStyle ListView -ErrorAction SilentlyContinue
             } catch {
