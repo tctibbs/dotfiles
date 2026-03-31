@@ -224,3 +224,15 @@ function http-server {
         Write-Host "Python not found" -ForegroundColor Red
     }
 }
+
+# ============================================================================
+# Lazygit / Lazydocker
+# ============================================================================
+
+if (Get-Command lazygit -ErrorAction SilentlyContinue) {
+    Set-Alias -Name lg -Value lazygit
+}
+
+if (Get-Command lazydocker -ErrorAction SilentlyContinue) {
+    Set-Alias -Name lzd -Value lazydocker
+}
