@@ -197,6 +197,43 @@ foreach ($app in $GuiApps.Keys) {
     winget install $package --accept-package-agreements --accept-source-agreements 2>&1 | Out-Null
 }
 
+# ============================================================================
+# VS Code Extensions
+# ============================================================================
+
+Write-Host ""
+Write-Host "Installing VS Code extensions..." -ForegroundColor Cyan
+
+if (Test-Command code) {
+    $VsCodeExtensions = @(
+        "Catppuccin.catppuccin-vsc",
+        "Catppuccin.catppuccin-vsc-icons",
+        "miguelsolorio.fluent-icons",
+        "be5invis.vscode-custom-css",
+        "usernamehw.errorlens",
+        "charliermarsh.ruff",
+        "ms-vscode-remote.remote-ssh",
+        "ms-vscode-remote.remote-ssh-edit",
+        "ms-vscode-remote.remote-containers",
+        "ms-vscode-remote.remote-wsl",
+        "ms-vscode.remote-explorer",
+        "jebbs.plantuml"
+    )
+    foreach ($ext in $VsCodeExtensions) {
+        Write-Host "  Installing $ext..." -ForegroundColor Yellow
+        code --install-extension $ext --force 2>&1 | Out-Null
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "  $ext installed" -ForegroundColor Green
+            $Installed += $ext
+        } else {
+            Write-Host "  Failed: $ext" -ForegroundColor Red
+            $Failed += $ext
+        }
+    }
+} else {
+    Write-Host "  code CLI not found - skipping extensions (install VS Code first)" -ForegroundColor Yellow
+}
+
 # Install Nerd Font
 Write-Host ""
 Write-Host "Installing FiraCode Nerd Font..." -ForegroundColor Cyan
@@ -228,6 +265,12 @@ if (-not $FontsInstalled) {
 } else {
     Write-Host "  FiraCode Nerd Font already installed" -ForegroundColor Green
 }
+
+Write-Host ""
+Write-Host "VS Code post-install steps:" -ForegroundColor Cyan
+Write-Host "  1. Restart VS Code fully" -ForegroundColor White
+Write-Host "  2. Ctrl+Shift+P -> 'Enable Custom CSS and JS Loader'" -ForegroundColor White
+Write-Host "  3. Dismiss 'corrupt installation' warning (gear icon -> Don't Show Again)" -ForegroundColor White
 {{ end -}}
 
 # ============================================================================

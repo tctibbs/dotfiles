@@ -377,6 +377,40 @@ if ! command -v wezterm &>/dev/null; then
 else
     echo -e "${GREEN}WezTerm already installed${NC}"
 fi
+
+# VS Code extensions
+if command -v code &>/dev/null; then
+    echo ""
+    echo -e "${BLUE}Installing VS Code extensions...${NC}"
+    VSCODE_EXTENSIONS=(
+        "Catppuccin.catppuccin-vsc"
+        "Catppuccin.catppuccin-vsc-icons"
+        "miguelsolorio.fluent-icons"
+        "be5invis.vscode-custom-css"
+        "usernamehw.errorlens"
+        "charliermarsh.ruff"
+        "ms-vscode-remote.remote-ssh"
+        "ms-vscode-remote.remote-ssh-edit"
+        "ms-vscode-remote.remote-containers"
+        "ms-vscode-remote.remote-wsl"
+        "ms-vscode.remote-explorer"
+        "jebbs.plantuml"
+    )
+    for ext in "${VSCODE_EXTENSIONS[@]}"; do
+        if code --install-extension "$ext" --force &>/dev/null; then
+            echo -e "${GREEN}  ✓ $ext${NC}"
+        else
+            echo -e "${YELLOW}  ✗ $ext (failed — check connection or install manually)${NC}"
+        fi
+    done
+    echo ""
+    echo -e "${CYAN}VS Code post-install steps:${NC}"
+    echo "  1. Restart VS Code fully"
+    echo "  2. Ctrl+Shift+P → 'Enable Custom CSS and JS Loader'"
+    echo "  3. Dismiss 'corrupt installation' warning (gear → Don't Show Again)"
+else
+    echo -e "${YELLOW}code CLI not found — skipping VS Code extensions${NC}"
+fi
 {{ end -}}
 
 {{ end -}}

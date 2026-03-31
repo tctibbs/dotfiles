@@ -1,0 +1,199 @@
+{
+    // ── Preserved / Functional Settings ───────────────────────────────────────
+    "diffEditor.hideUnchangedRegions.enabled": true,
+    "dotfiles.repository": "https://github.com/tctibbs/dotfiles.git",
+    "git.ignoreMissingGitWarning": true,
+    "plantuml.server": "https://www.plantuml.com/plantuml",
+    "plantuml.commandArgs": ["-DPLANTUML_LIMIT_SIZE=8192"],
+    "remote.SSH.remotePlatform": { "home-server": "linux" },
+    "remote.autoForwardPortsSource": "hybrid",
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "jupyter.askForKernelRestart": false,
+    "notebook.formatOnSave.enabled": true,
+
+    // ── Chezmoi File Associations ──────────────────────────────────────────────
+    "files.associations": {
+        "dot_zshrc": "shellscript",
+        "dot_bashrc": "shellscript",
+        "dot_profile": "shellscript",
+        "dot_tmux.conf": "tmux",
+        "dot_tmux*.conf": "tmux",
+        "dot_gitconfig": "properties",
+        "dot_gitconfig*": "properties",
+        "dot_wezterm.lua": "lua",
+        "*.lua": "lua",
+        ".chezmoiignore": "ignore",
+        ".chezmoi*.yaml": "yaml",
+        ".chezmoi*.toml": "toml",
+        "run_*.tmpl": "shellscript",
+        "*.zsh": "shellscript"
+    },
+
+    // ── Theme & Icons ──────────────────────────────────────────────────────────
+    "workbench.colorTheme": "Catppuccin Mocha",
+    "workbench.iconTheme": "catppuccin-mocha",
+    "workbench.productIconTheme": "fluent-icons",
+
+    // ── Catppuccin Configuration ───────────────────────────────────────────────
+    "catppuccin.accentColor": "mauve",
+    "catppuccin.workbenchMode": "minimal",
+    "catppuccin.bracketMode": "neovim",
+    "catppuccin.italicComments": true,
+    "catppuccin.italicKeywords": true,
+    "catppuccin.extraBordersEnabled": false,
+
+    // ── Custom CSS and JS Loader ───────────────────────────────────────────────
+    // Path is resolved at deploy time by chezmoi template rendering.
+    // Backslashes in the Windows home dir are converted to forward slashes for the file URI.
+    "vscode_custom_css.imports": [
+        "file:///{{ .chezmoi.homeDir | replace "\\" "/" }}/AppData/Roaming/Code/User/custom.css"
+    ],
+    "vscode_custom_css.policy": true,
+
+    // ── Editor Font (FiraCode Nerd Font Mono) ──────────────────────────────────
+    "editor.fontFamily": "'FiraCode Nerd Font Mono', 'FiraCode Nerd Font', monospace",
+    "editor.fontSize": 14,
+    "editor.lineHeight": 1.6,
+    "editor.fontWeight": "400",
+    "editor.letterSpacing": 0,
+    "editor.fontLigatures": true,
+
+    // ── Terminal Font ──────────────────────────────────────────────────────────
+    "terminal.integrated.fontFamily": "'FiraCode Nerd Font Mono', monospace",
+    "terminal.integrated.fontSize": 13,
+    "terminal.integrated.lineHeight": 1.4,
+    "terminal.integrated.fontWeight": "400",
+    "terminal.integrated.cursorStyle": "line",
+    "terminal.integrated.cursorBlinking": true,
+    "terminal.integrated.cursorWidth": 2,
+    "terminal.integrated.smoothScrolling": true,
+    "terminal.integrated.drawBoldTextInBrightColors": false,
+    "terminal.integrated.minimumContrastRatio": 1,
+    "terminal.integrated.enableBell": false,
+    "terminal.integrated.gpuAcceleration": "auto",
+
+    // ── Catppuccin Mocha Terminal Colors (matches WezTerm & Windows Terminal) ──
+    "workbench.colorCustomizations": {
+        "[Catppuccin Mocha]": {
+            "editor.background": "#1e1e2e",
+            "sideBar.background": "#1e1e2e",
+            "activityBar.background": "#1e1e2e",
+            "panel.background": "#1e1e2e",
+            "terminal.background": "#1e1e2e",
+            "titleBar.activeBackground": "#1e1e2e",
+            "titleBar.inactiveBackground": "#1e1e2e",
+            "editorGroupHeader.tabsBackground": "#1e1e2e",
+            "sideBar.border": "#1e1e2e",
+            "activityBar.border": "#1e1e2e",
+            "panel.border": "#313244",
+            "titleBar.border": "#1e1e2e",
+            "tab.border": "#1e1e2e",
+            "scrollbar.shadow": "#00000000",
+            "terminal.foreground": "#cdd6f4",
+            "terminalCursor.foreground": "#f5e0dc",
+            "terminal.ansiBlack": "#45475a",
+            "terminal.ansiRed": "#f38ba8",
+            "terminal.ansiGreen": "#a6e3a1",
+            "terminal.ansiYellow": "#f9e2af",
+            "terminal.ansiBlue": "#89b4fa",
+            "terminal.ansiMagenta": "#cba6f7",
+            "terminal.ansiCyan": "#94e2d5",
+            "terminal.ansiWhite": "#bac2de",
+            "terminal.ansiBrightBlack": "#585b70",
+            "terminal.ansiBrightRed": "#f38ba8",
+            "terminal.ansiBrightGreen": "#a6e3a1",
+            "terminal.ansiBrightYellow": "#f9e2af",
+            "terminal.ansiBrightBlue": "#89b4fa",
+            "terminal.ansiBrightMagenta": "#cba6f7",
+            "terminal.ansiBrightCyan": "#94e2d5",
+            "terminal.ansiBrightWhite": "#a6adc8"
+        }
+    },
+
+    // ── Remove Visual Noise ────────────────────────────────────────────────────
+    "editor.minimap.enabled": false,
+    "editor.scrollbar.vertical": "hidden",
+    "editor.scrollbar.horizontal": "hidden",
+    "editor.scrollbar.verticalScrollbarSize": 0,
+    "editor.scrollbar.horizontalScrollbarSize": 0,
+    "editor.guides.indentation": false,
+    "editor.guides.bracketPairs": false,
+    "editor.glyphMargin": false,
+    "editor.overviewRulerBorder": false,
+    "editor.hideCursorInOverviewRuler": true,
+    "editor.renderLineHighlight": "none",
+    "editor.renderWhitespace": "selection",
+    "editor.renderControlCharacters": false,
+    "editor.lightbulb.enabled": "off",
+    "editor.stickyScroll.enabled": false,
+    "editor.occurrencesHighlight": "off",
+    "editor.rulers": [],
+    "breadcrumbs.enabled": false,
+
+    // ── Smooth Animations ──────────────────────────────────────────────────────
+    "editor.smoothScrolling": true,
+    "editor.cursorSmoothCaretAnimation": "on",
+    "editor.cursorBlinking": "smooth",
+    "editor.cursorStyle": "line",
+    "editor.cursorWidth": 2,
+    "workbench.list.smoothScrolling": true,
+
+    // ── Bracket Colorization ───────────────────────────────────────────────────
+    "editor.bracketPairColorization.enabled": true,
+    "editor.semanticHighlighting.enabled": true,
+
+    // ── Workbench Layout ───────────────────────────────────────────────────────
+    "workbench.activityBar.location": "top",
+    "workbench.sideBar.location": "right",
+    "workbench.statusBar.visible": true,
+    "workbench.layoutControl.enabled": false,
+    "workbench.editor.editorActionsLocation": "hidden",
+    "workbench.editor.showTabs": "multiple",
+    "workbench.editor.tabSizing": "shrink",
+    "workbench.editor.pinnedTabSizing": "compact",
+    "workbench.editor.tabActionCloseVisibility": false,
+    "workbench.editor.enablePreview": false,
+    "workbench.editor.decorations.colors": false,
+    "workbench.editor.decorations.badges": false,
+    "workbench.tips.enabled": false,
+    "workbench.editor.empty.hint": "hidden",
+    "workbench.startupEditor": "none",
+    "window.density.editorTabHeight": "compact",
+    "window.commandCenter": false,
+    "window.menuBarVisibility": "toggle",
+    "window.title": "${rootName}${separator}${activeEditorShort}",
+
+    // ── Zen Mode ───────────────────────────────────────────────────────────────
+    "zenMode.fullScreen": false,
+    "zenMode.centerLayout": true,
+    "zenMode.hideLineNumbers": false,
+    "zenMode.hideStatusBar": false,
+    "zenMode.hideActivityBar": true,
+    "zenMode.showTabs": "none",
+    "zenMode.silentNotifications": true,
+    "zenMode.restore": true,
+
+    // ── Panel / Terminal Layout ────────────────────────────────────────────────
+    "workbench.panel.defaultLocation": "bottom",
+    "terminal.integrated.tabs.enabled": true,
+    "terminal.integrated.tabs.location": "left",
+
+    // ── Error Lens ─────────────────────────────────────────────────────────────
+    "errorLens.messageBackgroundMode": "message",
+    "errorLens.fontStyleItalic": true,
+    "errorLens.fontWeight": "300",
+    "errorLens.margin": "40px",
+    "errorLens.padding": "2px 6px",
+    "errorLens.borderRadius": "4px",
+    "errorLens.followCursor": "activeLine",
+    "errorLens.enabledDiagnosticLevels": ["error", "warning"],
+    "errorLens.delay": 500,
+    "errorLens.gutterIconsEnabled": true,
+
+    // ── Misc ───────────────────────────────────────────────────────────────────
+    "editor.accessibilitySupport": "off",
+    "editor.linkedEditing": true,
+    "files.trimTrailingWhitespace": true,
+    "explorer.openEditors.visible": 1
+}
