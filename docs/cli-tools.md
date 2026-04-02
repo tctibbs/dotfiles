@@ -16,7 +16,7 @@ Installed automatically by chezmoi on first run. Each tool has a `command -v` gu
 |----------|--------|
 | macOS | Homebrew (`brew install`) |
 | Linux | GitHub release binaries → `~/.local/bin`, plus apt, cargo, npm |
-| Windows | Scoop / winget / manual |
+| Windows | winget |
 
 ---
 
