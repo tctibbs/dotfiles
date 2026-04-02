@@ -197,4 +197,12 @@ dotfiles/
 
 ## Documentation
 
-- [VSCode Integration](docs/vscode.md) - Auto-deploy dotfiles on remote SSH connections
+| Guide | Covers |
+|-------|--------|
+| [Shell](docs/shell.md) | ZSH plugins, aliases, Starship prompt |
+| [Tmux](docs/tmux.md) | Keybindings, plugins, popup scratchpads |
+| [WezTerm](docs/wezterm.md) | Keys, theme, tab bar, platform behavior |
+| [VS Code](docs/vscode.md) | Settings, custom CSS, extensions |
+| [Git](docs/git.md) | Identity, delta, aliases |
+| [Windows](docs/windows.md) | PowerShell profile, aliases, Windows Terminal |
+| [CLI Tools](docs/cli-tools.md) | Full tool list, install scripts, getcontext |
