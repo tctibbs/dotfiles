@@ -80,7 +80,6 @@ if command -v code &>/dev/null; then
         "Catppuccin.catppuccin-vsc"
         "Catppuccin.catppuccin-vsc-icons"
         "miguelsolorio.fluent-icons"
-        "be5invis.vscode-custom-css"
         "usernamehw.errorlens"
         "charliermarsh.ruff"
         "ms-vscode-remote.remote-ssh"
@@ -97,11 +96,6 @@ if command -v code &>/dev/null; then
             echo -e "${YELLOW}  ✗ $ext (failed — check connection or install manually)${NC}"
         fi
     done
-    echo ""
-    echo -e "${CYAN}VS Code post-install steps:${NC}"
-    echo "  1. Restart VS Code fully"
-    echo "  2. Ctrl+Shift+P → 'Enable Custom CSS and JS Loader'"
-    echo "  3. Dismiss 'corrupt installation' warning (gear → Don't Show Again)"
 else
     echo -e "${YELLOW}code CLI not found — skipping VS Code extensions${NC}"
 fi
