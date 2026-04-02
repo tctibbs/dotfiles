@@ -88,6 +88,7 @@ if command -v code &>/dev/null; then
         "ms-vscode-remote.remote-wsl"
         "ms-vscode.remote-explorer"
         "bierner.markdown-mermaid"
+        "eamodio.gitlens"
     )
     for ext in "${VSCODE_EXTENSIONS[@]}"; do
         if code --install-extension "$ext" --force &>/dev/null; then
