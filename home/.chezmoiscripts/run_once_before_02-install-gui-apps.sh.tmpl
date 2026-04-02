@@ -9,7 +9,6 @@ exit 0
 set -e
 
 # Colors
-RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
@@ -26,6 +25,7 @@ echo -e "${BLUE}Installing GUI apps and fonts (full profile)...${NC}"
 {{ if eq .chezmoi.os "darwin" -}}
 brew install --cask font-fira-code-nerd-font wezterm visual-studio-code 2>/dev/null || true
 brew install fileicon 2>/dev/null || true
+echo -e "${GREEN}GUI apps installed via Homebrew${NC}"
 
 {{ else if eq .chezmoi.os "linux" -}}
 
