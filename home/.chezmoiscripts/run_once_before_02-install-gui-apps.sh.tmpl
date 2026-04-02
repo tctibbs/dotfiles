@@ -87,7 +87,7 @@ if command -v code &>/dev/null; then
         "ms-vscode-remote.remote-containers"
         "ms-vscode-remote.remote-wsl"
         "ms-vscode.remote-explorer"
-        "jebbs.plantuml"
+        "bierner.markdown-mermaid"
     )
     for ext in "${VSCODE_EXTENSIONS[@]}"; do
         if code --install-extension "$ext" --force &>/dev/null; then
