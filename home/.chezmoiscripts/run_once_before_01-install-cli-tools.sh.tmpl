@@ -1,6 +1,10 @@
 #!/bin/bash
-# Chezmoi run_once script: Runs once per machine (tracked by script content hash)
+# CLI tool installation: Homebrew formulae (macOS), GitHub releases (Linux)
 # Install profile: {{ .profile }}
+
+{{ if eq .profile "minimal" -}}
+exit 0
+{{ end -}}
 
 set -e
 
@@ -11,93 +15,34 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-# Tracks skipped tools to summarise at the end
 SKIPPED=()
 
 warn() { echo -e "${YELLOW}WARNING: $*${NC}" >&2; }
 skip() { warn "$*"; SKIPPED+=("$*"); }
-die()  { echo -e "${RED}ERROR: $*${NC}" >&2; exit 1; }
 
-echo -e "${BLUE}Installing packages for profile: {{ .profile }}${NC}"
-
-{{ if eq .profile "minimal" -}}
-# Minimal profile: Skip package installation
-echo -e "${YELLOW}Minimal profile selected - skipping package installation${NC}"
-echo "Shell configuration applied. Run chezmoi with profile=lite or profile=full for tools."
-exit 0
-{{ end -}}
+echo -e "${BLUE}Installing CLI tools for profile: {{ .profile }}${NC}"
 
 {{ if eq .chezmoi.os "darwin" -}}
-# macOS: Install via Homebrew
-if ! command -v brew &>/dev/null; then
-    echo -e "${BLUE}Installing Homebrew...${NC}"
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    # Add brew to PATH for Apple Silicon
-    if [[ -f "/opt/homebrew/bin/brew" ]]; then
-        eval "$(/opt/homebrew/bin/brew shellenv)"
-    fi
-fi
-
-echo -e "${BLUE}Installing packages via Homebrew...${NC}"
-
-# Taps
+# macOS: Install all CLI tools via Homebrew
 brew tap mikescher/tap 2>/dev/null || true
 brew tap tako8ki/tap 2>/dev/null || true
 
-# CLI Tools (all profiles except minimal)
 brew install bat btop difftastic dust eza fastfetch fd fzf git-delta \
     lazydocker lazygit mikescher/tap/dops pgcli procs litecli mcat mycli \
     tako8ki/tap/gobang onefetch repomix treemd yazi starship tldr tmux zoxide \
     2>/dev/null || true
 
-{{ if eq .profile "full" -}}
-# Full profile: Add fonts and GUI apps
-echo -e "${BLUE}Installing fonts and GUI apps (full profile)...${NC}"
-brew install --cask font-fira-code-nerd-font wezterm visual-studio-code 2>/dev/null || true
-brew install fileicon 2>/dev/null || true
-{{ end -}}
+echo -e "${GREEN}CLI tools installed via Homebrew${NC}"
 
 {{ else if eq .chezmoi.os "linux" -}}
-# Linux: Install via apt + manual downloads
+# Linux: Install CLI tools from GitHub releases and package managers
 
-# Ensure ~/.local/bin exists
 mkdir -p "$HOME/.local/bin"
 export PATH="$HOME/.local/bin:$PATH"
-
-# Detect architecture
 ARCH="$(uname -m)"
 
 # ---------------------------------------------------------------------------
-# Sudo detection — try passwordless first, then prompt
-# ---------------------------------------------------------------------------
-SUDO=""
-if [ "$EUID" -ne 0 ]; then
-    if command -v sudo &>/dev/null; then
-        if sudo -n true 2>/dev/null; then
-            SUDO="sudo"
-        else
-            echo -e "${BLUE}sudo requires a password for apt installs (zsh, tmux, etc.)${NC}"
-            if sudo true 2>/dev/null; then
-                SUDO="sudo"
-            else
-                skip "sudo not available — apt packages (zsh, tmux, btop, pgcli, mycli, litecli) will not be installed"
-            fi
-        fi
-    else
-        skip "sudo not found — apt packages (zsh, tmux, btop, pgcli, mycli, litecli) will not be installed"
-    fi
-fi
-
-# Install base packages via apt
-if [ -n "$SUDO" ] || [ "$EUID" -eq 0 ]; then
-    echo -e "${BLUE}Installing base packages via apt...${NC}"
-    ${SUDO} apt-get update -qq
-    ${SUDO} apt-get install -y zsh git curl wget unzip tmux btop pgcli mycli litecli
-fi
-
-# ---------------------------------------------------------------------------
-# Helper: fetch latest GitHub release tag, skip tool on failure
-# Usage: gh_version owner/repo  → prints tag, returns 1 on rate-limit/error
+# Helpers
 # ---------------------------------------------------------------------------
 gh_version() {
     local repo="$1"
@@ -111,10 +56,6 @@ gh_version() {
     echo "$tag"
 }
 
-# ---------------------------------------------------------------------------
-# Helper: verify a binary was actually installed after a download attempt
-# Usage: verify_installed <binary> <tool-name>
-# ---------------------------------------------------------------------------
 verify_installed() {
     local bin="$1" name="$2"
     if ! command -v "$bin" &>/dev/null && [ ! -f "$HOME/.local/bin/$bin" ]; then
@@ -124,31 +65,30 @@ verify_installed() {
     fi
 }
 
-# Install starship
+# ---------------------------------------------------------------------------
+# Shell tools (starship, fzf, zoxide)
+# ---------------------------------------------------------------------------
 if ! command -v starship &>/dev/null; then
     echo -e "${BLUE}Installing starship...${NC}"
     curl -sS https://starship.rs/install.sh | sh -s -- -y
 fi
 
-# Install fzf
 if ! command -v fzf &>/dev/null; then
     echo -e "${BLUE}Installing fzf...${NC}"
     git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf 2>/dev/null || true
     ~/.fzf/install --all --no-bash --no-fish 2>/dev/null || true
 fi
 
-# Install zoxide
 if ! command -v zoxide &>/dev/null; then
     echo -e "${BLUE}Installing zoxide...${NC}"
     curl -sSfL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | sh
 fi
 
 # ---------------------------------------------------------------------------
-# Architecture-specific binaries (GitHub releases)
+# GitHub release binaries
 # ---------------------------------------------------------------------------
 echo -e "${BLUE}Installing CLI tools for $ARCH...${NC}"
 
-# Install eza
 if ! command -v eza &>/dev/null; then
     if V=$(gh_version "eza-community/eza"); then
         curl -sL "https://github.com/eza-community/eza/releases/download/${V}/eza_${ARCH}-unknown-linux-gnu.tar.gz" | tar xz -C "$HOME/.local/bin"
@@ -156,7 +96,6 @@ if ! command -v eza &>/dev/null; then
     fi
 fi
 
-# Install bat
 if ! command -v bat &>/dev/null; then
     if V=$(gh_version "sharkdp/bat"); then
         curl -sL "https://github.com/sharkdp/bat/releases/download/${V}/bat-${V}-${ARCH}-unknown-linux-gnu.tar.gz" \
@@ -165,7 +104,6 @@ if ! command -v bat &>/dev/null; then
     fi
 fi
 
-# Install fd
 if ! command -v fd &>/dev/null; then
     if V=$(gh_version "sharkdp/fd"); then
         curl -sL "https://github.com/sharkdp/fd/releases/download/${V}/fd-${V}-${ARCH}-unknown-linux-gnu.tar.gz" \
@@ -174,7 +112,6 @@ if ! command -v fd &>/dev/null; then
     fi
 fi
 
-# Install dust
 if ! command -v dust &>/dev/null; then
     if V=$(gh_version "bootandy/dust"); then
         curl -sL "https://github.com/bootandy/dust/releases/download/${V}/dust-${V}-${ARCH}-unknown-linux-gnu.tar.gz" \
@@ -183,7 +120,6 @@ if ! command -v dust &>/dev/null; then
     fi
 fi
 
-# Install procs
 if ! command -v procs &>/dev/null; then
     if V=$(gh_version "dalance/procs"); then
         if [ "$ARCH" = "x86_64" ]; then
@@ -197,7 +133,6 @@ if ! command -v procs &>/dev/null; then
     fi
 fi
 
-# Install difftastic
 if ! command -v difft &>/dev/null; then
     if V=$(gh_version "Wilfred/difftastic"); then
         curl -sL "https://github.com/Wilfred/difftastic/releases/download/${V}/difft-${ARCH}-unknown-linux-gnu.tar.gz" \
@@ -206,7 +141,6 @@ if ! command -v difft &>/dev/null; then
     fi
 fi
 
-# Install lazydocker
 if ! command -v lazydocker &>/dev/null; then
     if V=$(gh_version "jesseduffield/lazydocker"); then
         V="${V#v}"
@@ -221,7 +155,6 @@ if ! command -v lazydocker &>/dev/null; then
     fi
 fi
 
-# Install lazygit
 if ! command -v lazygit &>/dev/null; then
     if V=$(gh_version "jesseduffield/lazygit"); then
         V="${V#v}"
@@ -236,7 +169,6 @@ if ! command -v lazygit &>/dev/null; then
     fi
 fi
 
-# Install dops (docker ps replacement)
 if ! command -v dops &>/dev/null; then
     if V=$(gh_version "Mikescher/better-docker-ps"); then
         V="${V#v}"
@@ -251,7 +183,6 @@ if ! command -v dops &>/dev/null; then
     fi
 fi
 
-# Install delta
 if ! command -v delta &>/dev/null; then
     if V=$(gh_version "dandavison/delta"); then
         curl -sL "https://github.com/dandavison/delta/releases/download/${V}/delta-${V}-${ARCH}-unknown-linux-gnu.tar.gz" \
@@ -260,7 +191,6 @@ if ! command -v delta &>/dev/null; then
     fi
 fi
 
-# Install fastfetch
 if ! command -v fastfetch &>/dev/null; then
     if V=$(gh_version "fastfetch-cli/fastfetch"); then
         if [ "$ARCH" = "x86_64" ]; then
@@ -274,7 +204,6 @@ if ! command -v fastfetch &>/dev/null; then
     fi
 fi
 
-# Install tldr (tealdeer)
 if ! command -v tldr &>/dev/null; then
     if V=$(gh_version "dbrgn/tealdeer"); then
         if [ "$ARCH" = "x86_64" ]; then
@@ -288,7 +217,6 @@ if ! command -v tldr &>/dev/null; then
     fi
 fi
 
-# Install onefetch (x86_64 pre-built; aarch64 needs cargo)
 if ! command -v onefetch &>/dev/null; then
     if [ "$ARCH" = "x86_64" ]; then
         if V=$(gh_version "o2sh/onefetch"); then
@@ -305,7 +233,6 @@ if ! command -v onefetch &>/dev/null; then
     fi
 fi
 
-# Install yazi
 if ! command -v yazi &>/dev/null; then
     if V=$(gh_version "sxyazi/yazi"); then
         if [ "$ARCH" = "x86_64" ]; then
@@ -323,7 +250,9 @@ if ! command -v yazi &>/dev/null; then
     fi
 fi
 
-# Install repomix via npm
+# ---------------------------------------------------------------------------
+# npm / cargo tools
+# ---------------------------------------------------------------------------
 if ! command -v repomix &>/dev/null; then
     if command -v npm &>/dev/null; then
         echo -e "${BLUE}Installing repomix via npm...${NC}"
@@ -333,7 +262,6 @@ if ! command -v repomix &>/dev/null; then
     fi
 fi
 
-# Install Rust-based tools via cargo
 if command -v cargo &>/dev/null; then
     echo -e "${BLUE}Installing Rust-based tools via cargo...${NC}"
     if ! command -v mcat &>/dev/null; then
@@ -349,81 +277,15 @@ else
     skip "mcat, treemd, gobang: cargo not found — install Rust first: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
 fi
 
-{{ if eq .profile "full" -}}
-# Full profile: Install fonts and GUI apps on Linux
-echo -e "${BLUE}Installing fonts and GUI apps (full profile)...${NC}"
-
-FONTS_DIR="$HOME/.local/share/fonts"
-mkdir -p "$FONTS_DIR"
-if [ ! -f "$FONTS_DIR/FiraCodeNerdFont-Regular.ttf" ]; then
-    if V=$(gh_version "ryanoasis/nerd-fonts"); then
-        curl -sL "https://github.com/ryanoasis/nerd-fonts/releases/download/${V}/FiraCode.zip" -o /tmp/FiraCode.zip \
-            && unzip -o /tmp/FiraCode.zip -d "$FONTS_DIR" && rm /tmp/FiraCode.zip
-        command -v fc-cache &>/dev/null && fc-cache -fv "$FONTS_DIR" 2>/dev/null || true
-        echo -e "${GREEN}FiraCode Nerd Font installed${NC}"
-    fi
-else
-    echo -e "${GREEN}FiraCode Nerd Font already installed${NC}"
-fi
-
-if ! command -v wezterm &>/dev/null; then
-    if command -v flatpak &>/dev/null; then
-        echo -e "${BLUE}Installing WezTerm via Flatpak...${NC}"
-        flatpak install --user -y flathub org.wezfurlong.wezterm 2>/dev/null \
-            || skip "WezTerm: flatpak install failed — install manually from https://wezfurlong.org/wezterm/"
-    else
-        skip "WezTerm: flatpak not available — install manually from https://wezfurlong.org/wezterm/"
-    fi
-else
-    echo -e "${GREEN}WezTerm already installed${NC}"
-fi
-
-# VS Code extensions
-if command -v code &>/dev/null; then
-    echo ""
-    echo -e "${BLUE}Installing VS Code extensions...${NC}"
-    VSCODE_EXTENSIONS=(
-        "Catppuccin.catppuccin-vsc"
-        "Catppuccin.catppuccin-vsc-icons"
-        "miguelsolorio.fluent-icons"
-        "be5invis.vscode-custom-css"
-        "usernamehw.errorlens"
-        "charliermarsh.ruff"
-        "ms-vscode-remote.remote-ssh"
-        "ms-vscode-remote.remote-ssh-edit"
-        "ms-vscode-remote.remote-containers"
-        "ms-vscode-remote.remote-wsl"
-        "ms-vscode.remote-explorer"
-        "jebbs.plantuml"
-    )
-    for ext in "${VSCODE_EXTENSIONS[@]}"; do
-        if code --install-extension "$ext" --force &>/dev/null; then
-            echo -e "${GREEN}  ✓ $ext${NC}"
-        else
-            echo -e "${YELLOW}  ✗ $ext (failed — check connection or install manually)${NC}"
-        fi
-    done
-    echo ""
-    echo -e "${CYAN}VS Code post-install steps:${NC}"
-    echo "  1. Restart VS Code fully"
-    echo "  2. Ctrl+Shift+P → 'Enable Custom CSS and JS Loader'"
-    echo "  3. Dismiss 'corrupt installation' warning (gear → Don't Show Again)"
-else
-    echo -e "${YELLOW}code CLI not found — skipping VS Code extensions${NC}"
-fi
 {{ end -}}
 
-{{ end -}}
-
-# ---------------------------------------------------------------------------
 # Summary
-# ---------------------------------------------------------------------------
 if [ ${#SKIPPED[@]} -gt 0 ]; then
-    echo -e "\n${YELLOW}⚠ Installation complete with ${#SKIPPED[@]} skipped item(s):${NC}"
+    echo -e "\n${YELLOW}⚠ CLI tools installed with ${#SKIPPED[@]} skipped item(s):${NC}"
     for msg in "${SKIPPED[@]}"; do
         echo -e "  ${YELLOW}• ${msg}${NC}"
     done
     echo -e "${YELLOW}Re-run after fixing the above: chezmoi state delete-bucket --bucket=entryState && chezmoi apply${NC}"
 else
-    echo -e "\n${GREEN}✓ Installation complete — all tools installed${NC}"
+    echo -e "\n${GREEN}✓ CLI tools installed${NC}"
 fi

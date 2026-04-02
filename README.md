@@ -145,44 +145,51 @@ chezmoi update        # Pull latest and apply
 
 ## Architecture
 
-### Chezmoi Structure
+### Repository Structure
 
 ```
-dotfiles/                          # Chezmoi source directory
-├── .chezmoi.yaml.tmpl            # Machine config (identity, profile)
-├── .chezmoiignore                # Conditional file ignores
-├── dot_zshrc                     # ~/.zshrc
-├── dot_gitconfig.tmpl            # ~/.gitconfig (templated)
-├── dot_tmux.conf                 # ~/.tmux.conf
-├── dot_wezterm.lua               # ~/.wezterm.lua
-├── private_dot_config/
-│   ├── zsh/
-│   │   ├── aliash.zsh
-│   │   └── exports.zsh
-│   ├── wezterm/                  # ~/.config/wezterm/
-│   │   ├── keys.lua
-│   │   ├── tabs.lua
-│   │   ├── theme.lua
-│   │   └── platform.lua
-│   ├── fastfetch/
-│   │   └── config.jsonc
-│   ├── starship.toml
-│   └── Code/User/settings.json   # VSCode (Linux only)
-├── private_dot_local/
-│   └── private_bin/
-│       └── executable_getcontext.zsh
-├── Documents/PowerShell/         # Windows PowerShell profile
-├── AppData/.../WindowsTerminal/  # Windows Terminal settings
-├── run_once_before_install-packages.sh.tmpl  # Package install (macOS/Linux)
-├── run_once_before_install-packages-windows.ps1.tmpl  # Package install (Windows)
-└── run_onchange_after_setup-tmux.sh.tmpl     # Tmux plugin install
+dotfiles/
+├── .chezmoiroot                  # Points chezmoi at home/
+├── README.md
+├── docs/                         # Guides and documentation
+├── assets/                       # Screenshots
+│
+└── home/                         # Chezmoi source root
+    ├── .chezmoi.yaml.tmpl        # Machine config (identity, profile)
+    ├── .chezmoiignore            # Conditional file ignores
+    │
+    ├── dot_zshrc                 # ~/.zshrc
+    ├── dot_gitconfig.tmpl        # ~/.gitconfig (templated)
+    ├── dot_gitconfig-work        # ~/.gitconfig-work
+    ├── dot_tmux.conf             # ~/.tmux.conf (+mac/linux variants)
+    ├── dot_wezterm.lua           # ~/.wezterm.lua
+    │
+    ├── private_dot_config/       # ~/.config/
+    │   ├── zsh/                  # Shell aliases and exports
+    │   ├── wezterm/              # WezTerm modules (keys, tabs, theme)
+    │   ├── Code/User/            # VS Code settings and custom CSS
+    │   ├── fastfetch/            # System info config
+    │   └── starship.toml         # Prompt config
+    │
+    ├── private_dot_local/        # ~/.local/
+    │   └── private_bin/          # Custom scripts
+    │
+    ├── Documents/PowerShell/     # Windows PowerShell profile
+    ├── AppData/.../              # Windows Terminal settings
+    │
+    └── .chezmoiscripts/          # Install and setup scripts
+        ├── run_once_before_00-install-base.sh.tmpl       # Homebrew / apt base
+        ├── run_once_before_01-install-cli-tools.sh.tmpl  # CLI tools
+        ├── run_once_before_02-install-gui-apps.sh.tmpl   # Fonts, GUI apps, VS Code
+        ├── run_once_before_install-packages-windows.ps1.tmpl
+        └── run_onchange_after_setup-tmux.sh.tmpl
 ```
 
-### Naming Conventions
+### Chezmoi Naming Conventions
 
 | Prefix | Meaning |
 |--------|---------|
-| `dot_` | File starts with `.` (dot_zshrc → ~/.zshrc) |
+| `dot_` | File starts with `.` (dot_zshrc -> ~/.zshrc) |
 | `private_` | File mode 600 (not world-readable) |
 | `.tmpl` | Go template, rendered with variables |
 | `run_once_` | Script runs once per machine |

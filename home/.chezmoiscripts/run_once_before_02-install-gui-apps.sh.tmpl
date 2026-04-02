@@ -1,0 +1,117 @@
+#!/bin/bash
+# GUI apps, fonts, and VS Code extensions (full profile only)
+# Install profile: {{ .profile }}
+
+{{ if ne .profile "full" -}}
+exit 0
+{{ end -}}
+
+set -e
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+NC='\033[0m'
+
+SKIPPED=()
+
+warn() { echo -e "${YELLOW}WARNING: $*${NC}" >&2; }
+skip() { warn "$*"; SKIPPED+=("$*"); }
+
+echo -e "${BLUE}Installing GUI apps and fonts (full profile)...${NC}"
+
+{{ if eq .chezmoi.os "darwin" -}}
+brew install --cask font-fira-code-nerd-font wezterm visual-studio-code 2>/dev/null || true
+brew install fileicon 2>/dev/null || true
+
+{{ else if eq .chezmoi.os "linux" -}}
+
+# ---------------------------------------------------------------------------
+# Helper
+# ---------------------------------------------------------------------------
+gh_version() {
+    local repo="$1"
+    local tag
+    tag=$(curl -sf "https://api.github.com/repos/${repo}/releases/latest" \
+          | grep '"tag_name"' | cut -d'"' -f4)
+    if [ -z "$tag" ]; then
+        skip "${repo}: could not fetch latest version (GitHub rate limit? Try again later or set GITHUB_TOKEN)"
+        return 1
+    fi
+    echo "$tag"
+}
+
+# Fonts
+FONTS_DIR="$HOME/.local/share/fonts"
+mkdir -p "$FONTS_DIR"
+if [ ! -f "$FONTS_DIR/FiraCodeNerdFont-Regular.ttf" ]; then
+    if V=$(gh_version "ryanoasis/nerd-fonts"); then
+        curl -sL "https://github.com/ryanoasis/nerd-fonts/releases/download/${V}/FiraCode.zip" -o /tmp/FiraCode.zip \
+            && unzip -o /tmp/FiraCode.zip -d "$FONTS_DIR" && rm /tmp/FiraCode.zip
+        command -v fc-cache &>/dev/null && fc-cache -fv "$FONTS_DIR" 2>/dev/null || true
+        echo -e "${GREEN}FiraCode Nerd Font installed${NC}"
+    fi
+else
+    echo -e "${GREEN}FiraCode Nerd Font already installed${NC}"
+fi
+
+# WezTerm
+if ! command -v wezterm &>/dev/null; then
+    if command -v flatpak &>/dev/null; then
+        echo -e "${BLUE}Installing WezTerm via Flatpak...${NC}"
+        flatpak install --user -y flathub org.wezfurlong.wezterm 2>/dev/null \
+            || skip "WezTerm: flatpak install failed — install manually from https://wezfurlong.org/wezterm/"
+    else
+        skip "WezTerm: flatpak not available — install manually from https://wezfurlong.org/wezterm/"
+    fi
+else
+    echo -e "${GREEN}WezTerm already installed${NC}"
+fi
+
+{{ end -}}
+
+# VS Code extensions (cross-platform)
+if command -v code &>/dev/null; then
+    echo -e "${BLUE}Installing VS Code extensions...${NC}"
+    VSCODE_EXTENSIONS=(
+        "Catppuccin.catppuccin-vsc"
+        "Catppuccin.catppuccin-vsc-icons"
+        "miguelsolorio.fluent-icons"
+        "be5invis.vscode-custom-css"
+        "usernamehw.errorlens"
+        "charliermarsh.ruff"
+        "ms-vscode-remote.remote-ssh"
+        "ms-vscode-remote.remote-ssh-edit"
+        "ms-vscode-remote.remote-containers"
+        "ms-vscode-remote.remote-wsl"
+        "ms-vscode.remote-explorer"
+        "jebbs.plantuml"
+    )
+    for ext in "${VSCODE_EXTENSIONS[@]}"; do
+        if code --install-extension "$ext" --force &>/dev/null; then
+            echo -e "${GREEN}  ✓ $ext${NC}"
+        else
+            echo -e "${YELLOW}  ✗ $ext (failed — check connection or install manually)${NC}"
+        fi
+    done
+    echo ""
+    echo -e "${CYAN}VS Code post-install steps:${NC}"
+    echo "  1. Restart VS Code fully"
+    echo "  2. Ctrl+Shift+P → 'Enable Custom CSS and JS Loader'"
+    echo "  3. Dismiss 'corrupt installation' warning (gear → Don't Show Again)"
+else
+    echo -e "${YELLOW}code CLI not found — skipping VS Code extensions${NC}"
+fi
+
+# Summary
+if [ ${#SKIPPED[@]} -gt 0 ]; then
+    echo -e "\n${YELLOW}⚠ GUI apps installed with ${#SKIPPED[@]} skipped item(s):${NC}"
+    for msg in "${SKIPPED[@]}"; do
+        echo -e "  ${YELLOW}• ${msg}${NC}"
+    done
+else
+    echo -e "\n${GREEN}✓ GUI apps and fonts installed${NC}"
+fi
