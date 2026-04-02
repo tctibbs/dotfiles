@@ -16,6 +16,7 @@
 {{ if ne .chezmoi.os "windows" }}
 Documents/
 AppData/
+.chezmoiscripts/install-packages-windows.ps1
 {{ end }}
 
 {{ if eq .chezmoi.os "windows" }}

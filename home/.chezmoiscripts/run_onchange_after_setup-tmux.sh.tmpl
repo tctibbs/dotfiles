@@ -39,26 +39,25 @@ fi
 # Install plugins directly (same as configured in .tmux.conf)
 echo -e "${BLUE}Installing tmux plugins...${NC}"
 
-declare -A PLUGINS=(
-    ["tmux-sensible"]="https://github.com/tmux-plugins/tmux-sensible"
-    ["tmux-resurrect"]="https://github.com/tmux-plugins/tmux-resurrect"
-    ["tmux-continuum"]="https://github.com/tmux-plugins/tmux-continuum"
-    ["tmux-yank"]="https://github.com/tmux-plugins/tmux-yank"
-    ["tmux-fzf"]="https://github.com/sainnhe/tmux-fzf"
-    ["tmux-sessionx"]="https://github.com/omerxx/tmux-sessionx"
-    ["tmux2k"]="https://github.com/2KAbhishek/tmux2k"
-    ["tmux-tpad"]="https://github.com/Subbeh/tmux-tpad"
-)
-
-for plugin in "${!PLUGINS[@]}"; do
-    PLUGIN_DIR="$TMUX_PLUGINS_DIR/$plugin"
-    if [ ! -d "$PLUGIN_DIR" ]; then
-        echo "  Installing $plugin..."
-        git clone --quiet "${PLUGINS[$plugin]}" "$PLUGIN_DIR"
+install_plugin() {
+    local name="$1" url="$2"
+    local dir="$TMUX_PLUGINS_DIR/$name"
+    if [ ! -d "$dir" ]; then
+        echo "  Installing $name..."
+        git clone --quiet "$url" "$dir"
     else
-        echo "  $plugin already installed"
+        echo "  $name already installed"
     fi
-done
+}
+
+install_plugin tmux-sensible  https://github.com/tmux-plugins/tmux-sensible
+install_plugin tmux-resurrect https://github.com/tmux-plugins/tmux-resurrect
+install_plugin tmux-continuum https://github.com/tmux-plugins/tmux-continuum
+install_plugin tmux-yank      https://github.com/tmux-plugins/tmux-yank
+install_plugin tmux-fzf       https://github.com/sainnhe/tmux-fzf
+install_plugin tmux-sessionx  https://github.com/omerxx/tmux-sessionx
+install_plugin tmux2k         https://github.com/2KAbhishek/tmux2k
+install_plugin tmux-tpad      https://github.com/Subbeh/tmux-tpad
 
 echo -e "${GREEN}Tmux plugin setup complete!${NC}"
 echo "Run 'tmux source ~/.tmux.conf' or restart tmux to load plugins."
