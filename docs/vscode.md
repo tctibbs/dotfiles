@@ -65,6 +65,7 @@ Visual noise is aggressively removed:
 | Menu bar | Toggle (hidden by default) |
 | Command center | Off |
 | Startup editor | None |
+| File nesting | On, collapsed (groups lock files, config variants, etc.) |
 
 ---
 
@@ -139,6 +140,7 @@ Installed automatically on **full profile** machines:
 | `ms-vscode-remote.remote-wsl` | WSL remote development |
 | `ms-vscode.remote-explorer` | Remote connections sidebar |
 | `bierner.markdown-mermaid` | Mermaid diagram rendering in markdown preview |
+| `eamodio.gitlens` | Inline blame, file history, line history, branch compare |
 
 Extensions only install when `code` is on PATH. Failures are non-fatal.
 
