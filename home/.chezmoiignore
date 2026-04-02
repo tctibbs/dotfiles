@@ -6,6 +6,7 @@
 # OS-specific ignores
 {{ if ne .chezmoi.os "darwin" }}
 .tmux.mac.conf
+Library/
 {{ end }}
 
 {{ if ne .chezmoi.os "linux" }}

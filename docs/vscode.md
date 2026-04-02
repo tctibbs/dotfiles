@@ -6,12 +6,12 @@ Managed by chezmoi — settings, custom CSS, and extensions are deployed automat
 
 | File | Platform | Target |
 |------|----------|--------|
+| `settings.json.tmpl` | macOS | `~/Library/Application Support/Code/User/settings.json` |
+| `custom.css` | macOS | `~/Library/Application Support/Code/User/custom.css` |
 | `settings.json.tmpl` | Linux | `~/.config/Code/User/settings.json` |
 | `custom.css` | Linux | `~/.config/Code/User/custom.css` |
 | `settings.json.tmpl` | Windows | `~/AppData/Roaming/Code/User/settings.json` |
 | `custom.css` | Windows | `~/AppData/Roaming/Code/User/custom.css` |
-
-> **macOS**: Extensions install automatically but settings aren't deployed (VS Code uses `~/Library/Application Support/Code/User/`).
 
 ---
 
@@ -78,6 +78,11 @@ Extensions only install when `code` is on PATH. Failures are non-fatal.
 ## How the CSS Path Works
 
 `vscode_custom_css.imports` uses a chezmoi template variable so the absolute path resolves at deploy time — no manual editing required:
+
+**macOS** (`Library/Application Support/Code/User/settings.json.tmpl`):
+```
+"file:///{{ .chezmoi.homeDir }}/Library/Application Support/Code/User/custom.css"
+```
 
 **Linux** (`private_dot_config/Code/User/settings.json.tmpl`):
 ```
