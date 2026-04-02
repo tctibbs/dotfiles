@@ -32,7 +32,8 @@ brew install bat btop difftastic dust eza fastfetch fd fzf git-delta \
     tako8ki/tap/gobang onefetch repomix treemd yazi starship tldr tmux zoxide \
     2>/dev/null || true
 
-echo -e "${GREEN}CLI tools installed via Homebrew${NC}"
+echo -e "\n${GREEN}✓ CLI tools installed via Homebrew${NC}"
+exit 0
 
 {{ else if eq .chezmoi.os "linux" -}}
 # Linux: Install CLI tools from GitHub releases and package managers
@@ -279,7 +280,7 @@ fi
 
 {{ end -}}
 
-# Summary
+# Summary (Linux only — macOS exits after brew)
 if [ ${#SKIPPED[@]} -gt 0 ]; then
     echo -e "\n${YELLOW}⚠ CLI tools installed with ${#SKIPPED[@]} skipped item(s):${NC}"
     for msg in "${SKIPPED[@]}"; do
