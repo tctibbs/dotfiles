@@ -115,7 +115,7 @@ The settings map dotfiles to correct language modes for syntax highlighting:
 | Setting | Value |
 |---------|-------|
 | Diff editor | Hide unchanged regions |
-| PlantUML | Server rendering via plantuml.com |
+| Mermaid | Markdown mermaid diagram preview |
 | Remote SSH | `home-server` mapped to Linux |
 | Jupyter | No kernel restart prompt |
 | Dotfiles repo | `tctibbs/dotfiles` (for VS Code's built-in dotfiles sync) |
@@ -138,7 +138,7 @@ Installed automatically on **full profile** machines:
 | `ms-vscode-remote.remote-containers` | Dev containers |
 | `ms-vscode-remote.remote-wsl` | WSL remote development |
 | `ms-vscode.remote-explorer` | Remote connections sidebar |
-| `jebbs.plantuml` | PlantUML diagram rendering |
+| `bierner.markdown-mermaid` | Mermaid diagram rendering in markdown preview |
 
 Extensions only install when `code` is on PATH. Failures are non-fatal.
 

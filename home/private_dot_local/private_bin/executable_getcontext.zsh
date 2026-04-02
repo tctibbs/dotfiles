@@ -167,7 +167,7 @@ getcontext() {
   fi
 
   # Determine extensions based on profile or explicit flag
-  local default_exts=".js,.jsx,.ts,.tsx,.py,.go,.java,.cpp,.c,.h,.hpp,.rs,.rb,.php,.swift,.kt,.scala,.clj,.hs,.ml,.fs,.ex,.exs,.cr,.nim,.zig,.odin,.v,.dart,.sol,.md,.txt,.yml,.yaml,.json,.toml,.xml,.puml,.plantuml"
+  local default_exts=".js,.jsx,.ts,.tsx,.py,.go,.java,.cpp,.c,.h,.hpp,.rs,.rb,.php,.swift,.kt,.scala,.clj,.hs,.ml,.fs,.ex,.exs,.cr,.nim,.zig,.odin,.v,.dart,.sol,.md,.txt,.yml,.yaml,.json,.toml,.xml,.mmd,.mermaid"
 
   local search_exts
   if [[ -n "$extensions" ]]; then
