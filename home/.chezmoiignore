@@ -1,0 +1,39 @@
+# Files to ignore from chezmoi management
+# Syntax: https://www.chezmoi.io/reference/special-files-and-directories/chezmoiignore/
+# Note: repo-level files (README, LICENSE, docs/, assets/) are outside home/
+# and not visible to chezmoi thanks to .chezmoiroot
+
+# OS-specific ignores
+{{ if ne .chezmoi.os "darwin" }}
+.tmux.mac.conf
+Library/
+{{ end }}
+
+{{ if ne .chezmoi.os "linux" }}
+.tmux.linux.conf
+.config/Code/
+{{ end }}
+
+{{ if ne .chezmoi.os "windows" }}
+Documents/
+AppData/
+.chezmoiscripts/install-packages-windows.ps1
+{{ end }}
+
+{{ if eq .chezmoi.os "windows" }}
+.tmux.conf
+.tmux.mac.conf
+.tmux.linux.conf
+{{ end }}
+
+# Container environments: skip tmux
+{{ if .isContainer }}
+.tmux.conf
+.tmux.mac.conf
+.tmux.linux.conf
+{{ end }}
+
+# WSL: skip macOS-specific
+{{ if .isWSL }}
+.tmux.mac.conf
+{{ end }}

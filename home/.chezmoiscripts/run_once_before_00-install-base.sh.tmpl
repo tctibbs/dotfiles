@@ -1,0 +1,66 @@
+#!/bin/bash
+# Base system setup: Homebrew (macOS), apt packages (Linux), architecture detection
+# Install profile: {{ .profile }}
+
+set -e
+
+# Colors
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+warn() { echo -e "${YELLOW}WARNING: $*${NC}" >&2; }
+
+echo -e "${BLUE}Installing base packages for profile: {{ .profile }}${NC}"
+
+{{ if eq .profile "minimal" -}}
+echo -e "${YELLOW}Minimal profile selected - skipping package installation${NC}"
+echo "Shell configuration applied. Run chezmoi with profile=lite or profile=full for tools."
+exit 0
+{{ end -}}
+
+{{ if eq .chezmoi.os "darwin" -}}
+# macOS: Install Homebrew if missing
+if ! command -v brew &>/dev/null; then
+    echo -e "${BLUE}Installing Homebrew...${NC}"
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    if [[ -f "/opt/homebrew/bin/brew" ]]; then
+        eval "$(/opt/homebrew/bin/brew shellenv)"
+    fi
+fi
+echo -e "${GREEN}Homebrew ready${NC}"
+
+{{ else if eq .chezmoi.os "linux" -}}
+# Linux: Install base packages via apt
+
+mkdir -p "$HOME/.local/bin"
+export PATH="$HOME/.local/bin:$PATH"
+
+# Sudo detection — try passwordless first, then prompt
+SUDO=""
+if [ "$EUID" -ne 0 ]; then
+    if command -v sudo &>/dev/null; then
+        if sudo -n true 2>/dev/null; then
+            SUDO="sudo"
+        else
+            echo -e "${BLUE}sudo requires a password for apt installs (zsh, tmux, etc.)${NC}"
+            if sudo true 2>/dev/null; then
+                SUDO="sudo"
+            else
+                warn "sudo not available — apt packages (zsh, tmux, btop, pgcli, mycli, litecli) will not be installed"
+            fi
+        fi
+    else
+        warn "sudo not found — apt packages (zsh, tmux, btop, pgcli, mycli, litecli) will not be installed"
+    fi
+fi
+
+if [ -n "$SUDO" ] || [ "$EUID" -eq 0 ]; then
+    echo -e "${BLUE}Installing base packages via apt...${NC}"
+    ${SUDO} apt-get update -qq
+    ${SUDO} apt-get install -y zsh git curl wget unzip tmux btop pgcli mycli litecli
+fi
+
+echo -e "${GREEN}Base packages ready${NC}"
+{{ end -}}
