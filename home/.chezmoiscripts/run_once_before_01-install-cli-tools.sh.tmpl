@@ -195,10 +195,10 @@ if ! command -v fastfetch &>/dev/null; then
     if V=$(gh_version "fastfetch-cli/fastfetch"); then
         if [ "$ARCH" = "x86_64" ]; then
             curl -sL "https://github.com/fastfetch-cli/fastfetch/releases/download/${V}/fastfetch-linux-amd64.tar.gz" \
-                | tar xz --strip-components=1 -C "$HOME/.local/bin" "fastfetch-linux-amd64/usr/bin/fastfetch"
+                | tar xz --strip-components=3 -C "$HOME/.local/bin" "fastfetch-linux-amd64/usr/bin/fastfetch"
         elif [ "$ARCH" = "aarch64" ]; then
             curl -sL "https://github.com/fastfetch-cli/fastfetch/releases/download/${V}/fastfetch-linux-aarch64.tar.gz" \
-                | tar xz --strip-components=1 -C "$HOME/.local/bin" "fastfetch-linux-aarch64/usr/bin/fastfetch"
+                | tar xz --strip-components=3 -C "$HOME/.local/bin" "fastfetch-linux-aarch64/usr/bin/fastfetch"
         fi
         verify_installed fastfetch fastfetch
     fi
@@ -221,7 +221,7 @@ if ! command -v onefetch &>/dev/null; then
     if [ "$ARCH" = "x86_64" ]; then
         if V=$(gh_version "o2sh/onefetch"); then
             curl -sL "https://github.com/o2sh/onefetch/releases/download/${V}/onefetch-linux.tar.gz" \
-                | tar xz -C "$HOME/.local/bin" onefetch
+                | tar xz --strip-components=1 -C "$HOME/.local/bin"
             verify_installed onefetch onefetch
         fi
     elif [ "$ARCH" = "aarch64" ]; then
