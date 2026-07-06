@@ -24,6 +24,10 @@ AppData/
 .tmux.conf
 .tmux.mac.conf
 .tmux.linux.conf
+.chezmoiscripts/00-install-base.sh
+.chezmoiscripts/01-install-cli-tools.sh
+.chezmoiscripts/02-install-gui-apps.sh
+.chezmoiscripts/setup-tmux.sh
 {{ end }}
 
 # Container environments: skip tmux
@@ -37,3 +41,6 @@ AppData/
 {{ if .isWSL }}
 .tmux.mac.conf
 {{ end }}
+
+# Machine-local secrets (never committed to git)
+Documents/PowerShell/claude_env.ps1

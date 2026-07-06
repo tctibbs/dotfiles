@@ -25,177 +25,193 @@ function Test-Command {
 }
 
 # ============================================================================
-# Winget Tools
+# Package Manager Detection
 # ============================================================================
 
-$WingetTools = @{
-    "bat" = "sharkdp.bat"
-    "fd" = "sharkdp.fd"
-    "fzf" = "junegunn.fzf"
-    "zoxide" = "ajeetdsouza.zoxide"
-    "tldr" = "tldr-pages.tlrc"
-    "eza" = "eza-community.eza"
-    "delta" = "dandavison.delta"
-    "fastfetch" = "Fastfetch-cli.Fastfetch"
-    "btop" = "aristocratos.btop4win"
-    "lazygit" = "JesseDuffield.lazygit"
-    "lazydocker" = "JesseDuffield.lazydocker"
-}
+$HasWinget = Test-Command winget
+$HasScoop = Test-Command scoop
 
-Write-Host "Installing tools via winget..." -ForegroundColor Cyan
-
-if (Test-Command winget) {
-    foreach ($tool in $WingetTools.Keys) {
-        $package = $WingetTools[$tool]
-
-        if (Test-Command $tool) {
-            Write-Host "  $tool already installed" -ForegroundColor Green
-            $Skipped += $tool
-            continue
-        }
-
-        Write-Host "  Installing $tool..." -ForegroundColor Yellow
-        try {
-            winget install $package --accept-package-agreements --accept-source-agreements 2>&1 | Out-Null
-            if ($LASTEXITCODE -eq 0 -or (Test-Command $tool)) {
-                Write-Host "  $tool installed" -ForegroundColor Green
-                $Installed += $tool
-            } else {
-                $Failed += $tool
-            }
-        } catch {
-            Write-Host "  Failed: $tool" -ForegroundColor Red
-            $Failed += $tool
+function Install-Tool {
+    param(
+        [string]$Command,
+        [string]$WingetId,
+        [string]$ScoopName
+    )
+    if (Test-Command $Command) {
+        Write-Host "  $Command already installed" -ForegroundColor Green
+        $script:Skipped += $Command
+        return
+    }
+    Write-Host "  Installing $Command..." -ForegroundColor Yellow
+    if ($HasWinget -and $WingetId) {
+        winget install $WingetId --accept-package-agreements --accept-source-agreements 2>&1 | Out-Null
+        if ($LASTEXITCODE -eq 0 -or (Test-Command $Command)) {
+            Write-Host "  $Command installed (winget)" -ForegroundColor Green
+            $script:Installed += $Command; return
         }
     }
-} else {
-    Write-Host "  winget not found - install from https://aka.ms/getwinget" -ForegroundColor Yellow
+    if ($HasScoop -and $ScoopName) {
+        scoop install $ScoopName 2>&1 | Out-Null
+        if ($LASTEXITCODE -eq 0 -or (Test-Command $Command)) {
+            Write-Host "  $Command installed (scoop)" -ForegroundColor Green
+            $script:Installed += $Command; return
+        }
+    }
+    Write-Host "  Failed: $Command" -ForegroundColor Red
+    $script:Failed += $Command
+}
+
+# ============================================================================
+# CLI Tools (winget preferred, scoop fallback)
+# ============================================================================
+
+Write-Host "Installing CLI tools..." -ForegroundColor Cyan
+
+Install-Tool "bat"       "sharkdp.bat"              "bat"
+Install-Tool "fd"        "sharkdp.fd"               "fd"
+Install-Tool "fzf"       "junegunn.fzf"             "fzf"
+Install-Tool "zoxide"    "ajeetdsouza.zoxide"       "zoxide"
+Install-Tool "eza"       "eza-community.eza"        "eza"
+Install-Tool "delta"     "dandavison.delta"          "delta"
+Install-Tool "fastfetch" "Fastfetch-cli.Fastfetch"  "fastfetch"
+Install-Tool "lazygit"   "JesseDuffield.lazygit"    "lazygit"
+Install-Tool "lazydocker" "JesseDuffield.lazydocker" "lazydocker"
+Install-Tool "starship"  "Starship.Starship"        "starship"
+Install-Tool "onefetch"  ""                         "extras/onefetch"
+Install-Tool "dust"      ""                         "dust"
+Install-Tool "procs"     ""                         "procs"
+
+# tldr (command name differs from package)
+if (-not (Test-Command tldr)) {
+    Write-Host "  Installing tldr..." -ForegroundColor Yellow
+    if ($HasWinget) { winget install tldr-pages.tlrc --accept-package-agreements --accept-source-agreements 2>&1 | Out-Null }
+    if (-not (Test-Command tldr) -and $HasScoop) { scoop install tealdeer 2>&1 | Out-Null }
+    if (Test-Command tldr) { Write-Host "  tldr installed" -ForegroundColor Green; $Installed += "tldr" }
+    else { Write-Host "  Failed: tldr" -ForegroundColor Red; $Failed += "tldr" }
+} else { Write-Host "  tldr already installed" -ForegroundColor Green; $Skipped += "tldr" }
+
+# btop (name differs between winget/scoop)
+if (-not (Test-Command btop)) {
+    Write-Host "  Installing btop..." -ForegroundColor Yellow
+    if ($HasWinget) { winget install aristocratos.btop4win --accept-package-agreements --accept-source-agreements 2>&1 | Out-Null }
+    if (-not (Test-Command btop) -and $HasScoop) { scoop install btop4win 2>&1 | Out-Null }
+    if (Test-Command btop) { Write-Host "  btop installed" -ForegroundColor Green; $Installed += "btop" }
+    else { Write-Host "  Failed: btop" -ForegroundColor Red; $Failed += "btop" }
+} else { Write-Host "  btop already installed" -ForegroundColor Green; $Skipped += "btop" }
+
+# FiraCode Nerd Font via scoop nerd-fonts bucket
+Write-Host ""
+Write-Host "Installing FiraCode Nerd Font..." -ForegroundColor Cyan
+if ($HasScoop) {
+    $nfBucket = scoop bucket list 2>&1 | Select-String "nerd-fonts"
+    if (-not $nfBucket) { scoop bucket add nerd-fonts 2>&1 | Out-Null }
+    scoop install nerd-fonts/FiraCode-NF 2>&1 | Out-Null
+    Write-Host "  FiraCode Nerd Font installed (scoop)" -ForegroundColor Green
+    $Installed += "FiraCode-NF"
 }
 
 # ============================================================================
 # Cargo Tools (requires Rust)
 # ============================================================================
 
-$CargoTools = @(
-    "du-dust",
-    "procs",
-    "yazi-fm",
-    "mcat",
-    "treemd",
-    "onefetch",
-    "difftastic"
-)
-
 Write-Host ""
 Write-Host "Installing Rust tools via cargo..." -ForegroundColor Cyan
 
-# Install Rust if needed
+# Install Rust: scoop preferred, winget fallback
 if (-not (Test-Command cargo)) {
-    Write-Host "  Installing Rust via winget..." -ForegroundColor Yellow
-    if (Test-Command winget) {
+    Write-Host "  Installing Rust..." -ForegroundColor Yellow
+    if ($HasScoop) {
+        # mingw provides dlltool.exe required by the GNU Rust toolchain
+        scoop install mingw rustup-gnu 2>&1 | Out-Null
+        # scoop rustup-gnu persists data under scoop\persist, not ~/.cargo / ~/.rustup
+        $env:RUSTUP_HOME = Join-Path $env:USERPROFILE "scoop\persist\rustup-gnu\.rustup"
+        $env:CARGO_HOME  = Join-Path $env:USERPROFILE "scoop\persist\rustup-gnu\.cargo"
+        $CargoPath = Join-Path $env:CARGO_HOME "bin"
+        $MinGWBin = Join-Path $env:USERPROFILE "scoop\apps\mingw\current\bin"
+        if (Test-Path $MinGWBin) { $env:PATH = "$MinGWBin;$env:PATH" }
+    } elseif ($HasWinget) {
         winget install Rustlang.Rustup --accept-package-agreements --accept-source-agreements 2>&1 | Out-Null
-
-        # Add cargo to PATH
         $CargoPath = Join-Path $env:USERPROFILE ".cargo\bin"
-        if (Test-Path $CargoPath) {
-            $env:PATH = "$CargoPath;$env:PATH"
-        }
+        if (Test-Command rustup) { rustup default stable 2>&1 | Out-Null }
+    }
+    if ($CargoPath -and (Test-Path $CargoPath)) { $env:PATH = "$CargoPath;$env:PATH" }
+}
 
-        # Initialize rustup
-        if (Test-Command rustup) {
-            rustup default stable 2>&1 | Out-Null
+# Tools available in scoop (faster than cargo build)
+$ScoopCargoTools = @{
+    "yazi"    = "yazi"
+    "onefetch" = "extras/onefetch"
+    "dust"    = "dust"
+    "procs"   = "procs"
+    "difft"   = "difftastic"
+}
+
+# Tools only available via cargo install
+$CargoOnlyTools = @{
+    "mcat"   = "mcat"
+    "treemd" = "treemd"
+}
+
+if ($HasScoop) {
+    foreach ($cmd in $ScoopCargoTools.Keys) {
+        $pkg = $ScoopCargoTools[$cmd]
+        if (-not (Test-Command $cmd)) {
+            Write-Host "  Installing $cmd (scoop)..." -ForegroundColor Yellow
+            scoop install $pkg 2>&1 | Out-Null
+            if (Test-Command $cmd) { Write-Host "  $cmd installed" -ForegroundColor Green; $Installed += $cmd }
+            else { Write-Host "  Failed: $cmd" -ForegroundColor Red; $Failed += $cmd }
+        } else {
+            Write-Host "  $cmd already installed" -ForegroundColor Green; $Skipped += $cmd
         }
     }
 }
 
 if (Test-Command cargo) {
-    foreach ($tool in $CargoTools) {
-        # Map crate names to command names
-        $cmdName = switch ($tool) {
-            "yazi-fm" { "yazi" }
-            "du-dust" { "dust" }
-            default { $tool }
-        }
-
-        if (Test-Command $cmdName) {
-            Write-Host "  $tool already installed" -ForegroundColor Green
-            $Skipped += $tool
-            continue
-        }
-
-        Write-Host "  Installing $tool (this may take a while)..." -ForegroundColor Yellow
-        $output = cargo install $tool 2>&1
-        if ($LASTEXITCODE -eq 0) {
-            Write-Host "  $tool installed" -ForegroundColor Green
-            $Installed += $tool
+    foreach ($cmd in $CargoOnlyTools.Keys) {
+        $crate = $CargoOnlyTools[$cmd]
+        if (-not (Test-Command $cmd)) {
+            Write-Host "  Installing $crate (cargo)..." -ForegroundColor Yellow
+            $output = cargo install $crate 2>&1
+            if ($LASTEXITCODE -eq 0) { Write-Host "  $cmd installed" -ForegroundColor Green; $Installed += $cmd }
+            else { Write-Host "  Failed: $crate`n  $output" -ForegroundColor Red; $Failed += $cmd }
         } else {
-            Write-Host "  Failed: $tool" -ForegroundColor Red
-            Write-Host "  Error: $output" -ForegroundColor Red
-            $Failed += $tool
+            Write-Host "  $cmd already installed" -ForegroundColor Green; $Skipped += $cmd
         }
     }
-
-    # Install gobang with specific version
+    # gobang requires a pinned version
     if (-not (Test-Command gobang)) {
-        Write-Host "  Installing gobang..." -ForegroundColor Yellow
+        Write-Host "  Installing gobang (cargo)..." -ForegroundColor Yellow
         $output = cargo install gobang --version 0.1.0-alpha.5 2>&1
-        if ($LASTEXITCODE -eq 0) {
-            Write-Host "  gobang installed" -ForegroundColor Green
-            $Installed += "gobang"
-        } else {
-            Write-Host "  Failed: gobang" -ForegroundColor Red
-            Write-Host "  Error: $output" -ForegroundColor Red
-            $Failed += "gobang"
-        }
-    } else {
-        $Skipped += "gobang"
-    }
+        if ($LASTEXITCODE -eq 0) { Write-Host "  gobang installed" -ForegroundColor Green; $Installed += "gobang" }
+        else { Write-Host "  Failed: gobang`n  $output" -ForegroundColor Red; $Failed += "gobang" }
+    } else { Write-Host "  gobang already installed" -ForegroundColor Green; $Skipped += "gobang" }
 } else {
-    Write-Host "  Cargo not available - skipping Rust tools" -ForegroundColor Yellow
-}
-
-# ============================================================================
-# Starship Prompt
-# ============================================================================
-
-Write-Host ""
-Write-Host "Installing Starship prompt..." -ForegroundColor Cyan
-
-if (-not (Test-Command starship)) {
-    if (Test-Command winget) {
-        winget install Starship.Starship --accept-package-agreements --accept-source-agreements 2>&1 | Out-Null
-        Write-Host "  Starship installed" -ForegroundColor Green
-        $Installed += "starship"
-    }
-} else {
-    Write-Host "  Starship already installed" -ForegroundColor Green
-    $Skipped += "starship"
+    Write-Host "  Cargo not available - skipping cargo-only tools" -ForegroundColor Yellow
+    $Failed += $CargoOnlyTools.Keys
+    $Failed += "gobang"
 }
 
 {{ if eq .profile "full" -}}
 # ============================================================================
-# Full Profile: GUI Apps & Fonts
+# Full Profile: GUI Apps
 # ============================================================================
 
 Write-Host ""
 Write-Host "Installing GUI apps (full profile)..." -ForegroundColor Cyan
 
-$GuiApps = @{
-    "wezterm" = "wez.wezterm"
-    "code" = "Microsoft.VisualStudioCode"
-}
-
-foreach ($app in $GuiApps.Keys) {
-    $package = $GuiApps[$app]
-
-    if (Test-Command $app) {
-        Write-Host "  $app already installed" -ForegroundColor Green
-        continue
+# Try winget first, scoop extras as fallback
+if ($HasWinget) {
+    if (-not (Test-Command wezterm)) {
+        winget install wez.wezterm --accept-package-agreements --accept-source-agreements 2>&1 | Out-Null
     }
-
-    Write-Host "  Installing $app..." -ForegroundColor Yellow
-    winget install $package --accept-package-agreements --accept-source-agreements 2>&1 | Out-Null
+    if (-not (Test-Command code)) {
+        winget install Microsoft.VisualStudioCode --accept-package-agreements --accept-source-agreements 2>&1 | Out-Null
+    }
+} elseif ($HasScoop) {
+    if (-not (Test-Command wezterm)) { scoop install extras/wezterm 2>&1 | Out-Null }
+    if (-not (Test-Command code)) { scoop install extras/vscode 2>&1 | Out-Null }
 }
+Write-Host "  GUI apps done" -ForegroundColor Green
 
 # ============================================================================
 # VS Code Extensions
@@ -232,38 +248,6 @@ if (Test-Command code) {
     }
 } else {
     Write-Host "  code CLI not found - skipping extensions (install VS Code first)" -ForegroundColor Yellow
-}
-
-# Install Nerd Font
-Write-Host ""
-Write-Host "Installing FiraCode Nerd Font..." -ForegroundColor Cyan
-$FontsFolder = Join-Path $env:LOCALAPPDATA "Microsoft\Windows\Fonts"
-$FontsInstalled = (Get-ChildItem -Path $FontsFolder -Filter "FiraCodeNerdFont*.ttf" -ErrorAction SilentlyContinue).Count -gt 0
-if (-not $FontsInstalled) {
-    $NerdFontUrl = "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FiraCode.zip"
-    $TempZip = Join-Path $env:TEMP "FiraCode.zip"
-    $TempExtract = Join-Path $env:TEMP "FiraCodeNerdFont"
-
-    try {
-        Invoke-WebRequest -Uri $NerdFontUrl -OutFile $TempZip
-        Expand-Archive -Path $TempZip -DestinationPath $TempExtract -Force
-
-        # Install fonts
-        $Fonts = Get-ChildItem -Path $TempExtract -Filter "*.ttf"
-        foreach ($Font in $Fonts) {
-            Copy-Item $Font.FullName -Destination $FontsFolder -Force
-        }
-
-        Write-Host "  FiraCode Nerd Font installed" -ForegroundColor Green
-
-        # Cleanup
-        Remove-Item $TempZip -Force -ErrorAction SilentlyContinue
-        Remove-Item $TempExtract -Recurse -Force -ErrorAction SilentlyContinue
-    } catch {
-        Write-Host "  Font installation failed: $_" -ForegroundColor Yellow
-    }
-} else {
-    Write-Host "  FiraCode Nerd Font already installed" -ForegroundColor Green
 }
 
 Write-Host ""
