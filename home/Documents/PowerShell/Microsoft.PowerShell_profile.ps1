@@ -7,6 +7,12 @@
 # Environment Variables
 # ============================================================================
 
+# Load machine-local secrets (not tracked in git)
+$LocalEnvPath = Join-Path $PSScriptRoot "claude_env.ps1"
+if (Test-Path $LocalEnvPath) {
+    . $LocalEnvPath
+}
+
 # Set default editor (change to your preference)
 $env:EDITOR = "code"
 
@@ -142,15 +148,11 @@ if (Get-Module -ListAvailable -Name CompletionPredictor) {
 # ============================================================================
 
 # Load aliases from separate file
-$AliasPath = Join-Path $PSScriptRoot "aliases.ps1"
+# $PSScriptRoot is empty when dot-sourced, so resolve from the profile path directly
+$_ProfileDir = Split-Path -Parent ($MyInvocation.MyCommand.Path ?? $PROFILE)
+$AliasPath = Join-Path $_ProfileDir "aliases.ps1"
 if (Test-Path $AliasPath) {
     . $AliasPath
-} else {
-    # Try alternate location (if profile is in different directory)
-    $DotfilesAliasPath = Join-Path $env:USERPROFILE ".dotfiles\windows\aliases.ps1"
-    if (Test-Path $DotfilesAliasPath) {
-        . $DotfilesAliasPath
-    }
 }
 
 # ============================================================================
