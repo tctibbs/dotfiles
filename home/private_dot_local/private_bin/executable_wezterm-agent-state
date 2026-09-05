@@ -1,0 +1,119 @@
+#!/bin/sh
+
+# ==============================================================
+# wezterm-agent-state: report coding agent state to the WezTerm tab bar
+#
+# Writes the `agent_id` and `agent_state` user variables via OSC 1337
+# SetUserVar. tabs.lua reads them and repaints the tab.
+#
+# Example usage:
+#
+#   wezterm-agent-state claude working
+#   wezterm-agent-state codex waiting
+#   wezterm-agent-state copilot idle
+#   wezterm-agent-state claude clear      # clear both vars
+#
+# States are normalised in agents/state.lua; working, idle and waiting are
+# canonical, and common synonyms (busy, done, blocked, approval) also map.
+#
+# Finding a terminal to write to
+# ------------------------------
+# Most agents run hooks in the same shell as the CLI, so stdout or stdin is
+# already the pane's tty. Claude Code is the exception: its hooks run in their
+# own session with no controlling terminal, and /dev/tty fails outright. For
+# that case this walks the ancestor process chain to find the tty of the
+# agent process itself.
+#
+# Exits 0 even when no terminal can be found, so a hook never fails a turn
+# because the tab bar could not be updated.
+# ==============================================================
+
+set -u
+
+AGENT="${1:-}"
+STATE="${2:-}"
+
+if [ -z "$AGENT" ] || [ -z "$STATE" ]; then
+    echo "usage: wezterm-agent-state <agent-id> <state|clear>" >&2
+    exit 2
+fi
+
+# --- locate a writable tty -------------------------------------------------
+
+resolve_tty() {
+    # 1. Already attached to one.
+    if [ -t 1 ]; then
+        _t=$(tty 2>/dev/null) && [ "$_t" != "not a tty" ] && { echo "$_t"; return 0; }
+    fi
+    if [ -t 0 ]; then
+        _t=$(tty 2>/dev/null) && [ "$_t" != "not a tty" ] && { echo "$_t"; return 0; }
+    fi
+
+    # 2. Controlling terminal, if the process has one. A -w test passes on
+    #    permissions even when the device cannot be opened, so try opening it.
+    if (: >/dev/tty) 2>/dev/null; then
+        echo "/dev/tty"
+        return 0
+    fi
+
+    # 3. Walk ancestors. Claude Code hooks land here: the hook process has no
+    #    tty, but the agent process that spawned it does. Not every wrapper
+    #    keeps the agent as the direct parent, so climb rather than trust PPID.
+    _pid=$$
+    _depth=0
+    while [ "$_depth" -lt 8 ]; do
+        _line=$(ps -o ppid=,tty= -p "$_pid" 2>/dev/null) || break
+        _ppid=$(echo "$_line" | awk '{print $1}')
+        _tty=$(echo "$_line" | awk '{print $2}')
+
+        if [ -n "$_tty" ] && [ "$_tty" != "??" ] && [ "$_tty" != "-" ]; then
+            case "$_tty" in
+                /dev/*) echo "$_tty"; return 0 ;;
+                *) [ -w "/dev/$_tty" ] && { echo "/dev/$_tty"; return 0; } ;;
+            esac
+        fi
+
+        [ -z "$_ppid" ] || [ "$_ppid" -le 1 ] 2>/dev/null && break
+        _pid="$_ppid"
+        _depth=$((_depth + 1))
+    done
+
+    return 1
+}
+
+TARGET=$(resolve_tty) || exit 0
+[ -w "$TARGET" ] || exit 0
+
+# --- encode ----------------------------------------------------------------
+
+# GNU coreutils wraps at 76 columns; -w 0 is rejected by BSD base64, which does
+# not wrap short input anyway.
+b64() {
+    printf '%s' "$1" | base64 -w 0 2>/dev/null || printf '%s' "$1" | base64 | tr -d '\n'
+}
+
+# --- emit ------------------------------------------------------------------
+
+# Inside tmux the sequence needs the DCS passthrough wrapper, and tmux must
+# have `allow-passthrough on`. ESC is doubled inside the wrapper.
+emit() {
+    _name="$1"
+    _value="$2"
+
+    if [ -n "${TMUX:-}" ]; then
+        printf '\033Ptmux;\033\033]1337;SetUserVar=%s=%s\007\033\\' "$_name" "$_value" >"$TARGET" 2>/dev/null || true
+    else
+        printf '\033]1337;SetUserVar=%s=%s\007' "$_name" "$_value" >"$TARGET" 2>/dev/null || true
+    fi
+}
+
+if [ "$STATE" = "clear" ]; then
+    # An empty value resets the variable.
+    emit agent_id ""
+    emit agent_state ""
+else
+    emit agent_id "$(b64 "$AGENT")"
+    emit agent_state "$(b64 "$STATE")"
+fi
+
+exit 0

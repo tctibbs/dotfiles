@@ -118,7 +118,10 @@ function module.apply(config, wezterm)
 
     -- Tab bar settings
     config.hide_tab_bar_if_only_one_tab = true
-    config.use_fancy_tab_bar = true
+    -- Retro tab bar renders as terminal cells, which is what lets tabs.lua
+    -- control per-tab background and draw powerline separators. The fancy bar
+    -- composites its own chrome over format-tab-title output.
+    config.use_fancy_tab_bar = false
     config.tab_bar_at_bottom = false
     config.tab_max_width = 40
 

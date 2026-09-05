@@ -52,7 +52,10 @@ Platform-aware: `Cmd` on macOS, `Ctrl` on Windows/Linux.
 
 ## Tab Bar
 
-Powerline-style with process-aware icons (Nerd Font):
+Powerline-style, rendered by `tabs.lua`. Requires the retro tab bar
+(`use_fancy_tab_bar = false`): the fancy bar draws its own chrome and
+composites a close button over whatever `format-tab-title` returns, so per-tab
+backgrounds cannot be controlled there.
 
 | Process | Icon |
 |---------|------|
@@ -62,10 +65,89 @@ Powerline-style with process-aware icons (Nerd Font):
 | node, npm | `󰎙` |
 | python | `󰌠` |
 | docker | `󰡨` |
-| claude | `󰚩` |
-| gemini | `󰊭` |
 
 Active tabs are blue (`#89b4fa`), inactive tabs are dark gray (`#313244`).
+
+---
+
+## Coding Agent Tabs
+
+Tabs show which coding agent is running and what it is doing.
+
+| State | Colour | Meaning |
+|-------|--------|---------|
+| working | `#f9e2af` yellow dot | agent is running |
+| idle | `#a6e3a1` green dot | finished, nothing pending |
+| waiting | `#f38ba8` red tab | blocked on you — the whole tab flips |
+
+### Registered agents
+
+| Agent | Binary | Icon | Colour |
+|-------|--------|------|--------|
+| Claude Code | `claude` | `󰚩` | `#fab387` peach |
+| Codex CLI | `codex` | `󰧑` | `#94e2d5` teal |
+| Copilot CLI | `copilot` | `󰊤` | `#74c7ec` sapphire |
+| Antigravity CLI | `agy` | `󱓞` | `#cba6f7` mauve |
+
+### Adding an agent
+
+Drop a file in `~/.config/wezterm/agents/<id>.lua` and add its id to
+`REGISTERED` in `agents/init.lua`. The contract:
+
+```lua
+return {
+    id = "myagent",             -- required, matches the agent_id user var
+    name = "My Agent",          -- required
+    icon = "󰚩",                 -- required, Nerd Font glyph
+    color = "#89b4fa",          -- required, avoid the three state colours
+    processes = { "myagent" },  -- optional
+    title_patterns = { "my" },  -- optional, lowercase Lua patterns
+}
+```
+
+A malformed file is skipped with a logged warning rather than breaking the
+tab bar.
+
+### How state arrives
+
+Detection precedence, highest confidence first:
+
+1. the `agent_id` user var — exact, survives any title the agent sets
+2. foreground process name — reliable, but many agents run as `node`
+3. title patterns — fragile; agents that set an LLM-generated title never match
+
+State comes from the `agent_state` user var, written by `wezterm-agent-state`:
+
+```sh
+wezterm-agent-state claude working
+wezterm-agent-state claude clear
+```
+
+Where no state is reported, an unfocused tab with `has_unseen_output` falls
+back to `waiting`. That needs no cooperation from the agent at all.
+
+### Wiring each agent
+
+| Agent | Where | Note |
+|-------|-------|------|
+| Claude Code | `hooks` in `~/.claude/settings.json` | hooks run with **no controlling terminal**; the helper walks the ancestor process chain to find the pane's tty |
+| Codex CLI | `~/.codex/hooks.json` | needs a build with the hooks crate; definitions must be trusted on first run via the startup review or `/hooks` |
+| Copilot CLI | `~/.copilot/hooks/*.json` | hooks share the CLI's shell, so `/dev/tty` works; write to the tty, never stdout — stdout is parsed as the hook's decision payload |
+| Antigravity CLI | `title.command` in `~/.gemini/antigravity-cli/settings.json` | `tool_confirmation_pending` is what distinguishes "waiting" from "finished"; `agent_state` alone does not |
+
+Useful events: session start → `idle`, prompt submitted → `working`,
+permission/approval requested → `waiting`, stop → `idle`, session end →
+`clear`.
+
+### Caveats
+
+- `format-tab-title` is synchronous. `wezterm.run_child_process` inside it
+  errors with `attempt to yield from outside a coroutine`, so state must
+  arrive via user vars — nothing can be queried at render time.
+- Inside tmux the escape needs the DCS passthrough wrapper and tmux needs
+  `allow-passthrough on`. The helper handles the wrapper.
+- `wezterm cli set-user-var` does not exist in any WezTerm version. User vars
+  can only be set through the OSC 1337 escape.
 
 ---
 
