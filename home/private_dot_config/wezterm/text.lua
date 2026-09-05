@@ -16,11 +16,17 @@ local wezterm = require("wezterm")
 local module = {}
 
 -- Zero-width and bidi format characters, as their UTF-8 byte sequences:
--- U+200B..U+200F, U+2028..U+202E, U+2060..U+2064, U+FEFF. These occupy no
--- cell but keep a string non-empty, which would defeat the "is this title
--- useful" checks in the tab bar.
+-- U+200B, U+200E, U+200F, U+2028..U+202E, U+2060..U+2064, U+FEFF. These
+-- occupy no cell but keep a string non-empty.
+--
+-- U+200C and U+200D are deliberately absent. They are JOINERS: inside an
+-- emoji sequence the joiner is what binds several codepoints into one
+-- grapheme, so removing it does not remove a cell, it adds several — a family
+-- emoji goes from 2 cells to 8. ZWNJ is also orthographically meaningful in
+-- Persian and Devanagari. The width check in sanitize already rejects a title
+-- made only of joiners, so stripping them buys nothing and corrupts text.
 local INVISIBLE = {
-    "\226\128\139", "\226\128\140", "\226\128\141", "\226\128\142", "\226\128\143",
+    "\226\128\139", "\226\128\142", "\226\128\143",
     "\226\128\168", "\226\128\169", "\226\128\170", "\226\128\171", "\226\128\172",
     "\226\128\173", "\226\128\174", "\226\129\160", "\226\129\161", "\226\129\162",
     "\226\129\163", "\226\129\164", "\239\187\191",

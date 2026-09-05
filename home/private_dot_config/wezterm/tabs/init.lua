@@ -74,12 +74,17 @@ local function base_title(tab, proc)
         return explicit
     end
 
-    local pane_title = text.sanitize(tab.active_pane and tab.active_pane.title)
-    if pane_title ~= "" then
-        pane_title = pane_title:gsub("^Copy mode: ", "")
-        if not UNHELPFUL_TITLES[text.ascii_lower(pane_title)] then
-            return pane_title
-        end
+    -- Strip WezTerm's copy-mode prefix BEFORE sanitizing, so sanitize stays
+    -- the last word. Editing a title after the gate can re-admit one that
+    -- measures zero cells, which is what the gate exists to prevent.
+    local raw = tab.active_pane and tab.active_pane.title
+    if type(raw) == "string" then
+        raw = (raw:gsub("^Copy mode: ", ""))
+    end
+
+    local pane_title = text.sanitize(raw)
+    if pane_title ~= "" and not UNHELPFUL_TITLES[text.ascii_lower(pane_title)] then
+        return pane_title
     end
 
     return text.sanitize(proc) ~= "" and text.sanitize(proc) or "shell"
