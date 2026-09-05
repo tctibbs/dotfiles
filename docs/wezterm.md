@@ -83,6 +83,10 @@ Active tabs are blue (`#89b4fa`), inactive dark grey (`#313244`).
 
 Tabs show which coding agent is running and what it is doing.
 
+The working/idle/waiting signal also carries over to Windows Terminal via an
+`OSC 9;4` progress ring — see [windows-terminal.md](windows-terminal.md). The
+rich rendering below (icons, per-tab colour, status rollup) is WezTerm-only.
+
 | State | Colour | Meaning |
 |-------|--------|---------|
 | working | `#f9e2af` yellow dot | agent is running |

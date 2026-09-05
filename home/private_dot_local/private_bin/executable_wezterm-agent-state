@@ -1,10 +1,15 @@
 #!/bin/sh
 
 # ==============================================================
-# wezterm-agent-state: report coding agent state to the WezTerm tab bar
+# wezterm-agent-state: report coding agent state to the terminal tab bar
 #
 # Writes the `agent_id` and `agent_state` user variables via OSC 1337
-# SetUserVar. tabs/init.lua reads them and repaints the tab.
+# SetUserVar; tabs/init.lua reads them and repaints the WezTerm tab. For
+# terminals without that Lua tab bar (Windows Terminal, ConEmu, Ghostty, ...)
+# it also emits an OSC 9;4 progress ring so the working/waiting/idle signal
+# still lands on the tab. One call drives every terminal; each ignores the
+# sequences it does not understand. (Name kept for the agent hooks that call
+# it, though it is no longer WezTerm-only.)
 #
 # Example usage:
 #
@@ -106,6 +111,35 @@ emit() {
     fi
 }
 
+# Emit a raw OSC body (everything between the leading ESC and the BEL), with
+# the same tmux passthrough handling as emit().
+emit_raw() {
+    if [ -n "${TMUX:-}" ]; then
+        printf '\033Ptmux;\033\033%s\007\033\\' "$1" >"$TARGET" 2>/dev/null || true
+    else
+        printf '\033%s\007' "$1" >"$TARGET" 2>/dev/null || true
+    fi
+}
+
+# Map a state onto a ConEmu OSC 9;4 progress body for terminals without our
+# Lua tab bar (Windows Terminal, ConEmu, Ghostty, ...), which render it as a
+# coloured ring on the tab plus a taskbar indicator:
+#
+#   working -> 3 (indeterminate, animated spinner)
+#   waiting -> 2 (error, red)   <- the "needs you" signal
+#   idle    -> 0 (hidden)       <- and clear
+#
+# Aliases mirror agents/state.lua; keep the two in sync. An unknown state
+# yields nothing, so no ring is drawn on a guess.
+progress_seq() {
+    case "$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')" in
+        working|busy|running|thinking) echo "]9;4;3;0" ;;
+        waiting|blocked|input|approval|notification) echo "]9;4;2;100" ;;
+        idle|done|complete|finished|stop|clear) echo "]9;4;0;0" ;;
+        *) echo "" ;;
+    esac
+}
+
 if [ "$STATE" = "clear" ]; then
     # An empty value resets the variable.
     emit agent_id ""
@@ -113,6 +147,16 @@ if [ "$STATE" = "clear" ]; then
 else
     emit agent_id "$(b64 "$AGENT")"
     emit agent_state "$(b64 "$STATE")"
+fi
+
+# OSC 9;4 progress ring, for terminals that lack the WezTerm Lua tab bar.
+# Skipped under WezTerm ($WEZTERM_PANE is set there), whose tab bar already
+# renders state from the user vars above; a taskbar ring there is just noise.
+# Set WEZTERM_AGENT_PROGRESS=always to emit everywhere, or =never to disable.
+_progress_mode="${WEZTERM_AGENT_PROGRESS:-auto}"
+if [ "$_progress_mode" = "always" ] || { [ "$_progress_mode" = "auto" ] && [ -z "${WEZTERM_PANE:-}" ]; }; then
+    _seq=$(progress_seq "$STATE")
+    [ -n "$_seq" ] && emit_raw "$_seq"
 fi
 
 exit 0
