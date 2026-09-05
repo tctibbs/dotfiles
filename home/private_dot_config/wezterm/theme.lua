@@ -60,7 +60,7 @@ function module.apply(config, wezterm)
         },
 
         -- Tab bar colors. The retro tab bar draws tab titles through
-        -- format-tab-title in tabs.lua; these cover the surrounding chrome.
+        -- format-tab-title in tabs/init.lua; these cover the surrounding chrome.
         tab_bar = {
             background = p.base,
             active_tab = { bg_color = p.blue, fg_color = p.base, intensity = "Bold" },
@@ -106,7 +106,7 @@ function module.apply(config, wezterm)
 
     -- Tab bar settings
     config.hide_tab_bar_if_only_one_tab = true
-    -- Retro tab bar renders as terminal cells, which is what lets tabs.lua
+    -- Retro tab bar renders as terminal cells, which is what lets tabs/init.lua
     -- control per-tab background and draw powerline separators. The fancy bar
     -- composites its own chrome over format-tab-title output.
     config.use_fancy_tab_bar = false

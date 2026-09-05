@@ -77,7 +77,9 @@ local UNHELPFUL_TITLES = {
 --- Best available title, preferring one that was set deliberately.
 -- Precedence: an explicitly set tab title, then the pane title, then the
 -- foreground process name.
-local function base_title(tab)
+-- @param proc string|nil already-resolved process name, to avoid re-reading
+--   the lazily computed PaneInformation field
+local function base_title(tab, proc)
     local explicit = sanitize(tab.tab_title)
     if explicit ~= "" then
         return explicit
@@ -91,7 +93,7 @@ local function base_title(tab)
         end
     end
 
-    return process_name(tab) or "shell"
+    return sanitize(proc) ~= "" and sanitize(proc) or "shell"
 end
 
 --- Cut to a cell budget, marking the cut with an ellipsis.
@@ -126,9 +128,11 @@ local function layout(max_width, title, wants_state)
     local plan = { icon = true, state = wants_state }
     local needed = math.min(cells(title), MIN_TITLE_CELLS)
 
-    -- separators(2) + space before icon(1) + space after icon(1) + trailing space(1)
+    -- Always drawn: SEP_LEFT(1) + the space before the title(1)
+    -- + the trailing space(1) + SEP_RIGHT(1). The icon and the state dot each
+    -- add their own leading space, so they cost 2 cells apiece.
     local function overhead()
-        local n = 2 + 1
+        local n = 4
         if plan.icon then
             n = n + 2
         end
@@ -149,15 +153,29 @@ local function layout(max_width, title, wants_state)
     return plan
 end
 
+--- Ordered, dense list of icon lookup keys. ipairs stops at the first nil, so
+--- the list must not contain holes.
+local function candidates(...)
+    local out = {}
+    for i = 1, select("#", ...) do
+        local v = select(i, ...)
+        if type(v) == "string" and v ~= "" then
+            out[#out + 1] = v
+        end
+    end
+    return out
+end
+
 --- Resolve every colour and glyph for one tab.
 local function resolve(tab, hover)
     local agent = agents.detect(tab)
+    local proc = process_name(tab)
     local state, inferred = agent_state.resolve(tab, agent ~= nil)
     local state_def = state and agent_state.states[state]
 
-    local title = base_title(tab)
+    local title = base_title(tab, proc)
     local look = {
-        icon = agent and agent.icon or processes.icon_for({ process_name(tab), title }),
+        icon = agent and agent.icon or processes.icon_for(candidates(proc, title)),
         title = title,
         bg = p.surface0,
         fg = p.subtext1,

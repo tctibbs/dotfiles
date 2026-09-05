@@ -17,7 +17,7 @@ module.states = {
 }
 
 -- Vocabulary each agent might emit, mapped onto the canonical states above.
--- Extend this rather than teaching tabs.lua about new words.
+-- Extend this rather than teaching tabs/init.lua about new words.
 local ALIASES = {
     working = "working",
     busy = "working",
@@ -56,21 +56,26 @@ end
 -- background shell that prints a line turns "needs you", which is both wrong
 -- and quickly trains you to ignore the colour.
 --
+-- Nothing is reported for a pane that is not a known agent, in either branch.
+--
 -- @param tab TabInformation
 -- @param is_agent boolean whether an agent was identified in this tab
 -- @return string|nil canonical state key
 -- @return boolean true when the state was inferred rather than reported
 function module.resolve(tab, is_agent)
+    -- Everything below is attacker-influenced: any program in a pane can write
+    -- these. Nothing is honoured for a pane we have not identified as an agent,
+    -- so a stray escape sequence cannot flip a tab to "needs you".
+    if not is_agent then
+        return nil, false
+    end
+
     local pane = tab.active_pane
     if pane and pane.user_vars then
         local reported = module.normalize(pane.user_vars.agent_state)
         if reported then
             return reported, false
         end
-    end
-
-    if not is_agent then
-        return nil, false
     end
 
     -- An agent that cannot run hooks still produces output when it wants

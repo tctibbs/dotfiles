@@ -93,28 +93,39 @@ function module.get(id)
     return id and by_id[id] or nil
 end
 
---- Identify which agent, if any, is running in a tab.
--- @param tab TabInformation
--- @return table|nil agent definition
--- @return string detection method: "user_var" | "process" | "title"
-function module.detect(tab)
-    local pane = tab.active_pane
-    if not pane then
+--- Bare executable name from a path.
+local function basename(path)
+    if type(path) ~= "string" or path == "" then
         return nil
     end
+    return (path:gsub("(.*[/\\])(.*)", "%2")):lower()
+end
+
+--- Identify an agent from primitive inputs.
+--
+-- Deliberately takes plain values rather than a TabInformation, so the tab bar
+-- and the status rollup can share one definition of "which agent is this".
+-- They walk different object graphs (TabInformation vs MuxPane) and would
+-- otherwise drift apart, disagreeing about the same pane.
+--
+-- @param src table { user_vars = table|nil, process = string|nil, title = string|nil }
+-- @return table|nil agent definition
+-- @return string|nil detection method: "user_var" | "process" | "title"
+function module.identify(src)
+    src = src or {}
 
     -- 1. Explicitly reported by the agent itself.
-    if pane.user_vars then
-        local agent = by_id[pane.user_vars.agent_id or ""]
+    local vars = src.user_vars
+    if type(vars) == "table" then
+        local agent = by_id[vars.agent_id or ""]
         if agent then
             return agent, "user_var"
         end
     end
 
     -- 2. Foreground process name.
-    local process = pane.foreground_process_name
-    if process and process ~= "" then
-        local exe = process:gsub("(.*[/\\])(.*)", "%2"):lower()
+    local exe = basename(src.process)
+    if exe then
         for _, agent in ipairs(ordered) do
             for _, candidate in ipairs(agent.processes or {}) do
                 if exe == candidate then
@@ -124,13 +135,14 @@ function module.detect(tab)
         end
     end
 
-    -- 3. Title text. Fragile by nature — kept last.
-    local title = (tab.tab_title ~= "" and tab.tab_title) or pane.title
-    if title and title ~= "" then
-        local haystack = title:lower()
+    -- 3. Title text. Fragile by nature — kept last. Patterns come from agent
+    -- files, so a malformed one is contained rather than aborting the caller.
+    if type(src.title) == "string" and src.title ~= "" then
+        local haystack = src.title:lower()
         for _, agent in ipairs(ordered) do
             for _, pattern in ipairs(agent.title_patterns or {}) do
-                if haystack:find(pattern) then
+                local ok, found = pcall(string.find, haystack, pattern)
+                if ok and found then
                     return agent, "title"
                 end
             end
@@ -138,6 +150,28 @@ function module.detect(tab)
     end
 
     return nil
+end
+
+--- Identify the agent running in a tab.
+-- @param tab TabInformation
+-- @return table|nil agent definition
+-- @return string|nil detection method
+function module.detect(tab)
+    local pane = tab and tab.active_pane
+    if not pane then
+        return nil
+    end
+
+    local title = tab.tab_title
+    if not title or title == "" then
+        title = pane.title
+    end
+
+    return module.identify({
+        user_vars = pane.user_vars,
+        process = pane.foreground_process_name,
+        title = title,
+    })
 end
 
 return module

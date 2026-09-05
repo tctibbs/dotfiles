@@ -3,6 +3,10 @@
 -- The tab bar answers "what is this tab doing". This answers "is anything
 -- waiting on me" without reading the tabs at all, which is the question you
 -- actually have when several agents are running.
+--
+-- Identity comes from agents.identify and the state vocabulary from
+-- agents.state, the same sources the tab bar uses, so the rollup and the tabs
+-- cannot disagree about which panes are agents or what a state is called.
 
 local wezterm = require("wezterm")
 local p = require("palette")
@@ -12,32 +16,76 @@ local agent_state = require("agents.state")
 local nf = wezterm.nerdfonts
 local module = {}
 
--- Rendered left to right; anything with a zero count is omitted.
+-- Rendered left to right, most urgent first; zero counts are omitted.
 local ORDER = {
-    { state = "waiting", glyph = nf.md_alert_circle, color = p.red },
-    { state = "working", glyph = nf.md_progress_clock, color = p.yellow },
-    { state = "idle", glyph = nf.md_check_circle, color = p.green },
+    { state = "waiting", glyph = nf.md_alert_circle },
+    { state = "working", glyph = nf.md_progress_clock },
+    { state = "idle", glyph = nf.md_check_circle },
 }
 
---- Count agent states across every pane in the window.
--- Reads the same user vars the tab bar uses, so the two can never disagree.
+--- Call a method on a live mux object, tolerating its disappearance.
+-- These are live handles; a pane or tab can close between enumeration and
+-- access, and a missing method must degrade rather than abort the status bar.
+local function try(obj, method)
+    local ok, value = pcall(function()
+        return obj[method](obj)
+    end)
+    if ok then
+        return value
+    end
+    return nil
+end
+
+--- Read a MuxPane into the primitive shape agents.identify expects.
+local function read_pane(pane)
+    return {
+        user_vars = try(pane, "get_user_vars"),
+        process = try(pane, "get_foreground_process_name"),
+        title = try(pane, "get_title"),
+    }
+end
+
+--- Count agent states across the window, one entry per tab.
+--
+-- Scope deliberately mirrors the tab bar: one active pane per tab, identified
+-- the same way, with the same unseen-output inference. Counting every pane
+-- instead would report agents that no tab is showing.
+--
+-- @return table counts keyed by canonical state
+-- @return number how many agent tabs were found at all
 local function tally(window)
     local counts = { working = 0, idle = 0, waiting = 0 }
     local total = 0
 
-    local ok, mux_window = pcall(function()
-        return window:mux_window()
-    end)
-    if not ok or not mux_window then
+    local mux_window = try(window, "mux_window")
+    if not mux_window then
         return counts, total
     end
 
-    for _, tab in ipairs(mux_window:tabs()) do
-        for _, pane in ipairs(tab:panes()) do
-            local vars = pane:get_user_vars() or {}
-            if agents.get(vars.agent_id) then
+    local tabs = try(mux_window, "tabs")
+    if not tabs then
+        return counts, total
+    end
+
+    local active = try(mux_window, "active_tab")
+    local active_id = active and try(active, "tab_id")
+
+    for _, tab in ipairs(tabs) do
+        local pane = try(tab, "active_pane")
+        if pane then
+            local src = read_pane(pane)
+            if agents.identify(src) then
                 total = total + 1
+
+                local vars = type(src.user_vars) == "table" and src.user_vars or {}
                 local state = agent_state.normalize(vars.agent_state)
+
+                -- Same fallback the tab bar applies: an unfocused agent tab
+                -- with unseen output is treated as wanting attention.
+                if not state and try(tab, "tab_id") ~= active_id and try(pane, "has_unseen_output") then
+                    state = "waiting"
+                end
+
                 if state and counts[state] then
                     counts[state] = counts[state] + 1
                 end
@@ -51,24 +99,23 @@ end
 function module.apply(config, wezterm_mod)
     local wt = wezterm_mod or wezterm
 
-    -- Default cadence is 1s; the tally is a handful of table reads, but there
-    -- is no reason to run it faster than a human reacts.
+    -- A user-var write already triggers a title update, which re-runs this
+    -- event, so the interval only bounds how stale a process-detected agent
+    -- can look. There is no reason to poll faster than a human reacts.
     config.status_update_interval = 2000
 
     wt.on("update-status", function(window, _pane)
         local counts, total = tally(window)
 
-        if total == 0 then
-            window:set_right_status("")
-            return
-        end
-
         local cells = {}
-        for _, entry in ipairs(ORDER) do
-            local n = counts[entry.state]
-            if n > 0 then
-                cells[#cells + 1] = { Foreground = { Color = entry.color } }
-                cells[#cells + 1] = { Text = " " .. entry.glyph .. " " .. tostring(n) }
+        if total > 0 then
+            for _, entry in ipairs(ORDER) do
+                local n = counts[entry.state]
+                if n > 0 then
+                    local def = agent_state.states[entry.state]
+                    cells[#cells + 1] = { Foreground = { Color = def.color } }
+                    cells[#cells + 1] = { Text = " " .. entry.glyph .. " " .. tostring(n) }
+                end
             end
         end
 

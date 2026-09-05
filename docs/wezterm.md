@@ -52,7 +52,7 @@ Platform-aware: `Cmd` on macOS, `Ctrl` on Windows/Linux.
 
 ## Tab Bar
 
-Powerline-style, rendered by `tabs.lua`. Requires the retro tab bar
+Powerline-style, rendered by `tabs/init.lua`. Requires the retro tab bar
 (`use_fancy_tab_bar = false`): the fancy bar draws its own chrome and
 composites a close button over whatever `format-tab-title` returns, so per-tab
 backgrounds cannot be controlled there.
@@ -95,15 +95,22 @@ Drop a file in `~/.config/wezterm/agents/<id>.lua` and add its id to
 `REGISTERED` in `agents/init.lua`. The contract:
 
 ```lua
+local p = require("palette")
+local nf = require("wezterm").nerdfonts
+
 return {
     id = "myagent",             -- required, matches the agent_id user var
     name = "My Agent",          -- required
-    icon = "󰚩",                 -- required, Nerd Font glyph
-    color = "#89b4fa",          -- required, avoid the three state colours
-    processes = { "myagent" },  -- optional
+    icon = nf.md_robot,         -- required, one cell wide
+    color = p.sapphire,         -- required, avoid the three state colours
+    processes = { "myagent" },  -- optional, lowercase executable names
     title_patterns = { "my" },  -- optional, lowercase Lua patterns
 }
 ```
+
+Take colours from `palette.lua` rather than pasting hex, and glyphs from
+`wezterm.nerdfonts` rather than pasting codepoints — an unknown glyph name is
+`nil`, which the validator reports by name at startup.
 
 A malformed file is skipped with a logged warning rather than breaking the
 tab bar.
@@ -166,6 +173,9 @@ permission/approval requested → `waiting`, stop → `idle`, session end →
 | File | Responsibility |
 |------|---------------|
 | `keys.lua` | Keybindings (platform-aware modifier) |
-| `tabs.lua` | Tab formatting, process icons, powerline arrows |
+| `tabs/` | Tab rendering (`init.lua`) and process icons (`processes.lua`) |
 | `theme.lua` | Colors, font, cursor, background, window chrome |
 | `platform.lua` | OS detection, default shell, launch menu |
+| `palette.lua` | Catppuccin Mocha values, the single source of colour |
+| `agents/` | Agent registry (`init.lua`), canonical states (`state.lua`), one file per agent |
+| `status.lua` | Right-status rollup of agent states across the window |

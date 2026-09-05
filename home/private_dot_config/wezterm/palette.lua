@@ -1,6 +1,6 @@
 -- Catppuccin Mocha
 --
--- Single source of truth for colour. theme.lua, tabs.lua and every agent
+-- Single source of truth for colour. theme.lua, tabs/init.lua and every agent
 -- module take their values from here, so a palette change is one edit and
 -- agent accents can never silently drift from the terminal theme.
 --

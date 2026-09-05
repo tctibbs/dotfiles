@@ -2,6 +2,9 @@
 
 ![Terminal Screenshot](assets/terminal_screenshot.png)
 
+See [docs/showcase.md](docs/showcase.md) for a side-by-side of WezTerm with
+and without this configuration, and which features do the work.
+
 Personal configuration for a consistent dev environment across macOS, Linux, and Windows.
 
 ## Features

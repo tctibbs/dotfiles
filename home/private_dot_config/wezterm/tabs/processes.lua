@@ -64,10 +64,13 @@ local icons = {
 -- anyway ("zsh", "btop"). Trying both keeps the icon rather than silently
 -- dropping to the fallback.
 --
--- @param candidates table list of strings, nils tolerated
+-- @param candidates table ordered list of strings, most trusted first.
+--   Build it with only non-nil entries; ipairs stops at the first hole.
 -- @return string a glyph, never nil
 function module.icon_for(candidates)
-    for _, key in pairs(candidates or {}) do
+    -- ipairs, not pairs: the candidates are ordered by confidence and pairs
+    -- makes no ordering guarantee.
+    for _, key in ipairs(candidates or {}) do
         if type(key) == "string" and key ~= "" then
             local icon = icons[key:lower()]
             if icon then
