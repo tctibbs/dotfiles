@@ -1,0 +1,8 @@
+# Paths chezmoi deletes from the destination on apply.
+# https://www.chezmoi.io/reference/special-files/chezmoiremove/
+#
+# tabs.lua became the tabs/ package. Lua resolves `?.lua` before `?/init.lua`,
+# so a leftover tabs.lua silently shadows tabs/init.lua and the old tab bar
+# keeps rendering. chezmoi does not remove files dropped from the source on
+# its own, so it has to be named here.
+.config/wezterm/tabs.lua
