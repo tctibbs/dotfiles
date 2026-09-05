@@ -57,16 +57,24 @@ Powerline-style, rendered by `tabs/init.lua`. Requires the retro tab bar
 composites a close button over whatever `format-tab-title` returns, so per-tab
 backgrounds cannot be controlled there.
 
-| Process | Icon |
-|---------|------|
-| zsh, bash | `󰆍` |
-| nvim, vim | `󰕷` |
-| git, lazygit | `󰊢` |
-| node, npm | `󰎙` |
-| python | `󰌠` |
-| docker | `󰡨` |
+Tabs not running a coding agent get an icon for their foreground process,
+defined in `tabs/processes.lua`:
 
-Active tabs are blue (`#89b4fa`), inactive tabs are dark gray (`#313244`).
+| Icon | Process |
+|------|---------|
+| `󰞷` | zsh, bash, fish, sh |
+| `󱓷` | nvim, vim |
+| `󰊢` | git, lazygit |
+| `󰎙` | node, npm, pnpm |
+| `󰌠` | python, pip, uv |
+| `󰡨` | docker, lazydocker |
+| `󰓅` | btop, htop, top |
+| `󰣀` | ssh |
+| `󱘗` `󰟓` `󰢱` | cargo, go, lua |
+| `󱌣` `󰂘` `󰘥` | make, brew, man |
+| `󰇘` | anything else |
+
+Active tabs are blue (`#89b4fa`), inactive dark grey (`#313244`).
 
 ---
 
@@ -133,9 +141,9 @@ variable is cleared or the pane closes — wire a session-end hook to
 `wezterm-agent-state <id> clear` to avoid a stale icon. Identity by process
 name needs no such cleanup, since it follows the running process.
 
-Anything a pane writes is attacker-influenced: any program can set these
-variables. That is inherent to the mechanism, which is why a title match never
-earns state, and why the states are advisory rather than a security boundary.
+Anything a pane writes is attacker-influenced — any program can set these
+variables. That is inherent to the mechanism: the states are advisory, not a
+security boundary, which is why a title match never earns one.
 
 State comes from the `agent_state` user var, written by `wezterm-agent-state`:
 
@@ -158,9 +166,9 @@ be identified as an agent first — by user variable or process name.
 | Copilot CLI | `~/.copilot/hooks/*.json` | hooks share the CLI's shell, so `/dev/tty` works; write to the tty, never stdout — stdout is parsed as the hook's decision payload |
 | Antigravity CLI | `title.command` in `~/.gemini/antigravity-cli/settings.json` | `tool_confirmation_pending` is what distinguishes "waiting" from "finished"; `agent_state` alone does not |
 
-Useful events: session start → `idle`, prompt submitted → `working`,
-permission/approval requested → `waiting`, stop → `idle`, session end →
-`clear`.
+Map events to states like this: session start → `idle`, prompt submitted →
+`working`, permission or approval requested → `waiting`, stop → `idle`,
+session end → `clear`.
 
 ### Caveats
 
