@@ -1,26 +1,25 @@
 # Showcase
 
-Side-by-side comparisons of this configuration against stock defaults, with
-the features behind each difference.
-
-Each page shows the same content twice — once with the tool's defaults, once
-configured — so the difference is the configuration and nothing else.
+What this configuration actually changes, one page per feature.
 
 | Page | Covers |
 |------|--------|
-| [tab-bar.md](tab-bar.md) | WezTerm tabs: coding agent identity and state, process icons, powerline styling |
+| [tab-bar.md](tab-bar.md) | Tabs that show which coding agent is running and what it is doing |
 | [directories.md](directories.md) | Reopening tabs in the directories they were in |
+
+Where a change is visual, the page shows the same content twice — stock
+defaults and configured — so the only difference is the configuration.
 
 ## Planned
 
 Rough order of usefulness, not a commitment:
 
-- **prompt** — starship: git state, directory icons, what the segments mean
-- **shell** — the modern CLI replacements (eza, bat, fd, dust, procs) against
-  their coreutils equivalents, on the same directory
-- **tmux** — the popup scratchpad, prefix bindings, status line
+- **prompt** — starship: git state, directory icons, what each segment means
+- **shell** — eza, bat, fd, dust and procs against the coreutils equivalents,
+  on the same directory
+- **tmux** — popup scratchpad, prefix bindings, status line
 - **editor** — VS Code: Catppuccin, error lens, file nesting
-- **windows-terminal** — the Windows counterpart to the WezTerm setup
+- **windows-terminal** — the Windows counterpart
 
 ## Regenerating the images
 
@@ -28,5 +27,5 @@ Rough order of usefulness, not a commitment:
 scripts/capture-showcase.sh tab-bar
 ```
 
-Captures both halves from a real WezTerm window rather than a mockup, so the
-images cannot drift from what the config actually does. Requires macOS.
+Captures both halves from a real window rather than a mockup, so the images
+cannot drift from what the config does. macOS only.

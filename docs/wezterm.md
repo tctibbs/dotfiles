@@ -202,7 +202,7 @@ Only directories are saved. Programs are not restarted — land back in the
 project and resume the agent yourself:
 
 ```sh
-ccc            # claude --dangerously-skip-permissions -c
+claude --continue
 codex resume
 ```
 

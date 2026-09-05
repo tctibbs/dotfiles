@@ -1,52 +1,62 @@
 # Remembering directories
 
-Close WezTerm, restart the machine, open WezTerm — and your tabs are back in
-the projects you were working in.
+Restart your machine, open WezTerm, and your tabs are back in the projects you
+were working in.
 
-## Stock WezTerm
-
-One window, one tab, your home directory. Whatever you had open is gone, and
-you navigate back by hand.
-
-## Configured
-
-Every two minutes the directory of each tab is written to
-`~/.local/share/wezterm/tabs.json`. On the next launch those tabs reopen in the
-same places, each named after its project:
+Stock WezTerm gives you one window in your home directory; whatever you had
+open is gone. Configured, the tab bar comes back as:
 
 ```
  ~   dotfiles   Code   nestflix
 ```
 
-Then resume whichever agent was there:
+Each tab is in its project directory and named after it. Resume whichever agent
+was there:
 
 ```sh
-ccc            # claude --dangerously-skip-permissions -c
+claude --continue
 codex resume
 ```
 
-## What this is not
+## What is saved
 
-It does not restart programs, and that is deliberate. Restoring a live process
-is not something a terminal can honestly do — the tools that claim to are
-re-running a saved command line. Directories are the part that carries real
-meaning across a reboot, and they are the same for every agent, so nothing here
-needs to know whether you were running Claude Code, Codex, Copilot or
-Antigravity.
+Every two minutes, one entry per tab in `~/.local/share/wezterm/tabs.json`:
+
+```json
+{ "version": 1, "windows": [ { "tabs": [ { "cwd": "/Users/you/Code/nestflix" } ] } ] }
+```
+
+That is the whole state. Delete the file to start clean.
 
 | Saved | Not saved |
 |-------|-----------|
 | each tab's working directory | running programs |
 | tab order and window grouping | pane splits, scrollback, workspaces |
 
+## Why it does not restore programs
+
+Because a terminal cannot honestly do that. The plugins advertising session
+restore are re-running a saved command line, which works for a shell and not
+much else.
+
+Directories are the part that survives a reboot with its meaning intact, and a
+path means the same thing whichever agent you were using. Nothing here needs to
+know about Claude Code, Codex, Copilot or Antigravity, and nothing breaks when
+one of them changes its CLI.
+
 ## What does the work
 
 | Feature | What it gives |
 |---------|---------------|
-| `mux.all_windows`, `window:tabs()` | Walking the live layout to snapshot it. |
-| `pane:get_current_working_dir()` | The directory itself, as a `file://` URL. |
-| `update-status` | The save clock. `wezterm.time.call_after` cannot re-arm from inside its own callback — it fires once — so the state file would freeze at the startup snapshot. |
-| `gui-startup` | Recreating the tabs before the first window appears. Launching with an explicit command skips the restore. |
-| `json_encode` / `json_parse` | The state file, written to a temporary path and renamed, so a crash mid-write cannot leave unparseable JSON. |
+| `mux.all_windows`, `window:tabs()` | Walking the live layout to snapshot it |
+| `pane:get_current_working_dir()` | The directory, as a `Url`. Older releases returned a `file://` string, so both are handled |
+| `gui-startup` | Recreating tabs before the first window appears. An explicit command on the command line skips the restore |
+| `json_encode` / `json_parse` | The state file, written alongside and renamed, so a crash mid-write cannot leave unparseable JSON |
+| `update-status` | The save clock — see below |
+
+`update-status` is an odd choice until you try the obvious one:
+`wezterm.time.call_after` fires once and cannot re-arm from inside its own
+callback, so the state file freezes at the startup snapshot while appearing to
+work. `update-status` is driven by WezTerm itself.
 
 Lives in `wezterm/sessions.lua`.

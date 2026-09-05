@@ -30,7 +30,6 @@ working, one idle.
 | yellow dot | working |
 | green dot | idle |
 | whole tab red | waiting on you |
-| smaller dot | inferred from unseen output, not reported |
 
 Agents report state by writing a user variable. Where none is reported, an
 unfocused agent tab that produced output is treated as wanting attention —
@@ -51,10 +50,12 @@ print a matching title.
 | `has_unseen_output` | Output since a pane was last focused. The fallback attention signal, needing nothing from the program. |
 | `update-status` + `set_right_status` | The rollup. Reads the same variables the tabs do, so the two cannot disagree. |
 | `tab_bar_style` | Matches the new-tab button to the tabs. |
-| `INTEGRATED_BUTTONS` | Window controls inside the tab bar rather than a separate title bar. Works with the retro bar. |
+| `window_decorations = "INTEGRATED_BUTTONS\|RESIZE"` | Window controls inside the tab bar rather than a separate title bar. Works with the retro bar. |
 
 Everything above lives in `wezterm/tabs/`, `wezterm/agents/` and
-`wezterm/status.lua`. Colours come from `wezterm/palette.lua`.
+`wezterm/status.lua`, except the two window-level settings —
+`use_fancy_tab_bar` and `window_decorations` — which are in
+`wezterm/theme.lua`. Colours come from `wezterm/palette.lua`.
 
 ## Adding an agent
 
