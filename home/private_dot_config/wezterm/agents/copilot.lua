@@ -4,11 +4,13 @@
 -- extension. Hooks: ~/.copilot/hooks/*.json, 17 lifecycle events. Hooks run in
 -- the same shell as the CLI, so they can write to /dev/tty directly.
 -- Set `updateTerminalTitle` to false to stop it overwriting a title you set.
+local p = require("palette")
+
 return {
     id = "copilot",
     name = "Copilot CLI",
     icon = "󰊤",
-    color = "#74c7ec", -- sapphire
+    color = p.sapphire,
 
     processes = { "copilot" },
     title_patterns = { "copilot" },

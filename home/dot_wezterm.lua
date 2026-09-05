@@ -10,5 +10,6 @@ require("theme").apply(config, wezterm)
 require("platform").apply(config, wezterm)
 require("keys").apply(config, wezterm)
 require("tabs").apply(config, wezterm)
+require("status").apply(config, wezterm)
 
 return config

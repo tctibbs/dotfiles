@@ -4,11 +4,13 @@
 -- Caveat: Claude Code hooks run without a controlling terminal, so they cannot
 -- write to /dev/tty. wezterm-agent-state resolves the pane's tty by walking the
 -- ancestor process chain instead. See docs/wezterm.md.
+local p = require("palette")
+
 return {
     id = "claude",
     name = "Claude Code",
     icon = "󰚩",
-    color = "#fab387", -- peach
+    color = p.peach,
 
     processes = { "claude" },
 

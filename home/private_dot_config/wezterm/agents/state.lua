@@ -4,14 +4,16 @@
 -- wezterm-agent-state helper in ~/.local/bin). Values are normalised here so
 -- every agent renders the same way regardless of the vocabulary it uses.
 
+local p = require("palette")
+
 local module = {}
 
--- Catppuccin Mocha. Deliberately avoids the per-agent accent colours in
--- agents/*.lua so state and identity never read as the same signal.
+-- Deliberately avoids the per-agent accent colours in agents/*.lua so state
+-- and identity never read as the same signal.
 module.states = {
-    working = { label = "working",   color = "#f9e2af" }, -- yellow
-    idle    = { label = "idle",      color = "#a6e3a1" }, -- green
-    waiting = { label = "needs you", color = "#f38ba8" }, -- red
+    working = { label = "working", color = p.yellow },
+    idle = { label = "idle", color = p.green },
+    waiting = { label = "needs you", color = p.red },
 }
 
 -- Vocabulary each agent might emit, mapped onto the canonical states above.
@@ -48,11 +50,17 @@ end
 --- Resolve the state for a tab.
 -- Precedence:
 --   1. the `agent_state` user var (explicit, set by an agent hook)
---   2. has_unseen_output, which WezTerm tracks with no agent cooperation
+--   2. has_unseen_output, but only for a tab known to be running an agent
+--
+-- The fallback is deliberately gated on `is_agent`. Without that gate every
+-- background shell that prints a line turns "needs you", which is both wrong
+-- and quickly trains you to ignore the colour.
+--
 -- @param tab TabInformation
+-- @param is_agent boolean whether an agent was identified in this tab
 -- @return string|nil canonical state key
 -- @return boolean true when the state was inferred rather than reported
-function module.resolve(tab)
+function module.resolve(tab, is_agent)
     local pane = tab.active_pane
     if pane and pane.user_vars then
         local reported = module.normalize(pane.user_vars.agent_state)
@@ -61,8 +69,12 @@ function module.resolve(tab)
         end
     end
 
-    -- Fallback: any pane in the tab produced output since it was last focused.
-    -- Weaker than a reported state, but works for agents that cannot run hooks.
+    if not is_agent then
+        return nil, false
+    end
+
+    -- An agent that cannot run hooks still produces output when it wants
+    -- something, so unseen output in an unfocused tab is a usable signal.
     if not tab.is_active then
         for _, p in ipairs(tab.panes or {}) do
             if p.has_unseen_output then
