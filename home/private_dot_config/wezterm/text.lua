@@ -11,6 +11,8 @@
 -- Matching only explicit ASCII ranges is safe: no byte in 0x00-0x7F can appear
 -- inside a multi-byte UTF-8 sequence.
 
+local wezterm = require("wezterm")
+
 local module = {}
 
 -- Zero-width and bidi format characters, as their UTF-8 byte sequences:
@@ -37,7 +39,18 @@ function module.ascii_lower(s)
 end
 
 --- Strip anything that would not occupy a predictable cell.
+--
 -- A program can put arbitrary bytes in OSC 0, so titles are untrusted input.
+-- This is the single gate every title passes through, and it guarantees the
+-- result is valid UTF-8 that occupies at least one cell — callers can then
+-- treat "" as "no usable title" and fall through to the next candidate.
+--
+-- Stripping INVISIBLE by hand is not enough on its own: it removes marks from
+-- the middle of an otherwise visible title, but the zero-width set is open
+-- ended (U+2066..U+2069, U+00AD, U+FE0F and others are not in it). A title
+-- made only of such codepoints would stay non-empty while rendering nothing,
+-- producing a nameless and, at some widths, zero-column tab. Measuring closes
+-- the whole class rather than chasing codepoints.
 function module.sanitize(s)
     if type(s) ~= "string" or s == "" then
         return ""
@@ -47,8 +60,16 @@ function module.sanitize(s)
     for _, seq in ipairs(INVISIBLE) do
         s = s:gsub(seq, "")
     end
+    s = (s:gsub(" +", " "):gsub("^ +", ""):gsub(" +$", ""))
 
-    return (s:gsub(" +", " "):gsub("^ +", ""):gsub(" +$", ""))
+    -- column_width raises on invalid UTF-8, which is exactly the input we want
+    -- to reject, so a failure here is treated the same as an unusable title.
+    local ok, width = pcall(wezterm.column_width, s)
+    if not ok or width == 0 then
+        return ""
+    end
+
+    return s
 end
 
 --- Bare lowercase executable name from a path, without a Windows extension.
