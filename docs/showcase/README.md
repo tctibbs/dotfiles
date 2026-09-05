@@ -9,6 +9,7 @@ configured — so the difference is the configuration and nothing else.
 | Page | Covers |
 |------|--------|
 | [tab-bar.md](tab-bar.md) | WezTerm tabs: coding agent identity and state, process icons, powerline styling |
+| [directories.md](directories.md) | Reopening tabs in the directories they were in |
 
 ## Planned
 

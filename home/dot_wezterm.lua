@@ -11,5 +11,6 @@ require("platform").apply(config)
 require("keys").apply(config)
 require("tabs").apply(config)
 require("status").apply(config)
+require("sessions").apply(config)
 
 return config

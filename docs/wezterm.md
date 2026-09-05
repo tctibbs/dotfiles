@@ -192,6 +192,38 @@ session end → `clear`.
 
 ---
 
+## Remembering Directories
+
+Every two minutes the directory of each tab is written to
+`~/.local/share/wezterm/tabs.json`. On the next launch those tabs are reopened
+in the same places, named after the project directory.
+
+Only directories are saved. Programs are not restarted — land back in the
+project and resume the agent yourself:
+
+```sh
+ccc            # claude --dangerously-skip-permissions -c
+codex resume
+```
+
+That keeps it agent-agnostic: nothing here knows which tool you were running,
+so nothing breaks when one of them changes its CLI.
+
+| | |
+|---|---|
+| State | `~/.local/share/wezterm/tabs.json`, written atomically |
+| Saved | one entry per tab: its working directory |
+| Not saved | running programs, pane splits, scrollback, workspaces |
+| Restored | one tab per entry, titled after the directory |
+| Skipped | a directory that no longer exists falls back to home |
+
+Launching with an explicit command (`wezterm start -- htop`) does not restore;
+you asked for something specific, so you get it.
+
+To start clean, delete the state file.
+
+---
+
 ## Config Modules
 
 | File | Responsibility |
@@ -203,3 +235,4 @@ session end → `clear`.
 | `palette.lua` | Catppuccin Mocha values, the single source of colour |
 | `agents/` | Agent registry (`init.lua`), canonical states (`state.lua`), one file per agent |
 | `status.lua` | Right-status rollup of agent states across the window |
+| `sessions.lua` | Reopens tabs in the directories they were in |
