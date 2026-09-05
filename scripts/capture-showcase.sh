@@ -90,12 +90,35 @@ write_config() {
 
 capture() {
     local cfg="$1" out="$2" label="$3" width="${4:-$W}"
+    local staged="$WORK/$(basename "$out")"
+
     pkill -f "$WORK" 2>/dev/null || true
     sleep 1
     open -na WezTerm --args --config-file "$cfg" start --always-new-process
     sleep "$SETTLE"
-    screencapture -x -R"0,$Y,$width,$H" "$out"
+
+    # screencapture grabs a screen region, not a window. Without this check a
+    # failed or slow launch silently writes whatever else was on screen over a
+    # committed asset — during development that produced a browser window and
+    # an unrelated app before anyone noticed.
+    local pid
+    pid="$(pgrep -f "$cfg" | head -1)"
+    if [ -z "$pid" ]; then
+        echo "  $label: WezTerm did not start; leaving $out untouched" >&2
+        return 1
+    fi
+
+    # Capture to the work directory first, and only install over the committed
+    # asset once there is something to install.
+    screencapture -x -R"0,$Y,$width,$H" "$staged"
     pkill -f "$WORK" 2>/dev/null || true
+
+    if [ ! -s "$staged" ]; then
+        echo "  $label: capture produced nothing; leaving $out untouched" >&2
+        return 1
+    fi
+
+    mv "$staged" "$out"
     echo "  $label -> $out"
 }
 
@@ -110,9 +133,15 @@ case "${1:-}" in
         # different heights.
         # Stock uses the system font, so its window is narrower than the
         # configured one at the same column count.
-        Y=$((Y + 34)) capture "$WORK/stock.lua" "$REPO/assets/showcase/tab-bar-default.png" "stock    " "${SHOWCASE_W_STOCK:-1000}"
-        capture "$WORK/configured.lua" "$REPO/assets/showcase/tab-bar-configured.png" "configured"
-        echo "Check both images before committing."
+        failed=0
+        Y=$((Y + 34)) capture "$WORK/stock.lua" "$REPO/assets/showcase/tab-bar-default.png" "stock    " "${SHOWCASE_W_STOCK:-1000}" || failed=1
+        capture "$WORK/configured.lua" "$REPO/assets/showcase/tab-bar-configured.png" "configured" || failed=1
+        if [ "$failed" -ne 0 ]; then
+            echo "One or both captures failed; existing images were left in place." >&2
+            exit 1
+        fi
+        echo "Look at both images before committing — this cannot tell whether"
+        echo "another window was in front of the region it captured."
         ;;
     *)
         echo "usage: $(basename "$0") tab-bar" >&2

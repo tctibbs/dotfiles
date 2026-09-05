@@ -16,6 +16,10 @@
 --   title_patterns  table    optional  lowercase Lua patterns matched on the
 --                                      pane title
 --
+-- Callers pass the primitive values they already hold to module.identify;
+-- there is no TabInformation-shaped wrapper, so the tab bar and the status
+-- rollup cannot drift apart over how a pane is identified.
+--
 -- Detection precedence, highest confidence first:
 --   1. `agent_id` user var  — exact, survives any title the agent sets
 --   2. processes            — reliable, but many agents run as `node`
@@ -86,9 +90,6 @@ for _, id in ipairs(REGISTERED) do
     end
 end
 
-module.by_id = by_id
-module.all = ordered
-
 --- Look up an agent by its registered id.
 function module.get(id)
     return id and by_id[id] or nil
@@ -153,28 +154,6 @@ function module.identify(src)
     end
 
     return nil
-end
-
---- Identify the agent running in a tab.
--- @param tab TabInformation
--- @return table|nil agent definition
--- @return string|nil detection method
-function module.detect(tab)
-    local pane = tab and tab.active_pane
-    if not pane then
-        return nil
-    end
-
-    local title = tab.tab_title
-    if not title or title == "" then
-        title = pane.title
-    end
-
-    return module.identify({
-        user_vars = pane.user_vars,
-        process = pane.foreground_process_name,
-        title = title,
-    })
 end
 
 return module

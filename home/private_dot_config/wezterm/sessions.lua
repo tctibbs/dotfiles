@@ -22,7 +22,28 @@ local text = require("text")
 
 local module = {}
 
-local STATE_PATH = wezterm.home_dir .. "/.local/share/wezterm/tabs.json"
+local STATE_DIR = wezterm.home_dir .. "/.local/share/wezterm"
+local STATE_PATH = STATE_DIR .. "/tabs.json"
+
+-- Each GUI process writes its own temporary file, in the same directory as the
+-- target so the rename stays atomic. A shared temp path lets two instances
+-- interleave their writes and rename a mixture into place. Lua 5.4 seeds
+-- math.random per process, so this differs between GUI instances.
+--
+-- The state file itself is still last-writer-wins across instances: a snapshot
+-- only sees its own process's windows. Saving from several instances at once
+-- keeps whichever wrote last, which is the intended behaviour rather than a
+-- merge — merging would resurrect windows the user deliberately closed.
+local TMP_PATH = string.format("%s.%d.tmp", STATE_PATH, math.random(100000, 999999))
+
+-- Warn once rather than on every save cycle.
+local warned = false
+local function warn_once(message)
+    if not warned then
+        warned = true
+        wezterm.log_warn("sessions: " .. message)
+    end
+end
 
 -- Saving periodically rather than on quit: a quit hook misses a crash, a panic
 -- or a held power button, which are exactly the cases this exists for.
@@ -67,6 +88,9 @@ end
 -- Home is shown as "~" rather than the account name, which is what the last
 -- path segment would otherwise give.
 local function label_for(path)
+    if type(path) ~= "string" or path == "" then
+        return ""
+    end
     if path == wezterm.home_dir then
         return "~"
     end
@@ -115,18 +139,37 @@ local function save()
         return
     end
 
-    local tmp = STATE_PATH .. ".tmp"
-    local file = io.open(tmp, "w")
+    local file, open_err = io.open(TMP_PATH, "w")
     if not file then
+        warn_once("cannot write " .. TMP_PATH .. ": " .. tostring(open_err)
+            .. " (does " .. STATE_DIR .. " exist?)")
         return
     end
 
-    file:write(encoded)
-    file:close()
-    os.rename(tmp, STATE_PATH)
+    -- A short write or a failed flush would otherwise be renamed over the good
+    -- state, which is exactly what writing alongside and renaming prevents.
+    local wrote, write_err = file:write(encoded)
+    local closed, close_err = file:close()
+
+    if not wrote or not closed then
+        warn_once("failed writing state: " .. tostring(write_err or close_err))
+        os.remove(TMP_PATH)
+        return
+    end
+
+    os.rename(TMP_PATH, STATE_PATH)
 end
 
---- Read the state file. Returns nil for anything unusable.
+--- Read the state file and return only entries that are safe to restore.
+--
+-- The file is untrusted: it can be hand-edited, truncated by a crash, or left
+-- behind by a future schema. Validating only the top-level shape is not
+-- enough — a well-formed `{"windows":[{"tabs":[{}]}]}` would pass and then
+-- blow up mid-restore on the missing cwd, aborting the whole gui-startup
+-- handler and losing every remaining window. Everything is checked here, so
+-- restore can assume each cwd is a non-empty string.
+--
+-- @return table|nil list of windows, each { tabs = { { cwd = string }, ... } }
 local function load()
     local file = io.open(STATE_PATH, "r")
     if not file then
@@ -143,7 +186,26 @@ local function load()
     if not ok or type(state) ~= "table" or type(state.windows) ~= "table" then
         return nil
     end
-    return state
+
+    local windows = {}
+    for _, saved in ipairs(state.windows) do
+        if type(saved) == "table" and type(saved.tabs) == "table" then
+            local tabs = {}
+            for _, tab in ipairs(saved.tabs) do
+                if type(tab) == "table" and type(tab.cwd) == "string" and tab.cwd ~= "" then
+                    tabs[#tabs + 1] = { cwd = tab.cwd }
+                end
+            end
+            if #tabs > 0 then
+                windows[#windows + 1] = { tabs = tabs }
+            end
+        end
+    end
+
+    if #windows == 0 then
+        return nil
+    end
+    return windows
 end
 
 --- Open one window and its tabs, each in its saved directory.
@@ -216,15 +278,19 @@ function module.apply(config)
             return
         end
 
-        local state = load()
         local restored = 0
 
-        for i, saved in ipairs(state and state.windows or {}) do
+        for i, saved in ipairs(load() or {}) do
             if i > MAX_WINDOWS then
                 break
             end
-            if restore_window(saved) then
+            -- Defence in depth: this handler owns spawning the first window,
+            -- so one unexpected error here must not cost the user every tab.
+            local ok, did = pcall(restore_window, saved)
+            if ok and did then
                 restored = restored + 1
+            elseif not ok then
+                warn_once("restore failed: " .. tostring(did))
             end
         end
 

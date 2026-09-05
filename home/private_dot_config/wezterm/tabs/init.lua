@@ -42,18 +42,22 @@ local ELLIPSIS = "…"
 -- optional decorations are dropped to buy it room.
 local MIN_TITLE_CELLS = 5
 
+--- Darken a colour so a pale accent stays legible on a light background.
+-- Falls back to the original if the colour cannot be parsed, since a readable
+-- approximation beats erroring inside format-tab-title.
+local function darken(color)
+    local ok, result = pcall(function()
+        return tostring(wezterm.color.parse(color):darken(0.45))
+    end)
+    return ok and result or color
+end
+
 --- Display width in terminal cells.
 -- wezterm.column_width errors on nil and counts control characters as zero
 -- width, so a title carrying a tab or newline would measure short and then
 -- overflow its budget. Both are handled before measuring.
 local function cells(s)
     return wezterm.column_width(s or "")
-end
-
---- Bare executable name of the tab's foreground process.
-local function process_name(tab)
-    local pane = tab.active_pane
-    return text.basename(pane and pane.foreground_process_name)
 end
 
 -- A pane whose program never sets a title inherits the terminal's own window
@@ -87,7 +91,11 @@ local function base_title(tab, proc)
         return pane_title
     end
 
-    return text.sanitize(proc) ~= "" and text.sanitize(proc) or "shell"
+    local from_process = text.sanitize(proc)
+    if from_process ~= "" then
+        return from_process
+    end
+    return "shell"
 end
 
 --- Cut to a cell budget, marking the cut with an ellipsis.
@@ -163,8 +171,24 @@ end
 
 --- Resolve every colour and glyph for one tab.
 local function resolve(tab, hover)
-    local agent, method = agents.detect(tab)
-    local proc = process_name(tab)
+    local pane = tab.active_pane
+
+    -- foreground_process_name is a lazily computed PaneInformation field that
+    -- WezTerm documents as not cheap. Read it once here and hand the value to
+    -- identification, rather than letting detection read it a second time.
+    local process = pane and pane.foreground_process_name
+    local proc = text.basename(process)
+
+    local raw_title = tab.tab_title
+    if not raw_title or raw_title == "" then
+        raw_title = pane and pane.title
+    end
+
+    local agent, method = agents.identify({
+        user_vars = pane and pane.user_vars,
+        process = process,
+        title = raw_title,
+    })
 
     -- Identity from a title match is a guess and only earns an icon. Letting it
     -- drive state would let any program flip a tab red by printing a title.
@@ -188,7 +212,11 @@ local function resolve(tab, hover)
         look.bg = p.blue
         look.fg = p.base
         look.accent = p.base
-        look.dot_color = look.dot and p.base or nil
+        -- Keep the state colour rather than flattening it to the base colour:
+        -- a dot that is always the same shade looks like a state indicator
+        -- while conveying no state. Darkened for contrast on the light active
+        -- background, which the pale state colours would otherwise wash out.
+        look.dot_color = look.dot_color and darken(look.dot_color) or nil
         look.bold = true
     elseif hover then
         look.bg = p.surface1
@@ -214,10 +242,12 @@ function module.apply(config)
         local plan = layout(max_width, look.title, look.dot ~= nil)
         local title = fit(look.title, plan.title_budget)
 
-        -- Too narrow for chrome plus at least one cell of title. WezTerm would
-        -- resolve an overflow by hard-cutting mid-glyph, and chrome with no
-        -- title at all says nothing. Degrade to plain text sized to the budget.
-        if plan.title_budget < 1 or plan.overhead + cells(title) > max_width then
+        -- Too narrow for chrome plus at least one cell of title. Chrome with
+        -- no title says nothing, and WezTerm would resolve any overflow by
+        -- hard-cutting mid-glyph. Degrade to plain text sized to the budget.
+        -- One condition suffices: fit() already bounds the title to the
+        -- budget, so overhead + title can never exceed max_width below.
+        if plan.title_budget < 1 then
             return {
                 { Background = { Color = look.bg } },
                 { Foreground = { Color = look.fg } },

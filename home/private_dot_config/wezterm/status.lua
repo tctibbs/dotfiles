@@ -74,6 +74,11 @@ local function tally(window)
         return counts, total
     end
 
+    -- If the active tab cannot be determined, no tab can be proven unfocused,
+    -- so the unseen-output inference is skipped entirely below. Comparing
+    -- against a nil id would instead mark every tab unfocused and let the
+    -- focused one be counted as needing attention, which the tab bar never
+    -- does.
     local active = try(mux_window, "active_tab")
     local active_id = active and try(active, "tab_id")
 
@@ -94,6 +99,7 @@ local function tally(window)
                 if not agents.is_trusted(method) then
                     state = nil
                 elseif not state
+                    and active_id ~= nil
                     and try(tab, "tab_id") ~= active_id
                     and try(pane, "has_unseen_output") then
                     state = "waiting"
