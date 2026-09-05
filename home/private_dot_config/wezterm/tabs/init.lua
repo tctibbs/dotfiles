@@ -23,6 +23,7 @@ local p = require("palette")
 local agents = require("agents")
 local agent_state = require("agents.state")
 local processes = require("tabs.processes")
+local text = require("text")
 
 local nf = wezterm.nerdfonts
 local module = {}
@@ -49,36 +50,10 @@ local function cells(s)
     return wezterm.column_width(s or "")
 end
 
--- Zero-width and bidi format characters. Lua patterns have no Unicode
--- classes, so these are matched as their UTF-8 byte sequences:
--- U+200B..U+200F, U+2028..U+202E, U+2060..U+2064, U+FEFF.
-local INVISIBLE = { "\226\128\139", "\226\128\140", "\226\128\141", "\226\128\142",
-    "\226\128\143", "\226\128\168", "\226\128\169", "\226\128\170", "\226\128\171",
-    "\226\128\172", "\226\128\173", "\226\128\174", "\226\129\160", "\226\129\161",
-    "\226\129\162", "\226\129\163", "\226\129\164", "\239\187\191" }
-
---- Strip anything that would not occupy a predictable cell.
--- A program can put arbitrary bytes in OSC 0. Control characters measure zero
--- width, and zero-width or bidi marks are invisible but keep a string
--- non-empty, which would defeat the "is this title useful" checks below.
-local function sanitize(s)
-    if not s or s == "" then
-        return ""
-    end
-    s = s:gsub("%c", " ")
-    for _, seq in ipairs(INVISIBLE) do
-        s = s:gsub(seq, "")
-    end
-    return (s:gsub("%s+", " "):gsub("^%s+", ""):gsub("%s+$", ""))
-end
-
 --- Bare executable name of the tab's foreground process.
 local function process_name(tab)
-    local name = tab.active_pane and tab.active_pane.foreground_process_name
-    if not name or name == "" then
-        return nil
-    end
-    return (name:gsub("(.*[/\\])(.*)", "%2"))
+    local pane = tab.active_pane
+    return text.basename(pane and pane.foreground_process_name)
 end
 
 -- A pane whose program never sets a title inherits the terminal's own window
@@ -94,20 +69,20 @@ local UNHELPFUL_TITLES = {
 -- @param proc string|nil already-resolved process name, to avoid re-reading
 --   the lazily computed PaneInformation field
 local function base_title(tab, proc)
-    local explicit = sanitize(tab.tab_title)
+    local explicit = text.sanitize(tab.tab_title)
     if explicit ~= "" then
         return explicit
     end
 
-    local pane_title = sanitize(tab.active_pane and tab.active_pane.title)
+    local pane_title = text.sanitize(tab.active_pane and tab.active_pane.title)
     if pane_title ~= "" then
         pane_title = pane_title:gsub("^Copy mode: ", "")
-        if not UNHELPFUL_TITLES[pane_title:lower()] then
+        if not UNHELPFUL_TITLES[text.ascii_lower(pane_title)] then
             return pane_title
         end
     end
 
-    return sanitize(proc) ~= "" and sanitize(proc) or "shell"
+    return text.sanitize(proc) ~= "" and text.sanitize(proc) or "shell"
 end
 
 --- Cut to a cell budget, marking the cut with an ellipsis.

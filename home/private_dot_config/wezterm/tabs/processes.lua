@@ -10,6 +10,7 @@
 
 local wezterm = require("wezterm")
 local nf = wezterm.nerdfonts
+local text = require("text")
 
 local module = {}
 
@@ -72,7 +73,7 @@ function module.icon_for(candidates)
     -- makes no ordering guarantee.
     for _, key in ipairs(candidates or {}) do
         if type(key) == "string" and key ~= "" then
-            local icon = icons[key:lower()]
+            local icon = icons[text.ascii_lower(key)]
             if icon then
                 return icon
             end

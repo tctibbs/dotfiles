@@ -26,6 +26,7 @@
 -- the whole tab bar down with it.
 
 local wezterm = require("wezterm")
+local text = require("text")
 
 local module = {}
 
@@ -93,17 +94,6 @@ function module.get(id)
     return id and by_id[id] or nil
 end
 
---- Bare executable name from a path, without a Windows extension.
--- `processes` entries are bare lowercase names, so claude.exe must reduce to
--- "claude" or nothing matches on Windows.
-local function basename(path)
-    if type(path) ~= "string" or path == "" then
-        return nil
-    end
-    local name = path:gsub("(.*[/\\])(.*)", "%2"):lower()
-    return (name:gsub("%.exe$", ""))
-end
-
 --- Which detection methods are strong enough to act on.
 -- A title match is a guess: any program can print a title containing an agent
 -- name. It is good enough to pick an icon, but not to escalate a whole tab.
@@ -137,7 +127,7 @@ function module.identify(src)
     end
 
     -- 2. Foreground process name.
-    local exe = basename(src.process)
+    local exe = text.basename(src.process)
     if exe then
         for _, agent in ipairs(ordered) do
             for _, candidate in ipairs(agent.processes or {}) do
@@ -151,7 +141,7 @@ function module.identify(src)
     -- 3. Title text. Fragile by nature — kept last. Patterns come from agent
     -- files, so a malformed one is contained rather than aborting the caller.
     if type(src.title) == "string" and src.title ~= "" then
-        local haystack = src.title:lower()
+        local haystack = text.ascii_lower(src.title)
         for _, agent in ipairs(ordered) do
             for _, pattern in ipairs(agent.title_patterns or {}) do
                 local ok, found = pcall(string.find, haystack, pattern)

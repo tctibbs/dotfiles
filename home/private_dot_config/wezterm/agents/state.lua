@@ -5,6 +5,7 @@
 -- every agent renders the same way regardless of the vocabulary it uses.
 
 local p = require("palette")
+local text = require("text")
 
 local module = {}
 
@@ -44,7 +45,7 @@ function module.normalize(raw)
     if not raw or raw == "" then
         return nil
     end
-    return ALIASES[raw:lower()]
+    return ALIASES[text.ascii_lower(raw)]
 end
 
 --- Resolve the state for a tab.
