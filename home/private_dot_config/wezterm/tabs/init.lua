@@ -210,10 +210,8 @@ local function resolve(tab, hover)
     return look
 end
 
-function module.apply(config, wezterm_mod)
-    local wt = wezterm_mod or wezterm
-
-    wt.on("format-tab-title", function(tab, _tabs, _panes, _config, hover, max_width)
+function module.apply(config)
+    wezterm.on("format-tab-title", function(tab, _tabs, _panes, _config, hover, max_width)
         local look = resolve(tab, hover)
         local plan = layout(max_width, look.title, look.dot ~= nil)
         local title = fit(look.title, plan.title_budget)
@@ -261,12 +259,12 @@ function module.apply(config, wezterm_mod)
 
     -- Retro tab bar chrome, kept in the same visual language as the tabs.
     config.tab_bar_style = {
-        new_tab = wt.format({
+        new_tab = wezterm.format({
             { Background = { Color = p.base } },
             { Foreground = { Color = p.overlay0 } },
             { Text = "  " .. (nf.md_plus or "+") .. " " },
         }),
-        new_tab_hover = wt.format({
+        new_tab_hover = wezterm.format({
             { Background = { Color = p.base } },
             { Foreground = { Color = p.text } },
             { Text = "  " .. (nf.md_plus or "+") .. " " },

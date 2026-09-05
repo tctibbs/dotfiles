@@ -1,9 +1,11 @@
 -- Keybindings configuration
 -- Platform-aware modifiers (CMD on Mac, CTRL on Windows/Linux)
 
+local wezterm = require("wezterm")
+
 local module = {}
 
-function module.apply(config, wezterm)
+function module.apply(config)
     local act = wezterm.action
 
     -- Platform detection for modifier keys

@@ -1,9 +1,11 @@
 -- Platform-specific configuration
 -- Handles macOS, Windows, and Linux settings
 
+local wezterm = require("wezterm")
+
 local module = {}
 
-function module.apply(config, wezterm)
+function module.apply(config)
     -- Platform detection
     local is_windows = wezterm.target_triple:find("windows")
     local is_mac = wezterm.target_triple:find("darwin") or wezterm.target_triple:find("apple")

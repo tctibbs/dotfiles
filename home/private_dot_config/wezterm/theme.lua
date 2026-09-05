@@ -4,9 +4,11 @@
 
 local p = require("palette")
 
+local wezterm = require("wezterm")
+
 local module = {}
 
-function module.apply(config, wezterm)
+function module.apply(config)
     -- Font configuration
     -- Try multiple FiraCode Nerd Font name variants
     config.font = wezterm.font_with_fallback({

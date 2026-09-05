@@ -6,10 +6,10 @@ local wezterm = require("wezterm")
 local config = wezterm.config_builder()
 
 -- Load and apply modular configuration
-require("theme").apply(config, wezterm)
-require("platform").apply(config, wezterm)
-require("keys").apply(config, wezterm)
-require("tabs").apply(config, wezterm)
-require("status").apply(config, wezterm)
+require("theme").apply(config)
+require("platform").apply(config)
+require("keys").apply(config)
+require("tabs").apply(config)
+require("status").apply(config)
 
 return config

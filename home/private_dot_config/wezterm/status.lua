@@ -96,15 +96,13 @@ local function tally(window)
     return counts, total
 end
 
-function module.apply(config, wezterm_mod)
-    local wt = wezterm_mod or wezterm
-
+function module.apply(config)
     -- A user-var write already triggers a title update, which re-runs this
     -- event, so the interval only bounds how stale a process-detected agent
     -- can look. There is no reason to poll faster than a human reacts.
     config.status_update_interval = 2000
 
-    wt.on("update-status", function(window, _pane)
+    wezterm.on("update-status", function(window, _pane)
         local counts, total = tally(window)
 
         local cells = {}
@@ -127,7 +125,7 @@ function module.apply(config, wezterm_mod)
         cells[#cells + 1] = { Foreground = { Color = p.surface2 } }
         cells[#cells + 1] = { Text = "  " }
 
-        window:set_right_status(wt.format(cells))
+        window:set_right_status(wezterm.format(cells))
     end)
 end
 
