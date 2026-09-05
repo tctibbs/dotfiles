@@ -4,7 +4,7 @@
 # wezterm-agent-state: report coding agent state to the WezTerm tab bar
 #
 # Writes the `agent_id` and `agent_state` user variables via OSC 1337
-# SetUserVar. tabs.lua reads them and repaints the tab.
+# SetUserVar. tabs/init.lua reads them and repaints the tab.
 #
 # Example usage:
 #
@@ -41,13 +41,11 @@ fi
 # --- locate a writable tty -------------------------------------------------
 
 resolve_tty() {
-    # 1. Already attached to one.
-    if [ -t 1 ]; then
-        _t=$(tty 2>/dev/null) && [ "$_t" != "not a tty" ] && { echo "$_t"; return 0; }
-    fi
-    if [ -t 0 ]; then
-        _t=$(tty 2>/dev/null) && [ "$_t" != "not a tty" ] && { echo "$_t"; return 0; }
-    fi
+    # 1. Already attached to one. `tty` reports the terminal on stdin, and its
+    #    exit status plus the "not a tty" string cover the negative case. There
+    #    is deliberately no [ -t 1 ] test: this runs as $(resolve_tty), so fd 1
+    #    is always the substitution pipe.
+    _t=$(tty 2>/dev/null) && [ "$_t" != "not a tty" ] && { echo "$_t"; return 0; }
 
     # 2. Controlling terminal, if the process has one. A -w test passes on
     #    permissions even when the device cannot be opened, so try opening it.
