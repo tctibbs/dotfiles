@@ -5,11 +5,12 @@
 -- write to /dev/tty. wezterm-agent-state resolves the pane's tty by walking the
 -- ancestor process chain instead. See docs/wezterm.md.
 local p = require("palette")
+local nf = require("wezterm").nerdfonts
 
 return {
     id = "claude",
     name = "Claude Code",
-    icon = "󰚩",
+    icon = nf.md_robot,
     color = p.peach,
 
     processes = { "claude" },

@@ -5,11 +5,12 @@
 -- the same shell as the CLI, so they can write to /dev/tty directly.
 -- Set `updateTerminalTitle` to false to stop it overwriting a title you set.
 local p = require("palette")
+local nf = require("wezterm").nerdfonts
 
 return {
     id = "copilot",
     name = "Copilot CLI",
-    icon = "󰊤",
+    icon = nf.md_github,
     color = p.sapphire,
 
     processes = { "copilot" },
