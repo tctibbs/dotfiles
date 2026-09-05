@@ -14,6 +14,19 @@
 {{- $isSSH := ne (env "SSH_CLIENT") "" -}}
 {{- $isHeadless := or $isContainer $isSSH -}}
 
+{{- /* --- Windows: locate Git Bash to run .sh scripts ---
+       Windows cannot fork/exec a .sh directly ("%1 is not a valid Win32
+       application"), so chezmoi needs an explicit interpreter. Prefer Git
+       Bash; avoid System32\bash.exe, which is the WSL launcher. */ -}}
+{{- $gitBash := "" -}}
+{{- if eq .chezmoi.os "windows" -}}
+{{-   range (list "C:/Program Files/Git/bin/bash.exe" "C:/Program Files/Git/usr/bin/bash.exe") -}}
+{{-     if and (eq $gitBash "") (stat .) -}}
+{{-       $gitBash = . -}}
+{{-     end -}}
+{{-   end -}}
+{{- end -}}
+
 {{- /* --- User Prompts (skip profile prompt in containers) --- */ -}}
 {{- $identity := promptStringOnce . "identity" "Git identity (personal/work)" -}}
 
@@ -51,6 +64,12 @@ data:
   isWSL: {{ $isWSL }}
   isSSH: {{ $isSSH }}
   isHeadless: {{ $isHeadless }}
+{{ if $gitBash }}
+# Run POSIX shell scripts through Git Bash on Windows.
+interpreters:
+  sh:
+    command: {{ $gitBash | quote }}
+{{- end }}
 
 # Age encryption for secrets (uncomment when key is generated)
 # encryption: age

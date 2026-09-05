@@ -40,6 +40,16 @@ $WingetTools = @{
     "btop" = "aristocratos.btop4win"
     "lazygit" = "JesseDuffield.lazygit"
     "lazydocker" = "JesseDuffield.lazydocker"
+    # Tools with prebuilt Windows binaries. Prefer these over `cargo install`:
+    # a stock Windows box has no MSVC linker, so compiling from source fails
+    # (rustc's link.exe resolves to Git's coreutils link). Key = command name.
+    "dust" = "bootandy.dust"
+    "procs" = "dalance.procs"
+    "yazi" = "sxyazi.yazi"
+    "mcat" = "skardyy.mcat"
+    "onefetch" = "o2sh.onefetch"
+    "difft" = "Wilfred.difftastic"
+    "gobang" = "TaKO8Ki.gobang"
 }
 
 Write-Host "Installing tools via winget..." -ForegroundColor Cyan
@@ -73,17 +83,14 @@ if (Test-Command winget) {
 }
 
 # ============================================================================
-# Cargo Tools (requires Rust)
+# Cargo Tools (requires Rust + a C++ linker)
 # ============================================================================
+# Only tools without a prebuilt Windows package live here; everything with a
+# winget package moved to $WingetTools above. These still compile from source,
+# so they require an MSVC linker (VS Build Tools "C++ build tools" workload).
 
 $CargoTools = @(
-    "du-dust",
-    "procs",
-    "yazi-fm",
-    "mcat",
-    "treemd",
-    "onefetch",
-    "difftastic"
+    "treemd"
 )
 
 Write-Host ""
@@ -110,14 +117,7 @@ if (-not (Test-Command cargo)) {
 
 if (Test-Command cargo) {
     foreach ($tool in $CargoTools) {
-        # Map crate names to command names
-        $cmdName = switch ($tool) {
-            "yazi-fm" { "yazi" }
-            "du-dust" { "dust" }
-            default { $tool }
-        }
-
-        if (Test-Command $cmdName) {
+        if (Test-Command $tool) {
             Write-Host "  $tool already installed" -ForegroundColor Green
             $Skipped += $tool
             continue
@@ -129,26 +129,10 @@ if (Test-Command cargo) {
             Write-Host "  $tool installed" -ForegroundColor Green
             $Installed += $tool
         } else {
-            Write-Host "  Failed: $tool" -ForegroundColor Red
+            Write-Host "  Failed: $tool (needs a C++ linker; install VS Build Tools)" -ForegroundColor Red
             Write-Host "  Error: $output" -ForegroundColor Red
             $Failed += $tool
         }
-    }
-
-    # Install gobang with specific version
-    if (-not (Test-Command gobang)) {
-        Write-Host "  Installing gobang..." -ForegroundColor Yellow
-        $output = cargo install gobang --version 0.1.0-alpha.5 2>&1
-        if ($LASTEXITCODE -eq 0) {
-            Write-Host "  gobang installed" -ForegroundColor Green
-            $Installed += "gobang"
-        } else {
-            Write-Host "  Failed: gobang" -ForegroundColor Red
-            Write-Host "  Error: $output" -ForegroundColor Red
-            $Failed += "gobang"
-        }
-    } else {
-        $Skipped += "gobang"
     }
 } else {
     Write-Host "  Cargo not available - skipping Rust tools" -ForegroundColor Yellow
