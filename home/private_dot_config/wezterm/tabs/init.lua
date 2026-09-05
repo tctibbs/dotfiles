@@ -149,7 +149,8 @@ local function layout(max_width, title, wants_state)
         plan.state = false
     end
 
-    plan.title_budget = max_width - overhead()
+    plan.overhead = overhead()
+    plan.title_budget = max_width - plan.overhead
     return plan
 end
 
@@ -216,6 +217,17 @@ function module.apply(config, wezterm_mod)
         local look = resolve(tab, hover)
         local plan = layout(max_width, look.title, look.dot ~= nil)
         local title = fit(look.title, plan.title_budget)
+
+        -- Below five cells even the bare chrome does not fit, which WezTerm
+        -- would resolve by hard-cutting the line mid-glyph. Degrade to plain
+        -- text sized exactly to the budget instead.
+        if plan.overhead + cells(title) > max_width then
+            return {
+                { Background = { Color = look.bg } },
+                { Foreground = { Color = look.fg } },
+                { Text = wezterm.truncate_right(look.title, max_width) },
+            }
+        end
 
         local out = {
             { Background = { Color = p.base } },
