@@ -13,6 +13,7 @@ Platform-aware: `Cmd` on macOS, `Ctrl` on Windows/Linux.
 | `Mod+T` | New tab |
 | `Mod+W` | Close tab |
 | `Mod+Shift+R` | Rename tab |
+| Middle-click `+` | Rename tab (the only tab-bar mouse gesture WezTerm exposes to Lua) |
 
 ### Panes
 
