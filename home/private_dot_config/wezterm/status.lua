@@ -36,12 +36,19 @@ local function try(obj, method)
     return nil
 end
 
---- Read a MuxPane into the primitive shape agents.identify expects.
-local function read_pane(pane)
+--- Read a tab's active pane into the shape agents.identify expects.
+-- Title precedence matches tabs/init.lua: an explicitly set tab title wins
+-- over the pane title, so title-pattern identity resolves the same way here.
+local function read_tab(tab, pane)
+    local title = try(tab, "get_title")
+    if type(title) ~= "string" or title == "" then
+        title = try(pane, "get_title")
+    end
+
     return {
         user_vars = try(pane, "get_user_vars"),
         process = try(pane, "get_foreground_process_name"),
-        title = try(pane, "get_title"),
+        title = title,
     }
 end
 
@@ -73,16 +80,22 @@ local function tally(window)
     for _, tab in ipairs(tabs) do
         local pane = try(tab, "active_pane")
         if pane then
-            local src = read_pane(pane)
-            if agents.identify(src) then
+            local src = read_tab(tab, pane)
+            local agent, method = agents.identify(src)
+            if agent then
                 total = total + 1
 
                 local vars = type(src.user_vars) == "table" and src.user_vars or {}
                 local state = agent_state.normalize(vars.agent_state)
 
-                -- Same fallback the tab bar applies: an unfocused agent tab
-                -- with unseen output is treated as wanting attention.
-                if not state and try(tab, "tab_id") ~= active_id and try(pane, "has_unseen_output") then
+                -- Same rules as the tab bar: only a trusted identity earns a
+                -- state, and an unfocused agent tab with unseen output on its
+                -- active pane is treated as wanting attention.
+                if not agents.is_trusted(method) then
+                    state = nil
+                elseif not state
+                    and try(tab, "tab_id") ~= active_id
+                    and try(pane, "has_unseen_output") then
                     state = "waiting"
                 end
 

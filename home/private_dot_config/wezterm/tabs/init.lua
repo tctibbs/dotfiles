@@ -49,13 +49,27 @@ local function cells(s)
     return wezterm.column_width(s or "")
 end
 
+-- Zero-width and bidi format characters. Lua patterns have no Unicode
+-- classes, so these are matched as their UTF-8 byte sequences:
+-- U+200B..U+200F, U+2028..U+202E, U+2060..U+2064, U+FEFF.
+local INVISIBLE = { "\226\128\139", "\226\128\140", "\226\128\141", "\226\128\142",
+    "\226\128\143", "\226\128\168", "\226\128\169", "\226\128\170", "\226\128\171",
+    "\226\128\172", "\226\128\173", "\226\128\174", "\226\129\160", "\226\129\161",
+    "\226\129\162", "\226\129\163", "\226\129\164", "\239\187\191" }
+
 --- Strip anything that would not occupy a predictable cell.
--- A program can put arbitrary bytes in OSC 0, including control characters.
+-- A program can put arbitrary bytes in OSC 0. Control characters measure zero
+-- width, and zero-width or bidi marks are invisible but keep a string
+-- non-empty, which would defeat the "is this title useful" checks below.
 local function sanitize(s)
     if not s or s == "" then
         return ""
     end
-    return (s:gsub("%c", " "):gsub("%s+", " "):gsub("^%s+", ""):gsub("%s+$", ""))
+    s = s:gsub("%c", " ")
+    for _, seq in ipairs(INVISIBLE) do
+        s = s:gsub(seq, "")
+    end
+    return (s:gsub("%s+", " "):gsub("^%s+", ""):gsub("%s+$", ""))
 end
 
 --- Bare executable name of the tab's foreground process.
@@ -169,9 +183,13 @@ end
 
 --- Resolve every colour and glyph for one tab.
 local function resolve(tab, hover)
-    local agent = agents.detect(tab)
+    local agent, method = agents.detect(tab)
     local proc = process_name(tab)
-    local state, inferred = agent_state.resolve(tab, agent ~= nil)
+
+    -- Identity from a title match is a guess and only earns an icon. Letting it
+    -- drive state would let any program flip a tab red by printing a title.
+    local trusted = agent ~= nil and agents.is_trusted(method)
+    local state, inferred = agent_state.resolve(tab, trusted)
     local state_def = state and agent_state.states[state]
 
     local title = base_title(tab, proc)
@@ -216,10 +234,10 @@ function module.apply(config)
         local plan = layout(max_width, look.title, look.dot ~= nil)
         local title = fit(look.title, plan.title_budget)
 
-        -- Below five cells even the bare chrome does not fit, which WezTerm
-        -- would resolve by hard-cutting the line mid-glyph. Degrade to plain
-        -- text sized exactly to the budget instead.
-        if plan.overhead + cells(title) > max_width then
+        -- Too narrow for chrome plus at least one cell of title. WezTerm would
+        -- resolve an overflow by hard-cutting mid-glyph, and chrome with no
+        -- title at all says nothing. Degrade to plain text sized to the budget.
+        if plan.title_budget < 1 or plan.overhead + cells(title) > max_width then
             return {
                 { Background = { Color = look.bg } },
                 { Foreground = { Color = look.fg } },

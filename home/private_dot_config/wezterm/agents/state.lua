@@ -59,7 +59,7 @@ end
 -- Nothing is reported for a pane that is not a known agent, in either branch.
 --
 -- @param tab TabInformation
--- @param is_agent boolean whether an agent was identified in this tab
+-- @param is_agent boolean whether the tab was identified as a trusted agent
 -- @return string|nil canonical state key
 -- @return boolean true when the state was inferred rather than reported
 function module.resolve(tab, is_agent)
@@ -80,12 +80,12 @@ function module.resolve(tab, is_agent)
 
     -- An agent that cannot run hooks still produces output when it wants
     -- something, so unseen output in an unfocused tab is a usable signal.
-    if not tab.is_active then
-        for _, p in ipairs(tab.panes or {}) do
-            if p.has_unseen_output then
-                return "waiting", true
-            end
-        end
+    --
+    -- Scoped to the active pane, matching where identity came from. Scanning
+    -- every pane would flag a tab because of a split the agent is not in, and
+    -- would not agree with the status rollup, which can only see one pane.
+    if not tab.is_active and pane and pane.has_unseen_output then
+        return "waiting", true
     end
 
     return nil, false

@@ -93,12 +93,25 @@ function module.get(id)
     return id and by_id[id] or nil
 end
 
---- Bare executable name from a path.
+--- Bare executable name from a path, without a Windows extension.
+-- `processes` entries are bare lowercase names, so claude.exe must reduce to
+-- "claude" or nothing matches on Windows.
 local function basename(path)
     if type(path) ~= "string" or path == "" then
         return nil
     end
-    return (path:gsub("(.*[/\\])(.*)", "%2")):lower()
+    local name = path:gsub("(.*[/\\])(.*)", "%2"):lower()
+    return (name:gsub("%.exe$", ""))
+end
+
+--- Which detection methods are strong enough to act on.
+-- A title match is a guess: any program can print a title containing an agent
+-- name. It is good enough to pick an icon, but not to escalate a whole tab.
+local TRUSTED = { user_var = true, process = true }
+
+--- Is this detection method strong enough to drive state?
+function module.is_trusted(method)
+    return TRUSTED[method or ""] == true
 end
 
 --- Identify an agent from primitive inputs.

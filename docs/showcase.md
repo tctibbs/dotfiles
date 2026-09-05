@@ -55,9 +55,11 @@ here one waiting, two working, one idle.
 | idle | a dot in the idle colour |
 | waiting on input | the whole tab flips to a solid colour |
 
-State is reported by the program in the pane. Where nothing is reported, a
-tab known to be running an agent falls back to unseen output as a weaker
-signal, drawn with a smaller dot so a guess never looks like a fact.
+State is reported by the program in the pane. Where nothing is reported, a tab
+identified as an agent by user variable or process name falls back to unseen
+output as a weaker signal, drawn with a smaller dot so a guess never looks
+like a fact. A tab identified only by a title match gets an icon but no state,
+since any program can print a matching title.
 
 ## Adding an agent
 

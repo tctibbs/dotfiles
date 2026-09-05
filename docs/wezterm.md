@@ -121,7 +121,11 @@ Detection precedence, highest confidence first:
 
 1. the `agent_id` user var — exact, survives any title the agent sets
 2. foreground process name — reliable, but many agents run as `node`
-3. title patterns — fragile; agents that set an LLM-generated title never match
+3. title patterns — a guess; any program can print a matching title
+
+The first two are trusted and can drive state. A title match only earns an
+icon: letting it flip a tab red would mean any program could do so by printing
+the right words.
 
 State comes from the `agent_state` user var, written by `wezterm-agent-state`:
 
@@ -130,8 +134,10 @@ wezterm-agent-state claude working
 wezterm-agent-state claude clear
 ```
 
-Where no state is reported, an unfocused tab with `has_unseen_output` falls
-back to `waiting`. That needs no cooperation from the agent at all.
+Where no state is reported, an unfocused agent tab whose active pane has
+`has_unseen_output` falls back to `waiting`, drawn with a smaller dot so a
+guess never looks like a fact. It needs no hook, but it does need the tab to
+be identified as an agent first — by user variable or process name.
 
 ### Wiring each agent
 
