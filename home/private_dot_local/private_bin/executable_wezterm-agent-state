@@ -86,8 +86,9 @@ TARGET=$(resolve_tty) || exit 0
 
 # --- encode ----------------------------------------------------------------
 
-# GNU coreutils wraps at 76 columns; -w 0 is rejected by BSD base64, which does
-# not wrap short input anyway.
+# GNU coreutils wraps at 76 columns, so -w 0 is needed there. macOS ships
+# FreeBSD base64, which accepts -w 0 and does not wrap by default either way.
+# The fallback covers implementations without -w, such as busybox.
 b64() {
     printf '%s' "$1" | base64 -w 0 2>/dev/null || printf '%s' "$1" | base64 | tr -d '\n'
 }

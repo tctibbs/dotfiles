@@ -127,6 +127,16 @@ The first two are trusted and can drive state. A title match only earns an
 icon: letting it flip a tab red would mean any program could do so by printing
 the right words.
 
+User variables persist for the life of the pane. Nothing revokes them when an
+agent exits, so a tab identified by `agent_id` keeps that identity until the
+variable is cleared or the pane closes — wire a session-end hook to
+`wezterm-agent-state <id> clear` to avoid a stale icon. Identity by process
+name needs no such cleanup, since it follows the running process.
+
+Anything a pane writes is attacker-influenced: any program can set these
+variables. That is inherent to the mechanism, which is why a title match never
+earns state, and why the states are advisory rather than a security boundary.
+
 State comes from the `agent_state` user var, written by `wezterm-agent-state`:
 
 ```sh
