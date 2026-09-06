@@ -9,16 +9,17 @@ waiting on you.**
 ## Coding agent tabs
 
 The `wezterm-agent-state` helper (`~/.local/bin`) that agents' hooks already
-call now emits two things on every invocation:
+call now emits a second sequence alongside the user variables:
 
 | Sequence | Consumed by | Effect |
 |----------|-------------|--------|
 | `OSC 1337 SetUserVar` | WezTerm | Drives the full Lua tab bar (icon, colour, state dot, status rollup). |
 | `OSC 9;4` progress | Windows Terminal, ConEmu, Ghostty, … | A coloured **progress ring on the tab** plus a taskbar indicator. |
 
-One call drives both; each terminal ignores the sequences it does not
-understand. See [wezterm.md](wezterm.md) for the WezTerm side and the hook
-wiring — none of it changes.
+One call covers every terminal, and each ignores what it does not understand.
+The ring is skipped under WezTerm, whose tab bar already shows the state —
+see [When it fires](#when-it-fires). The WezTerm side and the hook wiring are
+unchanged; [wezterm.md](wezterm.md) has both.
 
 ### State → ring
 

@@ -212,7 +212,7 @@ them changes its CLI.
 |---|---|
 | Saved | one entry per tab: its working directory |
 | Not saved | running programs, pane splits, scrollback, workspaces |
-| Skipped | a directory that no longer exists falls back to home |
+| Skipped | a directory that no longer exists opens the window at home, or a later tab wherever the window already is |
 
 Launching with an explicit command (`wezterm start -- htop`) skips the restore.
 
@@ -227,6 +227,7 @@ Launching with an explicit command (`wezterm start -- htop`) skips the restore.
 | `theme.lua` | Colors, font, cursor, background, window chrome |
 | `platform.lua` | OS detection, default shell, launch menu |
 | `palette.lua` | Catppuccin Mocha values, the single source of colour |
+| `text.lua` | Sanitises every title, process name and user-var value |
 | `agents/` | Agent registry (`init.lua`), canonical states (`state.lua`), one file per agent |
 | `status.lua` | Right-status rollup of agent states across the window |
 | `sessions.lua` | Reopens tabs in the directories they were in |

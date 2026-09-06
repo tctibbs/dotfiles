@@ -33,6 +33,9 @@ local icons = {
     npm = nf.md_nodejs,
     pnpm = nf.md_nodejs,
 
+    ruby = nf.md_language_ruby,
+    irb = nf.md_language_ruby,
+
     python = nf.md_language_python,
     python3 = nf.md_language_python,
     pip = nf.md_language_python,

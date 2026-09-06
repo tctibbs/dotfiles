@@ -22,15 +22,39 @@ REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # Look on PATH first: Homebrew, MacPorts and a source build all put wezterm
 # there, and the app bundle is only one valid location. Override with
 # WEZTERM=/path/to/wezterm.
+#
+# Returns success even when nothing is found: under `set -e` a nonzero status
+# here would abort at the assignment below, before the message that explains
+# what to install.
 find_wezterm() {
-    [ -n "${WEZTERM:-}" ] && { printf '%s' "$WEZTERM"; return; }
-    command -v wezterm 2>/dev/null && return
+    if [ -n "${WEZTERM:-}" ]; then printf '%s' "$WEZTERM"; return 0; fi
+    if command -v wezterm 2>/dev/null; then return 0; fi
     for c in /Applications/WezTerm.app/Contents/MacOS/wezterm \
              "$HOME/Applications/WezTerm.app/Contents/MacOS/wezterm"; do
-        [ -x "$c" ] && { printf '%s' "$c"; return; }
+        [ -x "$c" ] && { printf '%s' "$c"; return 0; }
     done
+    return 0
 }
 WEZTERM="$(find_wezterm)"
+
+# `open -na` takes an application bundle, not the binary $WEZTERM points at.
+# Prefer a bundle when there is one — macOS gives a bundled launch proper
+# activation, which the frontmost check in capture() depends on — but fall
+# back to running the binary directly so a PATH-only install still works.
+# Override with WEZTERM_APP=/path/to/WezTerm.app.
+find_wezterm_app() {
+    if [ -n "${WEZTERM_APP:-}" ]; then printf '%s' "$WEZTERM_APP"; return 0; fi
+    # A binary inside a bundle names its own bundle, including non-standard
+    # locations such as Nix's /Applications/Nix Apps.
+    case "$WEZTERM" in
+        */WezTerm.app/Contents/MacOS/*) printf '%s' "${WEZTERM%/Contents/MacOS/*}"; return 0 ;;
+    esac
+    for c in /Applications/WezTerm.app "$HOME/Applications/WezTerm.app"; do
+        [ -d "$c" ] && { printf '%s' "$c"; return 0; }
+    done
+    return 0
+}
+WEZTERM_APP="$(find_wezterm_app)"
 
 # Resolved at run time so the demo does not depend on one machine's layout.
 SHELL_BIN="$(command -v zsh || command -v bash || echo /bin/sh)"
@@ -164,7 +188,11 @@ capture() {
 
     pkill -f "$WORK" 2>/dev/null || true
     sleep 1
-    open -na WezTerm --args --config-file "$cfg" start --always-new-process
+    if [ -n "$WEZTERM_APP" ]; then
+        open -na "$WEZTERM_APP" --args --config-file "$cfg" start --always-new-process
+    else
+        "$WEZTERM" --config-file "$cfg" start --always-new-process &
+    fi
 
     # screencapture grabs a screen region, not a window, so anything in front
     # of that region lands in the image instead. Twice during development that
