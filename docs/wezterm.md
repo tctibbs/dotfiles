@@ -13,7 +13,13 @@ Platform-aware: `Cmd` on macOS, `Ctrl` on Windows/Linux.
 | `Mod+T` | New tab |
 | `Mod+W` | Close tab |
 | `Mod+Shift+R` | Rename tab |
-| Middle-click `+` | Rename tab (the only tab-bar mouse gesture WezTerm exposes to Lua) |
+| Middle-click `+` | Rename tab |
+
+Rename is also in the command palette. Double-clicking a tab cannot be bound:
+WezTerm hit-tests tab-bar items before consulting `mouse_bindings`, so a tab
+click never reaches user config. The new-tab button is the only tab-bar element
+whose handler emits a Lua event. An empty name clears the override and returns
+the tab to tracking its program.
 
 ### Panes
 
@@ -121,12 +127,10 @@ return {
 }
 ```
 
-Take colours from `palette.lua` rather than pasting hex, and glyphs from
-`wezterm.nerdfonts` rather than pasting codepoints — an unknown glyph name is
-`nil`, which the validator reports by name at startup.
-
-A malformed file is skipped with a logged warning rather than breaking the
-tab bar.
+Take colours from `palette.lua` and glyphs from `wezterm.nerdfonts` rather than
+pasting values: an unknown glyph name is `nil`, which the validator reports by
+file and field at startup. A malformed file is skipped with a warning rather
+than breaking the tab bar.
 
 ### How state arrives
 
@@ -136,19 +140,14 @@ Detection precedence, highest confidence first:
 2. foreground process name — reliable, but many agents run as `node`
 3. title patterns — a guess; any program can print a matching title
 
-The first two are trusted and can drive state. A title match only earns an
-icon: letting it flip a tab red would mean any program could do so by printing
-the right words.
+The first two are trusted and can drive state. A title match earns only an
+icon — otherwise any program could turn a tab red by printing the right words.
 
-User variables persist for the life of the pane. Nothing revokes them when an
-agent exits, so a tab identified by `agent_id` keeps that identity until the
-variable is cleared or the pane closes — wire a session-end hook to
-`wezterm-agent-state <id> clear` to avoid a stale icon. Identity by process
-name needs no such cleanup, since it follows the running process.
-
-Anything a pane writes is attacker-influenced — any program can set these
-variables. That is inherent to the mechanism: the states are advisory, not a
-security boundary, which is why a title match never earns one.
+Everything a pane writes is attacker-influenced, so these states are advisory
+rather than a security boundary. User variables also live as long as the pane:
+a tab identified by `agent_id` keeps that identity until the variable is cleared,
+so wire a session-end hook to `wezterm-agent-state <id> clear` to avoid a stale
+icon. Process-name identity needs no cleanup, since it follows the process.
 
 State comes from the `agent_state` user var, written by `wezterm-agent-state`:
 
@@ -157,10 +156,10 @@ wezterm-agent-state claude working
 wezterm-agent-state claude clear
 ```
 
-Where no state is reported, an unfocused agent tab whose active pane has
-`has_unseen_output` falls back to `waiting`, drawn with a smaller dot so a
-guess never looks like a fact. It needs no hook, but it does need the tab to
-be identified as an agent first — by user variable or process name.
+With no state reported, an unfocused agent tab whose active pane has unseen
+output falls back to `waiting`, drawn with a smaller dot so a guess never looks
+like a fact. No hook needed, but the tab must first be identified as an agent by
+user variable or process name.
 
 ### Wiring each agent
 
@@ -199,33 +198,27 @@ session end → `clear`.
 
 ## Remembering Directories
 
-Every two minutes the directory of each tab is written to
-`~/.local/share/wezterm/tabs.json`. On the next launch those tabs are reopened
-in the same places, named after the project directory.
+Every two minutes each tab's directory is written to
+`~/.local/share/wezterm/tabs.json`. On the next launch those tabs reopen in the
+same places, named after their directory. Delete the file to start clean.
 
-Only directories are saved. Programs are not restarted — land back in the
-project and resume the agent yourself:
+Programs are not restarted, so resume the agent yourself:
 
 ```sh
 claude --continue
 codex resume
 ```
 
-That keeps it agent-agnostic: nothing here knows which tool you were running,
-so nothing breaks when one of them changes its CLI.
+Nothing here knows which tool you were running, so nothing breaks when one of
+them changes its CLI.
 
 | | |
 |---|---|
-| State | `~/.local/share/wezterm/tabs.json`, written atomically |
 | Saved | one entry per tab: its working directory |
 | Not saved | running programs, pane splits, scrollback, workspaces |
-| Restored | one tab per entry, titled after the directory |
 | Skipped | a directory that no longer exists falls back to home |
 
-Launching with an explicit command (`wezterm start -- htop`) does not restore;
-you asked for something specific, so you get it.
-
-To start clean, delete the state file.
+Launching with an explicit command (`wezterm start -- htop`) skips the restore.
 
 ---
 

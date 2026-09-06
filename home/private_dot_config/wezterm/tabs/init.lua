@@ -5,18 +5,16 @@
 --   agents.state    what that agent is doing       (state)
 --   tabs.processes  fallback icon for plain shells
 --
--- Requires the retro tab bar (use_fancy_tab_bar = false, set in theme.lua).
--- The fancy bar renders in a proportional system font with no Nerd Font
--- coverage, and composites its own close button over whatever this returns.
+-- Requires the retro tab bar (use_fancy_tab_bar = false, in theme.lua): the
+-- fancy bar uses a proportional system font with no Nerd Font coverage and
+-- composites its own close button over whatever this returns.
 --
--- Repaint is event driven: an OSC 1337 SetUserVar write fires user-var-changed,
--- which posts update_title and rebuilds the tab bar, so agent state appears as
--- soon as it is reported rather than on a poll interval.
+-- Repaint is event driven — a SetUserVar write rebuilds the tab bar — so state
+-- appears when reported rather than on a poll.
 --
--- Width is measured with wezterm.column_width and cut with
--- wezterm.truncate_right. Lua's # operator counts BYTES: "…" is 3 bytes but
--- one cell, and every Nerd Font glyph is 3-4 bytes wide, so byte arithmetic
--- both over-reserves space and can slice a codepoint in half.
+-- Width comes from wezterm.column_width, cut with truncate_right. Lua's #
+-- counts bytes: "…" is three bytes and one cell, so byte arithmetic both
+-- over-reserves and can slice a character in half.
 
 local wezterm = require("wezterm")
 local p = require("palette")

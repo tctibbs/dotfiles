@@ -7,7 +7,7 @@ Stock WezTerm gives you one window in your home directory; whatever you had
 open is gone. Configured, the tab bar comes back as:
 
 ```
- ~   dotfiles   Code   nestflix
+ ~   dotfiles   api-refactor   data-pipeline
 ```
 
 Each tab is in its project directory and named after it. Resume whichever agent
@@ -23,7 +23,7 @@ codex resume
 Every two minutes, one entry per tab in `~/.local/share/wezterm/tabs.json`:
 
 ```json
-{ "version": 1, "windows": [ { "tabs": [ { "cwd": "/Users/you/Code/nestflix" } ] } ] }
+{ "version": 1, "windows": [ { "tabs": [ { "cwd": "/Users/you/code/api-refactor" } ] } ] }
 ```
 
 That is the whole state. Delete the file to start clean.

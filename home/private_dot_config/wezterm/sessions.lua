@@ -1,21 +1,15 @@
 -- Remember which directories you had open.
 --
--- Not session restore. Programs are not saved, restarted or resurrected — the
--- only thing persisted is the working directory of each tab, plus enough
--- structure to put them back in the same windows.
+-- Not session restore: only each tab's working directory is persisted, plus
+-- enough structure to put the tabs back. You land in the project and resume the
+-- agent yourself. That needs no per-agent knowledge, so it does not rot when an
+-- agent changes its CLI.
 --
--- That is deliberately the smallest useful thing. Directories are the part
--- that survives a reboot meaningfully: land back in the project and resume the
--- agent yourself (`claude -c`, `codex resume`). It also needs no per-agent
--- knowledge, so it does not rot when an agent changes its CLI.
+-- Workspaces are out of scope. WezTerm renders one at a time, so a window
+-- restored into a non-active workspace exists but is invisible — indis-
+-- tinguishable from a failed restore. Everything comes back in the active one.
 --
--- Workspaces are out of scope. WezTerm renders one workspace at a time, so a
--- window restored into a saved, non-active workspace exists but is invisible —
--- indistinguishable from a restore that failed. Everything comes back in the
--- active workspace.
---
--- State lives in WezTerm's data directory, not the config, because it is
--- machine state rather than configuration and must not be committed.
+-- State lives in WezTerm's data directory: machine state, not configuration.
 
 local wezterm = require("wezterm")
 local text = require("text")
@@ -45,14 +39,13 @@ local function warn_once(message)
     end
 end
 
--- Saving periodically rather than on quit: a quit hook misses a crash, a panic
--- or a held power button, which are exactly the cases this exists for.
+-- Periodic rather than on quit: a quit hook misses a crash or a held power
+-- button, which are the cases this exists for.
 --
--- The clock is WezTerm's own update-status event, throttled here. An earlier
--- version re-armed wezterm.time.call_after from inside its own callback, which
--- fires exactly once and never reschedules — the state file then froze at the
--- startup snapshot. update-status is driven by WezTerm and fires reliably;
--- registering a second handler does not disturb the one in status.lua.
+-- The clock is update-status, throttled here. wezterm.time.call_after cannot
+-- re-arm from inside its own callback — it fires once, so the state file froze
+-- at the startup snapshot. Registering a second update-status handler does not
+-- disturb the one in status.lua.
 local SAVE_INTERVAL_SECONDS = 120
 
 -- A runaway or hand-edited state file should not be able to spawn hundreds of
