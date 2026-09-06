@@ -15,11 +15,11 @@ Platform-aware: `Cmd` on macOS, `Ctrl` on Windows/Linux.
 | `Mod+Shift+R` | Rename tab |
 | Middle-click `+` | Rename tab |
 
-Rename is also in the command palette. Double-clicking a tab cannot be bound:
-WezTerm hit-tests tab-bar items before consulting `mouse_bindings`, so a tab
-click never reaches user config. The new-tab button is the only tab-bar element
-whose handler emits a Lua event. An empty name clears the override and returns
-the tab to tracking its program.
+Also in the command palette. An empty name clears the override, returning the
+tab to tracking its program. Double-clicking a tab cannot be bound — WezTerm
+hit-tests tab-bar items before consulting `mouse_bindings`, so the click never
+reaches user config, and the new-tab button is the only tab-bar element that
+emits a Lua event.
 
 ### Panes
 
@@ -134,20 +134,16 @@ than breaking the tab bar.
 
 ### How state arrives
 
-Detection precedence, highest confidence first:
+Detection precedence: the `agent_id` user var, then the foreground process
+name, then title patterns. The first two are trusted and can drive state; a
+title match earns only an icon, or any program could turn a tab red by printing
+the right words. These states are advisory, not a security boundary — anything
+a pane writes is attacker-influenced.
 
-1. the `agent_id` user var — exact, survives any title the agent sets
-2. foreground process name — reliable, but many agents run as `node`
-3. title patterns — a guess; any program can print a matching title
-
-The first two are trusted and can drive state. A title match earns only an
-icon — otherwise any program could turn a tab red by printing the right words.
-
-Everything a pane writes is attacker-influenced, so these states are advisory
-rather than a security boundary. User variables also live as long as the pane:
-a tab identified by `agent_id` keeps that identity until the variable is cleared,
-so wire a session-end hook to `wezterm-agent-state <id> clear` to avoid a stale
-icon. Process-name identity needs no cleanup, since it follows the process.
+User variables live as long as the pane, so a tab identified by `agent_id`
+keeps that identity until cleared; wire a session-end hook to
+`wezterm-agent-state <id> clear` to avoid a stale icon. Process-name identity
+needs no cleanup.
 
 State comes from the `agent_state` user var, written by `wezterm-agent-state`:
 
