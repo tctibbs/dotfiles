@@ -13,8 +13,8 @@ falls back to the terminal's own window title.
 
 Tab 5 is now `zsh`. Each tab carries an icon for what is running, agents are
 tinted by identity, and a dot shows what each is doing — yellow working, green
-idle. The tab waiting on input turns solid red, and the rollup on the right
-counts states across the window.
+idle. The tab needing input flips its whole background rather than just its
+dot, and the rollup on the right counts states across the window.
 
 A dot drawn smaller means the state was inferred from unseen output rather than
 reported. A tab identified only by a title match gets an icon but never a

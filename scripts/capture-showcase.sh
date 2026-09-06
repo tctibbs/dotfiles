@@ -9,12 +9,12 @@
 # therefore cannot drift from what the config actually does.
 #
 # macOS only: it uses screencapture. The window is placed and sized from Lua,
-# so the crop is reproducible, but the vertical offset depends on the menu bar
-# and the tab bar height depends on your font size. Override if the crop is off:
+# so the crop is reproducible on one machine, but the vertical offset depends
+# on the menu bar height and the tab bar height depends on your font size.
+# Every edge of both crops is overridable — see the block below.
 #
-#   SHOWCASE_Y=44 SHOWCASE_H=26 scripts/capture-showcase.sh tab-bar
-#
-# The script prints the output paths; look at them before committing.
+# Look at both images before committing. The checks here catch a blank crop and
+# a window that never came forward; they cannot tell you the tabs are wrong.
 
 set -euo pipefail
 
@@ -40,10 +40,25 @@ trap 'pkill -f "$WORK" 2>/dev/null || true; rm -rf "$WORK"' EXIT
 
 COLS="${SHOWCASE_COLS:-150}"
 ROWS="${SHOWCASE_ROWS:-20}"
-Y="${SHOWCASE_Y:-34}"
-H="${SHOWCASE_H:-28}"
-W="${SHOWCASE_W:-1270}"
 SETTLE="${SHOWCASE_SETTLE:-7}"
+
+# Crop of the tab bar, in points from the top of the screen. The two halves
+# need different numbers: the stock window has a native title bar above its
+# tabs, this configuration puts the window controls in the tab bar itself, and
+# stock renders in the system font so its tabs are both taller and narrower at
+# the same column count.
+#
+# These are measured on a 2x display with the default font size. If your crop
+# is off, capture a tall strip and read the band boundaries off it:
+#
+#   SHOWCASE_H_STOCK=120 SHOWCASE_H_CONF=120 scripts/capture-showcase.sh tab-bar
+#
+Y_STOCK="${SHOWCASE_Y_STOCK:-61}"
+H_STOCK="${SHOWCASE_H_STOCK:-25}"
+W_STOCK="${SHOWCASE_W_STOCK:-1000}"
+Y_CONF="${SHOWCASE_Y_CONF:-32}"
+H_CONF="${SHOWCASE_H_CONF:-18}"
+W_CONF="${SHOWCASE_W_CONF:-1270}"
 
 if [ -z "$WEZTERM" ] || [ ! -x "$WEZTERM" ]; then
     echo "wezterm not found. Put it on PATH or set WEZTERM=/path/to/wezterm" >&2
@@ -121,8 +136,28 @@ front_app() {
         | sed -n 's/.*"LSDisplayName"="\([^"]*\)".*/\1/p'
 }
 
+# A crop that misses the tab bar lands on the uniform terminal background and
+# looks plausible until someone opens the file. Reject a near-uniform image.
+# Needs ImageMagick; without it the check passes and the eyeball is the only
+# guard, which is how a VS Code window once reached a committed asset.
+has_content() {
+    command -v magick >/dev/null 2>&1 || return 0
+    local spread
+    spread="$(magick "$1" -colorspace gray -format '%[fx:maxima-minima]' info: 2>/dev/null)"
+    [ -n "$spread" ] || return 0
+    awk -v s="$spread" 'BEGIN { exit !(s > 0.25) }'
+}
+
+# Bring WezTerm forward without opening anything. Needs Accessibility for the
+# calling terminal; if that is not granted the capture still works whenever
+# WezTerm takes focus on its own, and fails cleanly when it does not.
+raise_wezterm() {
+    osascript -e 'tell application "System Events" to set frontmost of process "WezTerm" to true' \
+        >/dev/null 2>&1 || true
+}
+
 capture() {
-    local cfg="$1" out="$2" label="$3" width="${4:-$W}"
+    local cfg="$1" out="$2" label="$3" width="$4" y="$5" h="$6"
     local staged="$WORK/$(basename "$out")"
     STAGED_PAIRS="$STAGED_PAIRS$staged|$out
 "
@@ -130,34 +165,54 @@ capture() {
     pkill -f "$WORK" 2>/dev/null || true
     sleep 1
     open -na WezTerm --args --config-file "$cfg" start --always-new-process
-    sleep "$SETTLE"
 
-    # screencapture grabs a screen region, not a window. Without this check a
-    # failed or slow launch silently writes whatever else was on screen over a
-    # committed asset — during development that produced a browser window and
-    # an unrelated app before anyone noticed.
-    local pid
-    pid="$(pgrep -f "$cfg" | head -1)"
+    # screencapture grabs a screen region, not a window, so anything in front
+    # of that region lands in the image instead. Twice during development that
+    # silently wrote another app's window over a committed asset.
+    #
+    # Wait for the window to exist AND be frontmost rather than sleeping a
+    # fixed time and hoping: killing the previous window hands focus back to
+    # whatever was behind it, so the second capture of a pair would otherwise
+    # race.
+    #
+    # Raise with System Events, not `open -a WezTerm`: `open` sends a reopen
+    # event, which makes WezTerm spawn a fresh default-config window that then
+    # sits in front of the demo window and lands in the capture.
+    local pid="" front="" deadline=$((SECONDS + SETTLE + 20))
+    while [ "$SECONDS" -lt "$deadline" ]; do
+        [ -z "$pid" ] && pid="$(pgrep -f "$cfg" | head -1)"
+        if [ -n "$pid" ]; then
+            front="$(front_app)"
+            [ "$front" = "WezTerm" ] && break
+            raise_wezterm
+        fi
+        sleep 1
+    done
+
     if [ -z "$pid" ]; then
         echo "  $label: WezTerm did not start; leaving $out untouched" >&2
         return 1
     fi
-
-    local front
-    front="$(front_app)"
     if [ "$front" != "WezTerm" ]; then
-        echo "  $label: $front is in front, not WezTerm; leaving $out untouched" >&2
+        echo "  $label: $front stayed in front; leaving $out untouched" >&2
         pkill -f "$WORK" 2>/dev/null || true
         return 1
     fi
 
+    # Frontmost only means the app is active; its tabs still have to spawn.
+    sleep "$SETTLE"
+
     # Capture to the work directory first, and only install over the committed
     # asset once there is something to install.
-    screencapture -x -R"0,$Y,$width,$H" "$staged"
+    screencapture -x -R"0,$y,$width,$h" "$staged"
     pkill -f "$WORK" 2>/dev/null || true
 
     if [ ! -s "$staged" ]; then
         echo "  $label: capture produced nothing; leaving $out untouched" >&2
+        return 1
+    fi
+    if ! has_content "$staged"; then
+        echo "  $label: crop looks blank; check the offsets. Leaving $out untouched" >&2
         return 1
     fi
 
@@ -177,8 +232,10 @@ case "${1:-}" in
         # configured one at the same column count.
         failed=0
         STAGED_PAIRS=""
-        Y=$((Y + 34)) capture "$WORK/stock.lua" "$REPO/assets/showcase/tab-bar-default.png" "stock    " "${SHOWCASE_W_STOCK:-1000}" || failed=1
-        capture "$WORK/configured.lua" "$REPO/assets/showcase/tab-bar-configured.png" "configured" || failed=1
+        capture "$WORK/stock.lua" "$REPO/assets/showcase/tab-bar-default.png" \
+            "stock    " "$W_STOCK" "$Y_STOCK" "$H_STOCK" || failed=1
+        capture "$WORK/configured.lua" "$REPO/assets/showcase/tab-bar-configured.png" \
+            "configured" "$W_CONF" "$Y_CONF" "$H_CONF" || failed=1
         # All or nothing: a half-updated pair is worse than none, since the
         # two images are only meaningful side by side.
         if [ "$failed" -ne 0 ]; then
