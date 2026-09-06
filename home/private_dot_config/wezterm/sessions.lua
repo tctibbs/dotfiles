@@ -87,7 +87,9 @@ local function label_for(path)
     if path == wezterm.home_dir then
         return "~"
     end
-    return (path:gsub("/+$", ""):gsub(".*/", ""))
+    -- Both separators: WezTerm reports Windows cwds with backslashes, and
+    -- splitting on "/" alone would title those tabs with the whole path.
+    return (path:gsub("[/\\]+$", ""):gsub(".*[/\\]", ""))
 end
 
 --- Current windows and the directory of each tab's active pane.
@@ -120,6 +122,21 @@ end
 --- Write the state file, replacing it atomically.
 -- A partial write during a crash would leave unparseable JSON exactly when it
 -- is needed, so the new file is written alongside and renamed into place.
+-- Lua has no mkdir. The directory is normally WezTerm's own runtime dir and
+-- already exists, but on Linux with XDG_RUNTIME_DIR set WezTerm uses
+-- /run/user/N/wezterm instead and nothing has created this one. Try once, then
+-- let the warning below stand rather than retrying on every save.
+local tried_mkdir = false
+local function ensure_state_dir()
+    if tried_mkdir then
+        return
+    end
+    tried_mkdir = true
+    -- Fails harmlessly on Windows, which has no mkdir -p; there the directory
+    -- is WezTerm's runtime dir and exists already.
+    pcall(wezterm.run_child_process, { "mkdir", "-p", STATE_DIR })
+end
+
 local function save()
     local ok, state = pcall(snapshot)
     if not ok or #state.windows == 0 then
@@ -134,8 +151,12 @@ local function save()
 
     local file, open_err = io.open(TMP_PATH, "w")
     if not file then
+        ensure_state_dir()
+        file, open_err = io.open(TMP_PATH, "w")
+    end
+    if not file then
         warn_once("cannot write " .. TMP_PATH .. ": " .. tostring(open_err)
-            .. " (does " .. STATE_DIR .. " exist?)")
+            .. " (could not create " .. STATE_DIR .. ")")
         return
     end
 
@@ -254,7 +275,17 @@ end
 function module.apply(config)
     local last_save = 0
 
+    -- Saving is the dangerous half: a window this process did not restore is
+    -- not the user's layout, and writing it out replaces the layout that was
+    -- deliberately left alone. Every path that declines to restore therefore
+    -- also has to decline to save. gui-startup runs before any window exists,
+    -- so it always gets to set this before update-status can fire.
+    local persist = true
+
     wezterm.on("update-status", function()
+        if not persist then
+            return
+        end
         local now = os.time()
         if now - last_save < SAVE_INTERVAL_SECONDS then
             return
@@ -267,13 +298,15 @@ function module.apply(config)
         -- An explicit command means the user asked for something specific;
         -- honour it and leave the saved directories alone.
         if cmd then
+            persist = false
             wezterm.mux.spawn_window(cmd)
             return
         end
 
+        local saved_windows = load() or {}
         local restored = 0
 
-        for i, saved in ipairs(load() or {}) do
+        for i, saved in ipairs(saved_windows) do
             if i > MAX_WINDOWS then
                 break
             end
@@ -290,6 +323,16 @@ function module.apply(config)
         -- Nothing to restore, or every restore failed: this handler owns
         -- spawning, so a window has to come from somewhere.
         if restored == 0 then
+            -- There is a difference between the two. With nothing saved, this
+            -- empty window is the only layout there is and saving it is right.
+            -- With windows saved that all failed to restore, the state file is
+            -- still the user's layout, and saving over it would finish what
+            -- the failed restore started.
+            if #saved_windows > 0 then
+                persist = false
+                warn_once("no saved window could be restored; leaving "
+                    .. STATE_PATH .. " untouched")
+            end
             wezterm.mux.spawn_window({})
         end
     end)

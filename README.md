@@ -24,7 +24,7 @@ Personal configuration for a consistent dev environment across macOS, Linux, and
 | Shell | zsh, aliases, exports |
 | CLI Tools | eza, bat, dust, procs, fd, fzf, btop, tldr, fastfetch |
 | Git | Conditional identity (personal/work), delta diffs |
-| AI | Claude Code, Codex, Copilot and Antigravity CLI aliases and tab integration |
+| AI | Tab integration for Claude Code, Codex, Copilot and Antigravity CLI; Claude Code aliases |
 
 ## Installation
 
