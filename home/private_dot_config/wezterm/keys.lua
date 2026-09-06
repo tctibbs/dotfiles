@@ -1,9 +1,33 @@
 -- Keybindings configuration
 -- Platform-aware modifiers (CMD on Mac, CTRL on Windows/Linux)
 
+local wezterm = require("wezterm")
+
 local module = {}
 
-function module.apply(config, wezterm)
+-- Renaming is defined once and reached three ways: a keybinding, a middle-click
+-- on the new-tab button, and the command palette.
+--
+-- Double-clicking a tab is deliberately absent, because it cannot be done.
+-- WezTerm hit-tests tab-bar UI items before consulting mouse_bindings, and the
+-- two sit in opposite branches of the same if/else, so a tab click never
+-- reaches user config. MouseEventTrigger has no region field either, so the
+-- binding is not expressible. new-tab-button-click is the only tab-bar mouse
+-- event exposed to Lua.
+local function rename_action()
+    return wezterm.action.PromptInputLine({
+        description = "Enter new tab name:",
+        action = wezterm.action_callback(function(window, _pane, line)
+            -- nil means cancelled. An empty string clears the override, so the
+            -- tab goes back to tracking whatever is running in it.
+            if line then
+                window:active_tab():set_title(line)
+            end
+        end),
+    })
+end
+
+function module.apply(config)
     local act = wezterm.action
 
     -- Platform detection for modifier keys
@@ -23,18 +47,7 @@ function module.apply(config, wezterm)
         { key = "w", mods = mod, action = act.CloseCurrentTab({ confirm = false }) },
 
         -- Rename tab
-        {
-            key = "r",
-            mods = mod_shift,
-            action = act.PromptInputLine({
-                description = "Enter new tab name:",
-                action = wezterm.action_callback(function(window, pane, line)
-                    if line then
-                        window:active_tab():set_title(line)
-                    end
-                end),
-            }),
-        },
+        { key = "r", mods = mod_shift, action = rename_action() },
 
         -- Pane splitting (universal CTRL+SHIFT)
         { key = "|", mods = "CTRL|SHIFT", action = act.SplitHorizontal({ domain = "CurrentPaneDomain" }) },
@@ -122,6 +135,32 @@ function module.apply(config, wezterm)
             }),
         },
     }
+
+
+    -- Middle-click the new-tab button to rename the current tab.
+    --
+    -- This is the only mouse gesture in the tab bar that WezTerm hands to Lua.
+    -- Left and Right on that button already spawn a tab and open the launcher;
+    -- Middle maps to no action, so the event fires with nothing to override.
+    -- Returning false stops WezTerm handling it afterwards.
+    wezterm.on("new-tab-button-click", function(window, pane, button, _default)
+        if button == "Middle" then
+            window:perform_action(rename_action(), pane)
+            return false
+        end
+        return true
+    end)
+
+    -- And from the command palette, for when the mouse is not to hand.
+    wezterm.on("augment-command-palette", function()
+        return {
+            {
+                brief = "Rename tab",
+                icon = "md_rename_box",
+                action = rename_action(),
+            },
+        }
+    end)
 
 end
 

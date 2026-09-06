@@ -42,7 +42,6 @@ Defined in `home/private_dot_config/zsh/aliash.zsh`. Each alias is conditional â
 |-------|---------|
 | `cc` | `claude --dangerously-skip-permissions` |
 | `ccc` | `claude --dangerously-skip-permissions -c` (continue) |
-| `gf` | `gemini --model gemini-2.5-flash` |
 
 ### Utilities
 

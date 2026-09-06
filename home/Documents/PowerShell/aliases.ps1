@@ -94,15 +94,6 @@ if (Get-Command claude -ErrorAction SilentlyContinue) {
 }
 
 # ============================================================================
-# Gemini CLI Aliases
-# ============================================================================
-
-if (Get-Command gemini -ErrorAction SilentlyContinue) {
-    # gf - Gemini Flash model
-    function gf { gemini --model gemini-2.5-flash @args }
-}
-
-# ============================================================================
 # yazi - Terminal File Manager with cd on exit
 # ============================================================================
 

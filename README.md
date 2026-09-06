@@ -2,6 +2,9 @@
 
 ![Terminal Screenshot](assets/terminal_screenshot.png)
 
+See [docs/showcase/](docs/showcase/) for side-by-side comparisons of this
+configuration against stock defaults, and the features behind each difference.
+
 Personal configuration for a consistent dev environment across macOS, Linux, and Windows.
 
 ## Features
@@ -21,7 +24,7 @@ Personal configuration for a consistent dev environment across macOS, Linux, and
 | Shell | zsh, aliases, exports |
 | CLI Tools | eza, bat, dust, procs, fd, fzf, btop, tldr, fastfetch |
 | Git | Conditional identity (personal/work), delta diffs |
-| AI | Claude Code & Gemini CLI aliases |
+| AI | Claude Code, Codex, Copilot and Antigravity CLI aliases and tab integration |
 
 ## Installation
 
@@ -141,7 +144,6 @@ chezmoi update        # Pull latest and apply
 |-------|---------|-------------|
 | `cc`  | `claude --dangerously-skip-permissions` | Claude Code |
 | `ccc` | `claude --dangerously-skip-permissions -c` | Claude Code continue |
-| `gf`  | `gemini --model gemini-2.5-flash` | Gemini Flash |
 
 ## Architecture
 

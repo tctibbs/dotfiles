@@ -1,9 +1,14 @@
 -- Theme configuration
--- Catppuccin Mocha colors with FiraCode Nerd Font
+-- Catppuccin Mocha colors with FiraCode Nerd Font.
+-- Colour values come from palette.lua so they stay in step with the tab bar.
+
+local p = require("palette")
+
+local wezterm = require("wezterm")
 
 local module = {}
 
-function module.apply(config, wezterm)
+function module.apply(config)
     -- Font configuration
     -- Try multiple FiraCode Nerd Font name variants
     config.font = wezterm.font_with_fallback({
@@ -19,67 +24,52 @@ function module.apply(config, wezterm)
 
     -- Catppuccin Mocha color scheme
     config.colors = {
-        foreground = "#cdd6f4",
-        background = "#1e1e2e",
+        foreground = p.text,
+        background = p.base,
 
-        cursor_bg = "#f5e0dc",
-        cursor_fg = "#1e1e2e",
-        cursor_border = "#f5e0dc",
+        cursor_bg = p.rosewater,
+        cursor_fg = p.base,
+        cursor_border = p.rosewater,
 
-        selection_fg = "#1e1e2e",
-        selection_bg = "#89b4fa",
+        selection_fg = p.base,
+        selection_bg = p.blue,
 
-        scrollbar_thumb = "#585b70",
-        split = "#6c7086",
+        scrollbar_thumb = p.surface2,
+        split = p.overlay0,
 
         -- ANSI colors (normal)
         ansi = {
-            "#45475a", -- black (surface0)
-            "#f38ba8", -- red
-            "#a6e3a1", -- green
-            "#f9e2af", -- yellow
-            "#89b4fa", -- blue
-            "#cba6f7", -- magenta (mauve)
-            "#94e2d5", -- cyan (teal)
-            "#bac2de", -- white (subtext1)
+            p.surface1, -- black
+            p.red,
+            p.green,
+            p.yellow,
+            p.blue,
+            p.mauve, -- magenta
+            p.teal, -- cyan
+            p.subtext1, -- white
         },
 
         -- ANSI colors (bright)
         brights = {
-            "#585b70", -- bright black (surface2)
-            "#f38ba8", -- bright red
-            "#a6e3a1", -- bright green
-            "#f9e2af", -- bright yellow
-            "#89b4fa", -- bright blue
-            "#cba6f7", -- bright magenta
-            "#94e2d5", -- bright cyan
-            "#a6adc8", -- bright white (subtext0)
+            p.surface2, -- bright black
+            p.red,
+            p.green,
+            p.yellow,
+            p.blue,
+            p.mauve,
+            p.teal,
+            p.subtext0, -- bright white
         },
 
-        -- Tab bar colors
+        -- Tab bar colors. The retro tab bar draws tab titles through
+        -- format-tab-title in tabs/init.lua; these cover the surrounding chrome.
         tab_bar = {
-            background = "#1e1e2e",
-            active_tab = {
-                bg_color = "#89b4fa",
-                fg_color = "#1e1e2e",
-                intensity = "Bold",
-            },
-            inactive_tab = {
-                bg_color = "#313244",
-                fg_color = "#cdd6f4",
-            },
-            inactive_tab_hover = {
-                bg_color = "#45475a",
-                fg_color = "#cdd6f4",
-            },
-            new_tab = {
-                bg_color = "#313244",
-                fg_color = "#cdd6f4",
-            },
-            new_tab_hover = {
-                bg_color = "#45475a",
-                fg_color = "#cdd6f4",
-            },
+            background = p.base,
+            active_tab = { bg_color = p.blue, fg_color = p.base, intensity = "Bold" },
+            inactive_tab = { bg_color = p.surface0, fg_color = p.subtext1 },
+            inactive_tab_hover = { bg_color = p.surface1, fg_color = p.text },
+            new_tab = { bg_color = p.surface0, fg_color = p.subtext1 },
+            new_tab_hover = { bg_color = p.surface1, fg_color = p.text },
         },
     }
 
@@ -108,7 +98,7 @@ function module.apply(config, wezterm)
                 height = "Cover",
             },
             {
-                source = { Color = "#1e1e2e" },
+                source = { Color = p.base },
                 width = "100%",
                 height = "100%",
                 opacity = 0.7,
@@ -118,7 +108,10 @@ function module.apply(config, wezterm)
 
     -- Tab bar settings
     config.hide_tab_bar_if_only_one_tab = true
-    config.use_fancy_tab_bar = true
+    -- Retro tab bar renders as terminal cells, which is what lets tabs/init.lua
+    -- control per-tab background and draw powerline separators. The fancy bar
+    -- composites its own chrome over format-tab-title output.
+    config.use_fancy_tab_bar = false
     config.tab_bar_at_bottom = false
     config.tab_max_width = 40
 
