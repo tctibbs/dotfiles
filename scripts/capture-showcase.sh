@@ -70,7 +70,8 @@ SETTLE="${SHOWCASE_SETTLE:-7}"
 # need different numbers: the stock window has a native title bar above its
 # tabs, this configuration puts the window controls in the tab bar itself, and
 # stock renders in the system font so its tabs are both taller and narrower at
-# the same column count.
+# the same column count. The configured height covers the macOS traffic lights,
+# which sit a few points lower than the tabs.
 #
 # These are measured on a 2x display with the default font size. If your crop
 # is off, capture a tall strip and read the band boundaries off it:
@@ -81,7 +82,7 @@ Y_STOCK="${SHOWCASE_Y_STOCK:-61}"
 H_STOCK="${SHOWCASE_H_STOCK:-25}"
 W_STOCK="${SHOWCASE_W_STOCK:-1000}"
 Y_CONF="${SHOWCASE_Y_CONF:-32}"
-H_CONF="${SHOWCASE_H_CONF:-18}"
+H_CONF="${SHOWCASE_H_CONF:-22}"
 W_CONF="${SHOWCASE_W_CONF:-1270}"
 
 if [ -z "$WEZTERM" ] || [ ! -x "$WEZTERM" ]; then
@@ -152,12 +153,20 @@ write_config() {
     } > "$path"
 }
 
-# Name of the frontmost application. screencapture takes a screen region, so
-# anything in front of that region lands in the image instead — twice during
-# development that silently wrote another window over a committed asset.
+# Name of the frontmost application, for messages. screencapture takes a screen
+# region, so anything in front of that region lands in the image instead — twice
+# during development that silently wrote another window over a committed asset.
 front_app() {
     lsappinfo info -only name "$(lsappinfo front 2>/dev/null)" 2>/dev/null \
         | sed -n 's/.*"LSDisplayName"="\([^"]*\)".*/\1/p'
+}
+
+# PID of the frontmost application. The focus checks compare PIDs, not names:
+# with another WezTerm already open, "WezTerm is frontmost" is also true when
+# that other window is the one in front.
+front_pid() {
+    lsappinfo info -only pid "$(lsappinfo front 2>/dev/null)" 2>/dev/null \
+        | sed -n 's/.*"pid"=\([0-9]*\).*/\1/p'
 }
 
 # A crop that misses the tab bar lands on the uniform terminal background and
@@ -172,11 +181,12 @@ has_content() {
     awk -v s="$spread" 'BEGIN { exit !(s > 0.25) }'
 }
 
-# Bring WezTerm forward without opening anything. Needs Accessibility for the
-# calling terminal; if that is not granted the capture still works whenever
-# WezTerm takes focus on its own, and fails cleanly when it does not.
-raise_wezterm() {
-    osascript -e 'tell application "System Events" to set frontmost of process "WezTerm" to true' \
+# Bring the demo process forward without opening anything. Raising by name
+# would pick whichever WezTerm System Events lists first. Needs Accessibility
+# for the calling terminal; if that is not granted the capture still works
+# whenever WezTerm takes focus on its own, and fails cleanly when it does not.
+raise_pid() {
+    osascript -e "tell application \"System Events\" to set frontmost of (first process whose unix id is $1) to true" \
         >/dev/null 2>&1 || true
 }
 
@@ -206,13 +216,12 @@ capture() {
     # Raise with System Events, not `open -a WezTerm`: `open` sends a reopen
     # event, which makes WezTerm spawn a fresh default-config window that then
     # sits in front of the demo window and lands in the capture.
-    local pid="" front="" deadline=$((SECONDS + SETTLE + 20))
+    local pid="" deadline=$((SECONDS + SETTLE + 20))
     while [ "$SECONDS" -lt "$deadline" ]; do
         [ -z "$pid" ] && pid="$(pgrep -f "$cfg" | head -1)"
         if [ -n "$pid" ]; then
-            front="$(front_app)"
-            [ "$front" = "WezTerm" ] && break
-            raise_wezterm
+            [ "$(front_pid)" = "$pid" ] && break
+            raise_pid "$pid"
         fi
         sleep 1
     done
@@ -221,14 +230,28 @@ capture() {
         echo "  $label: WezTerm did not start; leaving $out untouched" >&2
         return 1
     fi
-    if [ "$front" != "WezTerm" ]; then
-        echo "  $label: $front stayed in front; leaving $out untouched" >&2
+    if [ "$(front_pid)" != "$pid" ]; then
+        echo "  $label: $(front_app) stayed in front; leaving $out untouched" >&2
         pkill -f "$WORK" 2>/dev/null || true
         return 1
     fi
 
     # Frontmost only means the app is active; its tabs still have to spawn.
     sleep "$SETTLE"
+
+    # Focus can move during the settle — once it did, and an editor window was
+    # written over both assets. Confirm again immediately before capturing.
+    local tries=0
+    while [ "$(front_pid)" != "$pid" ] && [ "$tries" -lt 5 ]; do
+        raise_pid "$pid"
+        sleep 1
+        tries=$((tries + 1))
+    done
+    if [ "$(front_pid)" != "$pid" ]; then
+        echo "  $label: $(front_app) took focus during the settle; leaving $out untouched" >&2
+        pkill -f "$WORK" 2>/dev/null || true
+        return 1
+    fi
 
     # Capture to the work directory first, and only install over the committed
     # asset once there is something to install.

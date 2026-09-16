@@ -186,9 +186,9 @@ session end → `clear`.
 
 | Platform | Details |
 |----------|---------|
-| macOS | Native fullscreen, window blur, Alt sends regular characters |
-| Windows | PowerShell default, launch menu (PS7/PS5/CMD), WSL auto-detected |
-| Linux | `zsh --login` default |
+| macOS | Native fullscreen, window blur, Alt sends regular characters, native traffic-light buttons in the tab bar (the tab bar stays visible with one tab so the buttons never cover output) |
+| Windows | PowerShell default, launch menu (PS7/PS5/CMD), WSL auto-detected, Windows-style buttons on the right of the tab bar, tab bar hidden with one tab |
+| Linux | `zsh --login` default, Windows-style buttons on the right of the tab bar, tab bar hidden with one tab |
 
 ---
 
