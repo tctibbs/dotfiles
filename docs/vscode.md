@@ -37,6 +37,7 @@ Matches the terminal stack (WezTerm / Windows Terminal / tmux):
 | Semantic highlighting | On |
 | Linked editing | On (auto-rename HTML tags) |
 | Trim trailing whitespace | On |
+| Markdown files | Open in the built-in hybrid Markdown Editor (`vscode.markdown.editor`, VS Code 1.131+). **View: Reopen Editor With...** → Text Editor for raw source |
 
 ---
 
@@ -44,7 +45,9 @@ Matches the terminal stack (WezTerm / Windows Terminal / tmux):
 
 Visual noise is aggressively removed:
 
-- No minimap, scrollbars, breadcrumbs, or rulers
+- No minimap, horizontal scrollbar, breadcrumbs, or rulers
+- Slim 8px vertical scrollbar, always visible, carrying overview ruler marks (git changes, diagnostics, search hits)
+- 10px of padding above the first line
 - No indentation/bracket guides, glyph margin, or lightbulb
 - No line highlight, sticky scroll, or occurrence highlights
 - Whitespace only rendered in selection
@@ -65,6 +68,8 @@ Visual noise is aggressively removed:
 | Menu bar | Toggle (hidden by default) |
 | Command center | Off |
 | Startup editor | None |
+| Secondary side bar (chat) | Hidden by default in new workspaces |
+| Release notes | Not opened after updates |
 | File nesting | On, collapsed (groups lock files, config variants, etc.) |
 
 ---
@@ -120,6 +125,7 @@ The settings map dotfiles to correct language modes for syntax highlighting:
 | Remote SSH | `home-server` mapped to Linux |
 | Jupyter | No kernel restart prompt |
 | Dotfiles repo | `tctibbs/dotfiles` (for VS Code's built-in dotfiles sync) |
+| Git blame (status bar) | VS Code's built-in blame item; GitLens's status bar blame is off to avoid a duplicate |
 
 ---
 
