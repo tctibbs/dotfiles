@@ -45,6 +45,7 @@
     "editor.fontFamily": "'FiraCode Nerd Font Mono', 'FiraCode Nerd Font', monospace",
     "editor.fontSize": 14,
     "editor.lineHeight": 1.6,
+    "editor.padding.top": 10,
     "editor.fontWeight": "400",
     "editor.letterSpacing": 0,
     "editor.fontLigatures": true,
@@ -60,7 +61,8 @@
     "terminal.integrated.smoothScrolling": true,
     "terminal.integrated.drawBoldTextInBrightColors": false,
     "terminal.integrated.minimumContrastRatio": 1,
-    "terminal.integrated.enableBell": false,
+    "terminal.integrated.enableVisualBell": false,
+    "accessibility.signals.terminalBell": { "sound": "off" },
     "terminal.integrated.gpuAcceleration": "auto",
 
     // ── Catppuccin Mocha Terminal Colors (matches WezTerm & Windows Terminal) ──
@@ -80,6 +82,7 @@
             "titleBar.border": "#1e1e2e",
             "tab.border": "#1e1e2e",
             "scrollbar.shadow": "#00000000",
+            "editorOverviewRuler.background": "#1e1e2e",
             "terminal.foreground": "#cdd6f4",
             "terminalCursor.foreground": "#f5e0dc",
             "terminal.ansiBlack": "#45475a",
@@ -103,9 +106,9 @@
 
     // ── Remove Visual Noise ────────────────────────────────────────────────────
     "editor.minimap.enabled": false,
-    "editor.scrollbar.vertical": "hidden",
+    "editor.scrollbar.vertical": "visible",
     "editor.scrollbar.horizontal": "hidden",
-    "editor.scrollbar.verticalScrollbarSize": 0,
+    "editor.scrollbar.verticalScrollbarSize": 8,
     "editor.scrollbar.horizontalScrollbarSize": 0,
     "editor.guides.indentation": false,
     "editor.guides.bracketPairs": false,
@@ -149,6 +152,8 @@
     "workbench.tips.enabled": false,
     "workbench.editor.empty.hint": "hidden",
     "workbench.startupEditor": "none",
+    "workbench.secondarySideBar.defaultVisibility": "hidden",
+    "update.showReleaseNotes": false,
     "explorer.fileNesting.enabled": true,
     "explorer.fileNesting.expand": false,
     "window.density.editorTabHeight": "compact",
@@ -183,6 +188,11 @@
     "errorLens.delay": 500,
     "errorLens.gutterIconsEnabled": true,
 
+    // ── Markdown (built-in hybrid editor, VS Code 1.131+) ──────────────────────
+    "workbench.editorAssociations": {
+        "*.md": "vscode.markdown.editor"
+    },
+
     // ── Misc ───────────────────────────────────────────────────────────────────
     "editor.accessibilitySupport": "off",
     "editor.linkedEditing": true,
@@ -190,6 +200,7 @@
     "explorer.openEditors.visible": 1,
 
     // ── GitLens ───────────────────────────────────────────────────────────────
+    "gitlens.statusBar.enabled": false,
     "gitlens.ai.model": "vscode",
     "gitlens.ai.vscode.model": "copilot:gpt-4.1"
 }

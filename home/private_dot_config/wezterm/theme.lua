@@ -9,6 +9,8 @@ local wezterm = require("wezterm")
 local module = {}
 
 function module.apply(config)
+    local is_mac = wezterm.target_triple:find("darwin") or wezterm.target_triple:find("apple")
+
     -- Font configuration
     -- Try multiple FiraCode Nerd Font name variants
     config.font = wezterm.font_with_fallback({
@@ -73,10 +75,16 @@ function module.apply(config)
         },
     }
 
-    -- Window appearance (Windows-style buttons on right for clean look)
+    -- Window appearance: window buttons live in the tab bar. macOS keeps its
+    -- native traffic lights (the retro tab bar reserves room for them);
+    -- elsewhere, Windows-style buttons sit on the right.
     config.window_decorations = "INTEGRATED_BUTTONS|RESIZE"
-    config.integrated_title_button_style = "Windows"
-    config.integrated_title_button_alignment = "Right"
+    if is_mac then
+        config.integrated_title_button_style = "MacOsNative"
+    else
+        config.integrated_title_button_style = "Windows"
+        config.integrated_title_button_alignment = "Right"
+    end
     config.window_padding = {
         left = 8,
         right = 8,
@@ -107,7 +115,9 @@ function module.apply(config)
     end
 
     -- Tab bar settings
-    config.hide_tab_bar_if_only_one_tab = true
+    -- The native macOS buttons sit in the tab bar, so hiding it for a single
+    -- tab would draw them over the first line of output.
+    config.hide_tab_bar_if_only_one_tab = not is_mac
     -- Retro tab bar renders as terminal cells, which is what lets tabs/init.lua
     -- control per-tab background and draw powerline separators. The fancy bar
     -- composites its own chrome over format-tab-title output.
